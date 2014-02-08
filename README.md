@@ -19,6 +19,7 @@ Test Process
 ============  
 We make use of the language testing library that ships with go. It is ran by running the very verbose command:  
 go test github.com/itsruntime/regifted  
+More: http://golang.org/pkg/testing/  
 
 Implementation Documentation  
 ============================  
