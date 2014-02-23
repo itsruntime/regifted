@@ -105,11 +105,14 @@ func main() {
 
 	fileName := os.Args[1]
 
+	var curser int = 0
+	var size int = 188
+
 	fmt.Printf("Attempting to read file:" + fileName + "\n")
 
 	bytes := data.Read(fileName, 0)
 
-	reader := Reader{0, 188, bytes}
+	
 
 	transport := TransportStream{Pat{}, map[int]string{}, map[int]Type{}}
 
@@ -117,16 +120,16 @@ func main() {
 
 	fmt.Println("Size: ", len(bytes))
 
-	for reader.curser < len(bytes) {
-		byteChunk := data.ReadBytes(reader.curser, reader.size, bytes)
-		reader.curser = reader.curser + reader.size
+	for curser < len(bytes) {
+		byteChunk := data.ReadBytes(curser, size, bytes)
+		curser = curser + size
 
 		tsPacket := TsPacket{}
 		tsPacket.pat = &transport.pat
 
 		tsPacket.byteChunk = byteChunk
 
-		Dispense(reader, tsPacket)
+		PacketRead(tsPacket)
 	}
 
 }
@@ -137,11 +140,6 @@ func PacketRead(packet Packet) {
 
 }
 
-func Dispense(reader Reader, packet Packet) {
-
-	packet.Read()
-
-}
 
 func (tsPacket TsPacket) Read() {
 
