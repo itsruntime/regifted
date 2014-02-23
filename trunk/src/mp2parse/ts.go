@@ -11,7 +11,7 @@ type Reader struct {
 }
 
 type PesDispenser struct {
-	pesCollectors map[int]*Writer
+	pesCollectors map[int]Writer
 }
 
 type TransportStream struct {
