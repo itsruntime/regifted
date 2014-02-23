@@ -4,16 +4,19 @@ import "mp2parse/data"
 import "os"
 import "fmt"
 
+type Packet interface {
+	Read()
+}
+
 type Reader struct {
 	curser int
 	size   int
-	data   []byte
+	bytes  []byte
 }
 
 type PesDispenser struct {
-	pesCollectors map[int]*Writer
+	pesCollectors map[int]Writer
 }
-
 
 type TransportStream struct {
 	pat          Pat
@@ -31,7 +34,8 @@ type Pat struct {
 	SKIP_BYTES int
 	CRC_SIZE   int
 
-	//self.packet = packet
+	byteChunk []byte
+
 	pointerField           int
 	tableId                int
 	flags                  int
@@ -47,17 +51,46 @@ type Pat struct {
 }
 
 type TsPacket struct {
-	sync  int
-	flags int
+	pat *Pat
 
-	transportError int
-	unitStart      int
-	priority       int
-	pid            int
-	scramble       int
-	hasAdaptation  int
-	hasPayload     int
-	continuity     int
+	byteChunk []byte
+
+	sync  uint32
+	flags uint32
+
+	payload []byte
+
+	transportError bool
+	unitStart      bool
+	priority       bool
+	pid            uint32
+	scramble       uint32
+	hasAdaptation  bool
+	hasPayload     bool
+	continuity     uint32
+	adaptation     Adaptation
+}
+
+type Adaptation struct {
+	payload   *[]byte
+	byteChunk []byte
+
+	size   uint32
+	pcr    Pcr
+	opcr   Pcr
+	splice int
+
+	discontinuity bool
+	random        bool
+	priority      bool
+	hasPCR        bool
+	hasOPCR       bool
+	hasSplice     bool
+	hasPrivate    bool
+	hasExtension  bool
+}
+
+type Pcr struct {
 }
 
 type Writer struct {
@@ -87,28 +120,123 @@ func main() {
 	for reader.curser < len(bytes) {
 		byteChunk := data.ReadBytes(reader.curser, reader.size, bytes)
 		reader.curser = reader.curser + reader.size
-		dispense(byteChunk, reader)
+
+		tsPacket := TsPacket{}
+		tsPacket.pat = &transport.pat
+
+		tsPacket.byteChunk = byteChunk
+
+		Dispense(reader, tsPacket)
 	}
 
 }
 
-func dispense(byteChunk []byte, reader Reader) {
+func PacketRead(packet Packet) {
 
-	tsPacket := TsPacket{}
-
-	TsRead(tsPacket, byteChunk)
+	packet.Read()
 
 }
 
-func patRead(pat Pat, byteChunk []byte) {
+func Dispense(reader Reader, packet Packet) {
+
+	packet.Read()
 
 }
 
-func TsRead(tsPacket TsPacket, byteChunk []byte) {
+func (tsPacket TsPacket) Read() {
 
-	if byteChunk[0] == 71 {
+	var curser int = 0
+	var flags uint32 = 0
+	byteChunk := tsPacket.byteChunk
+	//var adaptation Adaptation
+
+	tsPacket.sync = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	if tsPacket.sync == 71 {
 		fmt.Println("\nG found, packet contents: \n", byteChunk)
 
+		flags = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk))
+		curser++
+
+		tsPacket.transportError = flags&0x8000 > 0
+		tsPacket.unitStart = flags&0x4000 > 0
+		tsPacket.priority = flags&0x2000 > 0
+		tsPacket.pid = flags & 0x1fff
+
+		flags = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+		curser++
+
+		tsPacket.scramble = flags & 0xc0 >> 6
+		tsPacket.hasAdaptation = flags&0x20 > 0
+		tsPacket.hasPayload = flags&0x10 > 0
+		tsPacket.continuity = flags & 0x0f
+
+		if tsPacket.hasAdaptation {
+			tsPacket.adaptation.byteChunk = data.ReadBytes(curser, 188-curser, byteChunk)
+			tsPacket.adaptation.payload = &tsPacket.payload
+			tsPacket.adaptation.Read()
+		}
+
+		if tsPacket.pid == 0 {
+			tsPacket.pat.byteChunk = data.ReadBytes(curser, 188-curser, byteChunk)
+			PacketRead(tsPacket.pat)
+		}
+
+		//fmt.Println("\n 67898767 tsPacket \n", tsPacket)
+
 	}
+
+}
+
+func (adaptation Adaptation) Read() {
+
+	var flags uint32 = 0
+	var curser int = 0
+	byteChunk := adaptation.byteChunk
+
+	adaptation.size = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	flags = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	adaptation.discontinuity = flags&0x80 > 0
+	adaptation.random = flags&0x40 > 0
+	adaptation.priority = flags&0x20 > 0
+	adaptation.hasPCR = flags&0x10 > 0
+	adaptation.hasOPCR = flags&0x08 > 0
+	adaptation.hasSplice = flags&0x04 > 0
+	adaptation.hasPrivate = flags&0x02 > 0
+	adaptation.hasExtension = flags&0x01 > 1
+
+	if adaptation.hasPCR {
+		//TODO
+	}
+
+	if adaptation.hasOPCR {
+		//TODO
+	}
+
+	if adaptation.hasSplice {
+		//TODO
+	}
+
+	payload := data.ReadBytes(curser, 188-curser, byteChunk)
+
+	adaptation.payload = &payload
+
+}
+
+func (pat Pat) Read() {
+
+	//var  SKIP_BYTES int = 5
+	// var CRC_SIZE int = 4
+
+	//TODO
+
+}
+
+func (pcr Pcr) Read() {
 
 }
