@@ -289,6 +289,8 @@ func (pat Pat) Read() {
 
 	pat.count = pat.sectionLength - SKIP_BYTES
 
+	pat.pmtConstructors = make(map[uint32]Pmt)
+
 	for pat.count > CRC_SIZE {
 		program := Program{}
 		pmt := Pmt{}
@@ -303,6 +305,8 @@ func (pat Pat) Read() {
 		pat.pmtConstructors[program.pid] = pmt
 		pat.count = pat.count - PROGRAM_SIZE
 	}
+
+	fmt.Println("\n:::Pat:::\n", pat)
 
 }
 
