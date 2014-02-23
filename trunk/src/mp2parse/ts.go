@@ -91,9 +91,31 @@ type Adaptation struct {
 type Pcr struct {
 }
 
+
 type Pmt struct {
+	byteChunk []byte
+	packet Packet
+	pointerField bool
+	tableId uint32
+	sectionSyntaxIndicator bool
+	sectionLength uint32
+	programNumber uint32
+	versionNumber uint32
+	sectionNumber uint32
+	//	   assert self.sectionNumber == 0
+	lastSectionNumber uint32
+	//    //assert self.lastSectionNumber == 0
+
+	pcrPid uint32
+	programInfoLength uint32
+	descriptor []byte
+	count uint32
+	entries []int
 }
 
+
+
+>>>>>>> .r22
 type Writer struct {
 	chunks []byte
 	size   int
