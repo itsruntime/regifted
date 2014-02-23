@@ -8,12 +8,6 @@ type Packet interface {
 	Read()
 }
 
-type Reader struct {
-	curser int
-	size   int
-	bytes  []byte
-}
-
 type PesDispenser struct {
 	pesCollectors map[int]Writer
 }
@@ -36,18 +30,22 @@ type Pat struct {
 
 	byteChunk []byte
 
-	pointerField           int
-	tableId                int
-	flags                  int
-	sectionSyntaxIndicator int
-	sectionLength          int
-	transportStreamId      int
-	versionNumber          int
-	currentNext            int
-	sectionNumber          int
-	lastSectionNumber      int
-	programs               []Program
-	count                  int
+	unitStart bool
+
+	pointerField           bool
+	tableId                uint32
+	flags                  uint32
+	sectionSyntaxIndicator bool
+	sectionLength          uint32
+	transportStreamId      uint32
+	versionNumber          uint32
+	currentNext            uint32
+	sectionNumber          uint32
+	lastSectionNumber      uint32
+	count                  uint32
+
+	programs        []Program
+	pmtConstructors map[uint32]Pmt
 }
 
 type TsPacket struct {
@@ -93,12 +91,19 @@ type Adaptation struct {
 type Pcr struct {
 }
 
+type Pmt struct {
+}
+
 type Writer struct {
 	chunks []byte
 	size   int
 }
 
 type Program struct {
+	byteChunk []byte
+
+	pid    uint32
+	number uint32
 }
 
 func main() {
@@ -111,8 +116,6 @@ func main() {
 	fmt.Printf("Attempting to read file:" + fileName + "\n")
 
 	bytes := data.Read(fileName, 0)
-
-	
 
 	transport := TransportStream{Pat{}, map[int]string{}, map[int]Type{}}
 
@@ -140,7 +143,6 @@ func PacketRead(packet Packet) {
 
 }
 
-
 func (tsPacket TsPacket) Read() {
 
 	var curser int = 0
@@ -155,7 +157,7 @@ func (tsPacket TsPacket) Read() {
 		fmt.Println("\nG found, packet contents: \n", byteChunk)
 
 		flags = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk))
-		curser++
+		curser += 2
 
 		tsPacket.transportError = flags&0x8000 > 0
 		tsPacket.unitStart = flags&0x4000 > 0
@@ -178,6 +180,7 @@ func (tsPacket TsPacket) Read() {
 
 		if tsPacket.pid == 0 {
 			tsPacket.pat.byteChunk = data.ReadBytes(curser, 188-curser, byteChunk)
+			tsPacket.pat.unitStart = tsPacket.unitStart
 			PacketRead(tsPacket.pat)
 		}
 
@@ -226,12 +229,80 @@ func (adaptation Adaptation) Read() {
 
 }
 
+func (program Program) Read() {
+
+	var curser int = 0
+	byteChunk := program.byteChunk
+
+	program.number = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk))
+	curser += 2
+
+	program.pid = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk)) & 0x1fff
+	curser += 2
+}
+
 func (pat Pat) Read() {
 
-	//var  SKIP_BYTES int = 5
-	// var CRC_SIZE int = 4
+	var SKIP_BYTES uint32 = 5
+	var CRC_SIZE uint32 = 4
+	var PROGRAM_SIZE uint32 = 4
+	var flags uint32 = 0
 
-	//TODO
+	var READ_SIZE int = 4
+	var curser int = 0
+
+	var flag bool = false
+
+	byteChunk := pat.byteChunk
+
+	if data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk)) == 1 {
+		flag = true
+	}
+	curser++
+
+	pat.pointerField = (pat.unitStart && flag) || false
+
+	pat.tableId = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	flags = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	pat.sectionSyntaxIndicator = flags&0x8000 > 0
+
+	pat.sectionLength = flags & 0x3ff
+
+	pat.transportStreamId = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk))
+	curser += 2
+
+	flags = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	pat.versionNumber = flags & 0x3ffe
+	pat.currentNext = flags & 0x0001
+
+	pat.sectionNumber = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	pat.lastSectionNumber = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	pat.count = pat.sectionLength - SKIP_BYTES
+
+	for pat.count > CRC_SIZE {
+		program := Program{}
+		pmt := Pmt{}
+
+		program.byteChunk = data.ReadBytes(curser, 188-curser, byteChunk)
+		curser = curser + READ_SIZE
+
+		pat.programs = append(pat.programs, program)
+
+		program.Read()
+
+		pat.pmtConstructors[program.pid] = pmt
+		pat.count = pat.count - PROGRAM_SIZE
+	}
 
 }
 
