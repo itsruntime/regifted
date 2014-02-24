@@ -87,9 +87,7 @@ type Pmt struct {
 	programNumber          uint32
 	versionNumber          uint32
 	sectionNumber          uint32
-	//	   assert self.sectionNumber == 0
-	lastSectionNumber uint32
-	//    //assert self.lastSectionNumber == 0
+	lastSectionNumber      uint32
 
 	pcrPid            uint32
 	programInfoLength uint32
@@ -137,18 +135,12 @@ func main() {
 
 	bytes := data.Read(fileName, 0)
 
-	//transport := TransportStream{Pat{}, map[int]string{}}
-
 	pat = Pat{}
 	pat.tableId = 0
 
 	pmtConstructors = make(map[uint32]Pmt)
 	entryConstructors = make(map[uint32]PmtEntry)
 	types = make(map[uint32]uint32)
-
-	//constructors := Constructors{make(map[uint32]Pmt), make(map[uint32]PmtEntry), make(map[uint32]uint32)}
-
-	//transport.pat.tableId = 0
 
 	fmt.Println("Size: ", len(bytes))
 
@@ -170,7 +162,6 @@ func (tsPacket TsPacket) Read() {
 	var curser int = 0
 	var flags uint32 = 0
 	byteChunk := tsPacket.byteChunk
-	//var adaptation Adaptation
 
 	tsPacket.sync = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
 	curser++
@@ -197,13 +188,13 @@ func (tsPacket TsPacket) Read() {
 		tsPacket.Print()
 
 		if tsPacket.hasAdaptation {
-			tsPacket.adaptation.byteChunk = data.ReadBytes(curser, 188-curser, byteChunk)
+			tsPacket.adaptation.byteChunk = data.TruncateBytes(curser, byteChunk)
 			tsPacket.adaptation.payload = &tsPacket.payload
 			tsPacket.adaptation.Read()
 		}
 
 		if tsPacket.pid == 0 {
-			pat.byteChunk = data.TruncateBytes(curser, 188, byteChunk)
+			pat.byteChunk = data.TruncateBytes(curser, byteChunk)
 
 			pat.unitStart = tsPacket.unitStart
 			pat.Read()
@@ -211,16 +202,14 @@ func (tsPacket TsPacket) Read() {
 
 		if pmt, ok := pmtConstructors[tsPacket.pid]; ok {
 			pmt.unitStart = tsPacket.unitStart
-			pmt.byteChunk = data.TruncateBytes(curser, 188, byteChunk)
+			pmt.byteChunk = data.TruncateBytes(curser, byteChunk)
 			pmt.Read()
 		}
 
 		if pmtEntry, ok := entryConstructors[tsPacket.pid]; ok {
-			pmtEntry.byteChunk = data.TruncateBytes(curser, 188, byteChunk)
+			pmtEntry.byteChunk = data.TruncateBytes(curser, byteChunk)
 			pmtEntry.Read()
 		}
-
-		//fmt.Println("\n 67898767 tsPacket \n", tsPacket)
 
 	}
 
@@ -259,7 +248,7 @@ func (adaptation *Adaptation) Read() {
 		//TODO
 	}
 
-	payload := data.ReadBytes(curser, (188 - (curser)), byteChunk)
+	payload := data.TruncateBytes(curser, byteChunk)
 
 	adaptation.payload = &payload
 
@@ -276,7 +265,6 @@ func (program *Program) Read() {
 	program.pid = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk)) & 0x1fff
 	curser += 2
 
-	//program.Print()
 }
 
 func (pat *Pat) Read() {
@@ -331,7 +319,7 @@ func (pat *Pat) Read() {
 		program := Program{}
 		pmt := Pmt{}
 
-		program.byteChunk = data.TruncateBytes(curser, 188, byteChunk)
+		program.byteChunk = data.TruncateBytes(curser, byteChunk)
 		curser = curser + READ_SIZE
 
 		program.Read()
@@ -400,7 +388,7 @@ func (pmt *Pmt) Read() {
 
 		pmtEntry := PmtEntry{}
 
-		pmtEntry.byteChunk = data.TruncateBytes(curser, 188, byteChunk)
+		pmtEntry.byteChunk = data.TruncateBytes(curser, byteChunk)
 
 		pmtEntry.Read()
 
@@ -462,8 +450,6 @@ func (pat Pat) Print() {
 
 	fmt.Println("\nPacket End////////////////////////////")
 
-	//PRINT 	pmtConstructors map[uint32]Pmt
-
 }
 
 func (pmt Pmt) Print() {
@@ -482,8 +468,6 @@ func (pmt Pmt) Print() {
 	fmt.Println("count = ", pmt.count)
 
 	fmt.Println("descriptor = ", pmt.descriptor)
-	//fmt.Println("constructors = ", pmt.constructors)
-	//fmt.Println("types = ", pmt.types)
 
 	for i := 0; i < len(pmt.entries); i++ {
 
@@ -499,6 +483,8 @@ func (pmtEntry PmtEntry) Print() {
 	fmt.Println("streamType = ", pmtEntry.streamType)
 	fmt.Println("infoLength = ", pmtEntry.infoLength)
 	fmt.Println("descriptor = ", pmtEntry.descriptor)
+
+	fmt.Println("\nPacket End////////////////////////////")
 
 }
 

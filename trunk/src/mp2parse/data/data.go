@@ -39,8 +39,8 @@ func ReadBytes(curser int, size int, bytes []byte) []byte {
 
 
 
-func TruncateBytes(curser int, size int, bytes []byte) []byte {
+func TruncateBytes(curser int, bytes []byte) []byte {
 
-	return bytes[curser:size]
+	return bytes[curser:len(bytes)]
 
 }
