@@ -6,22 +6,11 @@ import "fmt"
 
 type Packet interface {
 	Read()
+	Print()
 }
 
 type PesDispenser struct {
 	pesCollectors map[int]Writer
-}
-
-type TransportStream struct {
-	pat          Pat
-	constructors map[int]string
-	types        map[int]Type
-}
-
-type Type struct {
-}
-
-type Constructor struct {
 }
 
 type Pat struct {
@@ -44,13 +33,10 @@ type Pat struct {
 	lastSectionNumber      uint32
 	count                  uint32
 
-	programs        []Program
-	pmtConstructors map[uint32]Pmt
+	programs []Program
 }
 
 type TsPacket struct {
-	pat *Pat
-
 	byteChunk []byte
 
 	sync  uint32
@@ -91,31 +77,38 @@ type Adaptation struct {
 type Pcr struct {
 }
 
-
 type Pmt struct {
-	byteChunk []byte
-	packet Packet
-	pointerField bool
-	tableId uint32
+	byteChunk              []byte
+	pointerField           bool
+	unitStart              bool
+	tableId                uint32
 	sectionSyntaxIndicator bool
-	sectionLength uint32
-	programNumber uint32
-	versionNumber uint32
-	sectionNumber uint32
+	sectionLength          uint32
+	programNumber          uint32
+	versionNumber          uint32
+	sectionNumber          uint32
 	//	   assert self.sectionNumber == 0
 	lastSectionNumber uint32
 	//    //assert self.lastSectionNumber == 0
 
-	pcrPid uint32
+	pcrPid            uint32
 	programInfoLength uint32
-	descriptor []byte
-	count uint32
-	entries []int
+	descriptor        []byte
+	count             uint32
+	entries           []PmtEntry
+
+	types map[uint32]uint32
 }
 
+type PmtEntry struct {
+	byteChunk []byte
 
+	streamType uint32
+	pid        uint32
+	infoLength uint32
+	descriptor []byte
+}
 
->>>>>>> .r22
 type Writer struct {
 	chunks []byte
 	size   int
@@ -128,6 +121,11 @@ type Program struct {
 	number uint32
 }
 
+var pmtConstructors map[uint32]Pmt
+var entryConstructors map[uint32]PmtEntry
+var types map[uint32]uint32
+var pat Pat
+
 func main() {
 
 	fileName := os.Args[1]
@@ -139,9 +137,18 @@ func main() {
 
 	bytes := data.Read(fileName, 0)
 
-	transport := TransportStream{Pat{}, map[int]string{}, map[int]Type{}}
+	//transport := TransportStream{Pat{}, map[int]string{}}
 
-	transport.pat.tableId = 0
+	pat = Pat{}
+	pat.tableId = 0
+
+	pmtConstructors = make(map[uint32]Pmt)
+	entryConstructors = make(map[uint32]PmtEntry)
+	types = make(map[uint32]uint32)
+
+	//constructors := Constructors{make(map[uint32]Pmt), make(map[uint32]PmtEntry), make(map[uint32]uint32)}
+
+	//transport.pat.tableId = 0
 
 	fmt.Println("Size: ", len(bytes))
 
@@ -150,18 +157,11 @@ func main() {
 		curser = curser + size
 
 		tsPacket := TsPacket{}
-		tsPacket.pat = &transport.pat
 
 		tsPacket.byteChunk = byteChunk
 
-		PacketRead(tsPacket)
+		tsPacket.Read()
 	}
-
-}
-
-func PacketRead(packet Packet) {
-
-	packet.Read()
 
 }
 
@@ -176,7 +176,7 @@ func (tsPacket TsPacket) Read() {
 	curser++
 
 	if tsPacket.sync == 71 {
-		fmt.Println("\nG found, packet contents: \n", byteChunk)
+		fmt.Println("\nG Found, Packet Start/////////////////////////")
 
 		flags = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk))
 		curser += 2
@@ -194,6 +194,8 @@ func (tsPacket TsPacket) Read() {
 		tsPacket.hasPayload = flags&0x10 > 0
 		tsPacket.continuity = flags & 0x0f
 
+		tsPacket.Print()
+
 		if tsPacket.hasAdaptation {
 			tsPacket.adaptation.byteChunk = data.ReadBytes(curser, 188-curser, byteChunk)
 			tsPacket.adaptation.payload = &tsPacket.payload
@@ -201,9 +203,21 @@ func (tsPacket TsPacket) Read() {
 		}
 
 		if tsPacket.pid == 0 {
-			tsPacket.pat.byteChunk = data.ReadBytes(curser, 188-curser, byteChunk)
-			tsPacket.pat.unitStart = tsPacket.unitStart
-			PacketRead(tsPacket.pat)
+			pat.byteChunk = data.TruncateBytes(curser, 188, byteChunk)
+
+			pat.unitStart = tsPacket.unitStart
+			pat.Read()
+		}
+
+		if pmt, ok := pmtConstructors[tsPacket.pid]; ok {
+			pmt.unitStart = tsPacket.unitStart
+			pmt.byteChunk = data.TruncateBytes(curser, 188, byteChunk)
+			pmt.Read()
+		}
+
+		if pmtEntry, ok := entryConstructors[tsPacket.pid]; ok {
+			pmtEntry.byteChunk = data.TruncateBytes(curser, 188, byteChunk)
+			pmtEntry.Read()
 		}
 
 		//fmt.Println("\n 67898767 tsPacket \n", tsPacket)
@@ -212,7 +226,7 @@ func (tsPacket TsPacket) Read() {
 
 }
 
-func (adaptation Adaptation) Read() {
+func (adaptation *Adaptation) Read() {
 
 	var flags uint32 = 0
 	var curser int = 0
@@ -245,13 +259,13 @@ func (adaptation Adaptation) Read() {
 		//TODO
 	}
 
-	payload := data.ReadBytes(curser, 188-curser, byteChunk)
+	payload := data.ReadBytes(curser, (188 - (curser)), byteChunk)
 
 	adaptation.payload = &payload
 
 }
 
-func (program Program) Read() {
+func (program *Program) Read() {
 
 	var curser int = 0
 	byteChunk := program.byteChunk
@@ -261,9 +275,11 @@ func (program Program) Read() {
 
 	program.pid = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk)) & 0x1fff
 	curser += 2
+
+	//program.Print()
 }
 
-func (pat Pat) Read() {
+func (pat *Pat) Read() {
 
 	var SKIP_BYTES uint32 = 5
 	var CRC_SIZE uint32 = 4
@@ -287,8 +303,8 @@ func (pat Pat) Read() {
 	pat.tableId = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
 	curser++
 
-	flags = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
-	curser++
+	flags = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk))
+	curser += 2
 
 	pat.sectionSyntaxIndicator = flags&0x8000 > 0
 
@@ -311,27 +327,202 @@ func (pat Pat) Read() {
 
 	pat.count = pat.sectionLength - SKIP_BYTES
 
-	pat.pmtConstructors = make(map[uint32]Pmt)
-
 	for pat.count > CRC_SIZE {
 		program := Program{}
 		pmt := Pmt{}
 
-		program.byteChunk = data.ReadBytes(curser, 188-curser, byteChunk)
+		program.byteChunk = data.TruncateBytes(curser, 188, byteChunk)
 		curser = curser + READ_SIZE
-
-		pat.programs = append(pat.programs, program)
 
 		program.Read()
 
-		pat.pmtConstructors[program.pid] = pmt
+		pat.programs = append(pat.programs, program)
+		pmtConstructors[program.pid] = pmt
+
 		pat.count = pat.count - PROGRAM_SIZE
 	}
 
-	fmt.Println("\n:::Pat:::\n", pat)
+	pat.Print()
+
+}
+
+func (pmt *Pmt) Read() {
+
+	var CRC_SIZE uint32 = 4
+	var SKIP_BYTES uint32 = 5
+	var flags uint32 = 0
+
+	var curser int = 0
+
+	var flag bool = false
+
+	byteChunk := pmt.byteChunk
+
+	if data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk)) == 1 {
+		flag = true
+	}
+	curser++
+
+	pmt.pointerField = (pmt.unitStart && flag) || false
+
+	pmt.tableId = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	flags = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk))
+	curser += 2
+
+	pmt.sectionSyntaxIndicator = flags&0x8000 > 0
+	pmt.sectionLength = flags & 0x3ff
+
+	pmt.programNumber = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk))
+	curser += 2
+
+	pmt.versionNumber = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	pmt.sectionNumber = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	pmt.lastSectionNumber = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	pmt.pcrPid = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk)) & 0x1fff
+	curser += 2
+
+	pmt.programInfoLength = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk)) & 0x3ff
+	curser += 2
+
+	pmt.descriptor = data.ReadBytes(curser, int(pmt.programInfoLength), byteChunk)
+
+	pmt.count = pmt.sectionLength - SKIP_BYTES - pmt.programInfoLength
+
+	for pmt.count > CRC_SIZE {
+
+		pmtEntry := PmtEntry{}
+
+		pmtEntry.byteChunk = data.TruncateBytes(curser, 188, byteChunk)
+
+		pmtEntry.Read()
+
+		pmt.entries = append(pmt.entries, pmtEntry)
+		types[pmtEntry.pid] = pmtEntry.streamType
+		entryConstructors[pmtEntry.pid] = pmtEntry
+		pmt.count -= SKIP_BYTES + pmtEntry.infoLength
+
+	}
+
+	pmt.Print()
+}
+
+func (pmtEntry *PmtEntry) Read() {
+
+	var curser int = 0
+	byteChunk := pmtEntry.byteChunk
+
+	pmtEntry.streamType = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	pmtEntry.pid = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk)) & 0x1fff
+	curser += 2
+
+	pmtEntry.infoLength = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk)) & 0x3ff
+	curser += 2
+
+	pmtEntry.descriptor = data.ReadBytes(curser, int(pmtEntry.infoLength), byteChunk)
+	curser += int(pmtEntry.infoLength)
+
+	pmtEntry.Print()
 
 }
 
 func (pcr Pcr) Read() {
 
+}
+
+func (pcr Pcr) Print() {
+}
+
+func (pat Pat) Print() {
+	fmt.Println("\n:::Pat:::\n")
+	fmt.Println("tableId = ", pat.tableId)
+	fmt.Println("pointerField = ", pat.pointerField)
+	fmt.Println("sectionSyntaxIndicator = ", pat.sectionSyntaxIndicator)
+	fmt.Println("sectionLength = ", pat.sectionLength)
+	fmt.Println("transportStreamId = ", pat.transportStreamId)
+	fmt.Println("versionNumber = ", pat.versionNumber)
+	fmt.Println("currentNext = ", pat.currentNext)
+	fmt.Println("sectionNumber = ", pat.sectionNumber)
+	fmt.Println("lastSectionNumber = ", pat.lastSectionNumber)
+	fmt.Println("count = ", pat.count)
+
+	for i := 0; i < len(pat.programs); i++ {
+
+		pat.programs[i].Print()
+	}
+
+	fmt.Println("\nPacket End////////////////////////////")
+
+	//PRINT 	pmtConstructors map[uint32]Pmt
+
+}
+
+func (pmt Pmt) Print() {
+
+	fmt.Println("\n:::Pmt65435:::\n")
+	fmt.Println("tableId = ", pmt.tableId)
+	fmt.Println("pointerField = ", pmt.pointerField)
+	fmt.Println("sectionSyntaxIndicator = ", pmt.sectionSyntaxIndicator)
+	fmt.Println("sectionLength = ", pmt.sectionLength)
+	fmt.Println("programNumber = ", pmt.programNumber)
+	fmt.Println("versionNumber = ", pmt.versionNumber)
+	fmt.Println("sectionNumber = ", pmt.sectionNumber)
+	fmt.Println("lastSectionNumber = ", pmt.lastSectionNumber)
+	fmt.Println("pcrPid = ", pmt.pcrPid)
+	fmt.Println("programInfoLength = ", pmt.programInfoLength)
+	fmt.Println("count = ", pmt.count)
+
+	fmt.Println("descriptor = ", pmt.descriptor)
+	//fmt.Println("constructors = ", pmt.constructors)
+	//fmt.Println("types = ", pmt.types)
+
+	for i := 0; i < len(pmt.entries); i++ {
+
+		pmt.entries[i].Print()
+	}
+
+	fmt.Println("\nPacket End////////////////////////////")
+}
+
+func (pmtEntry PmtEntry) Print() {
+	fmt.Println("\n:::PmtEntry:::\n")
+	fmt.Println("pid = ", pmtEntry.pid)
+	fmt.Println("streamType = ", pmtEntry.streamType)
+	fmt.Println("infoLength = ", pmtEntry.infoLength)
+	fmt.Println("descriptor = ", pmtEntry.descriptor)
+
+}
+
+func (program Program) Print() {
+
+	fmt.Println("\n:::Program:::\n")
+	fmt.Println("pid = ", program.pid)
+	fmt.Println("number = ", program.number)
+
+}
+
+func (adaptation Adaptation) Print() {
+}
+
+func (tsPacket TsPacket) Print() {
+
+	fmt.Println("\n:::TsRead:::\n")
+	fmt.Println("sync = ", tsPacket.sync)
+	fmt.Println("transportError = ", tsPacket.transportError)
+	fmt.Println("unitStart = ", tsPacket.unitStart)
+	fmt.Println("priority = ", tsPacket.priority)
+	fmt.Println("pid = ", tsPacket.pid)
+	fmt.Println("scramble = ", tsPacket.scramble)
+	fmt.Println("hasAdaptation = ", tsPacket.hasAdaptation)
+	fmt.Println("hasPayload = ", tsPacket.hasPayload)
+	fmt.Println("continuity = ", tsPacket.continuity)
 }

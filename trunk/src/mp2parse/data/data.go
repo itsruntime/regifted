@@ -30,8 +30,17 @@ func ReadSegemnt(bytes []byte) uint32 {
 return segment
 }
 
+
 func ReadBytes(curser int, size int, bytes []byte) []byte {
 
 	return bytes[curser:(curser+size)]
+
+}
+
+
+
+func TruncateBytes(curser int, size int, bytes []byte) []byte {
+
+	return bytes[curser:size]
 
 }
