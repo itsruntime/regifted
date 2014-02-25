@@ -7,10 +7,26 @@ import "fmt"
 type Packet interface {
 	Read()
 	Print()
+	Dispatch()
 }
 
-type PesDispenser struct {
-	pesCollectors map[int]Writer
+type Pes struct {
+	//pesCollectors map[int]Writer
+
+	byteChunk []byte
+
+	pid          uint32
+	streamType   uint32
+	streamId     uint32
+	packetLength uint32
+	flags        uint32
+	pts          uint32
+	dts          uint32
+	payload      []byte
+	nal          Nal
+}
+
+type Nal struct {
 }
 
 type Pat struct {
@@ -107,6 +123,16 @@ type PmtEntry struct {
 	descriptor []byte
 }
 
+type ElementaryStreamPacket struct {
+	byteChunk []byte
+	payload   []byte
+
+	unitStart bool
+
+	pid           uint32
+	hasAdaptation bool
+}
+
 type Writer struct {
 	chunks []byte
 	size   int
@@ -119,8 +145,10 @@ type Program struct {
 	number uint32
 }
 
+var pesCollector map[uint32]Pes
 var pmtConstructors map[uint32]Pmt
 var entryConstructors map[uint32]PmtEntry
+var elementaryConstructors map[uint32]ElementaryStreamPacket
 var types map[uint32]uint32
 var pat Pat
 
@@ -141,6 +169,8 @@ func main() {
 	pmtConstructors = make(map[uint32]Pmt)
 	entryConstructors = make(map[uint32]PmtEntry)
 	types = make(map[uint32]uint32)
+	pesCollector = make(map[uint32]Pes)
+	elementaryConstructors = make(map[uint32]ElementaryStreamPacket)
 
 	fmt.Println("Size: ", len(bytes))
 
@@ -153,11 +183,32 @@ func main() {
 		tsPacket.byteChunk = byteChunk
 
 		tsPacket.Read()
+
+	}
+
+	for key := range pesCollector {
+
+		CreateAndDispensePes(key, types[key])
+
 	}
 
 }
 
-func (tsPacket TsPacket) Read() {
+func CreateAndDispensePes(pid uint32, streamType uint32) {
+
+	pes := pesCollector[pid]
+
+	pes.pid = pid
+
+	pes.streamType = streamType
+
+	pes.Read()
+
+	pes.Print()
+
+}
+
+func (tsPacket *TsPacket) Read() {
 
 	var curser int = 0
 	var flags uint32 = 0
@@ -167,7 +218,7 @@ func (tsPacket TsPacket) Read() {
 	curser++
 
 	if tsPacket.sync == 71 {
-		fmt.Println("\nG Found, Packet Start/////////////////////////")
+		//fmt.Println("\nG Found, Packet Start/////////////////////////")
 
 		flags = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk))
 		curser += 2
@@ -185,7 +236,7 @@ func (tsPacket TsPacket) Read() {
 		tsPacket.hasPayload = flags&0x10 > 0
 		tsPacket.continuity = flags & 0x0f
 
-		tsPacket.Print()
+		//tsPacket.Print()
 
 		if tsPacket.hasAdaptation {
 			tsPacket.adaptation.byteChunk = data.TruncateBytes(curser, byteChunk)
@@ -206,10 +257,22 @@ func (tsPacket TsPacket) Read() {
 			pmt.Read()
 		}
 
-		if pmtEntry, ok := entryConstructors[tsPacket.pid]; ok {
-			pmtEntry.byteChunk = data.TruncateBytes(curser, byteChunk)
-			pmtEntry.Read()
+		if elementaryStreamPacket, ok := elementaryConstructors[tsPacket.pid]; ok {
+			elementaryStreamPacket.pid = tsPacket.pid
+			elementaryStreamPacket.unitStart = tsPacket.unitStart
+			elementaryStreamPacket.byteChunk = data.TruncateBytes(curser, byteChunk)
+			elementaryStreamPacket.payload = tsPacket.payload
+			elementaryStreamPacket.hasAdaptation = tsPacket.hasAdaptation
+			elementaryStreamPacket.Read()
+			elementaryStreamPacket.Dispatch()
+
+			elementaryStreamPacket.Print()
 		}
+
+		//if pmtEntry, ok := entryConstructors[tsPacket.pid]; ok {
+		//	pmtEntry.byteChunk = data.TruncateBytes(curser, byteChunk)
+		//	pmtEntry.Read()
+		//}
 
 	}
 
@@ -337,7 +400,7 @@ func (pat *Pat) Read() {
 func (pmt *Pmt) Read() {
 
 	var CRC_SIZE uint32 = 4
-	var SKIP_BYTES uint32 = 5
+	var SKIP_BYTES uint32 = 9
 	var flags uint32 = 0
 
 	var curser int = 0
@@ -381,8 +444,12 @@ func (pmt *Pmt) Read() {
 	curser += 2
 
 	pmt.descriptor = data.ReadBytes(curser, int(pmt.programInfoLength), byteChunk)
+	curser += int(pmt.programInfoLength)
 
 	pmt.count = pmt.sectionLength - SKIP_BYTES - pmt.programInfoLength
+
+	//count = self.sectionLength - self.SKIP_BYTES - self.programInfoLength
+	//pmt.Read()
 
 	for pmt.count > CRC_SIZE {
 
@@ -391,11 +458,14 @@ func (pmt *Pmt) Read() {
 		pmtEntry.byteChunk = data.TruncateBytes(curser, byteChunk)
 
 		pmtEntry.Read()
+		curser += (int(pmtEntry.infoLength) + 5)
 
 		pmt.entries = append(pmt.entries, pmtEntry)
 		types[pmtEntry.pid] = pmtEntry.streamType
-		entryConstructors[pmtEntry.pid] = pmtEntry
-		pmt.count -= SKIP_BYTES + pmtEntry.infoLength
+		elementaryConstructors[pmtEntry.pid] = ElementaryStreamPacket{}
+
+		//entryConstructors[pmtEntry.pid] = pmtEntry
+		pmt.count -= (5 + pmtEntry.infoLength)
 
 	}
 
@@ -427,10 +497,91 @@ func (pcr Pcr) Read() {
 
 }
 
-func (pcr Pcr) Print() {
+func (elementaryStreamPacket *ElementaryStreamPacket) Read() {
+
+	if !elementaryStreamPacket.hasAdaptation {
+		elementaryStreamPacket.payload = elementaryStreamPacket.byteChunk
+
+	}
+
 }
 
-func (pat Pat) Print() {
+func (pes *Pes) Read() {
+
+	var curser int = 0
+
+	var prefix uint32
+
+	var headerLength uint32
+
+	var headerData []byte
+
+	var flags uint32
+
+	byteChunk := pes.byteChunk
+
+	prefix = data.ReadSegemnt(data.ReadBytes(curser, 3, byteChunk))
+	curser += 3
+
+	fmt.Println("prefix12343232 = ", prefix)
+
+	if prefix == uint32(0x000001) {
+
+		pes.streamId = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+		curser++
+
+		pes.packetLength = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk))
+		curser += 2
+
+		flags = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk))
+		curser += 2
+
+		headerLength = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+		curser++
+
+		headerData = data.ReadBytes(curser, int(headerLength), byteChunk)
+		curser += int(headerLength)
+
+		if (flags & 0x0080) == 1 {
+			pes.pts = data.ReadHeaderData(headerData)
+		}
+		if (flags & 0x0040) == 1 {
+			pes.dts = data.ReadHeaderData(headerData)
+		}
+		pes.payload = data.TruncateBytes(curser, byteChunk)
+
+		//pes.nal =
+	}
+
+}
+
+func (elementaryStreamPacket *ElementaryStreamPacket) Dispatch() {
+
+	var pesData Pes
+
+	if elementaryStreamPacket.unitStart {
+
+		pesData.byteChunk = append(pesData.byteChunk, elementaryStreamPacket.payload...)
+
+		pesCollector[elementaryStreamPacket.pid] = pesData
+
+	} else {
+		//pesData.Read()
+
+		pesData = pesCollector[elementaryStreamPacket.pid]
+
+		pesData.byteChunk = append(pesData.byteChunk, elementaryStreamPacket.payload...)
+
+		pesCollector[elementaryStreamPacket.pid] = pesData
+
+	}
+
+}
+
+func (pcr *Pcr) Print() {
+}
+
+func (pat *Pat) Print() {
 	fmt.Println("\n:::Pat:::\n")
 	fmt.Println("tableId = ", pat.tableId)
 	fmt.Println("pointerField = ", pat.pointerField)
@@ -448,11 +599,11 @@ func (pat Pat) Print() {
 		pat.programs[i].Print()
 	}
 
-	fmt.Println("\nPacket End////////////////////////////")
+	//fmt.Println("\nPacket End////////////////////////////")
 
 }
 
-func (pmt Pmt) Print() {
+func (pmt *Pmt) Print() {
 
 	fmt.Println("\n:::Pmt65435:::\n")
 	fmt.Println("tableId = ", pmt.tableId)
@@ -474,32 +625,52 @@ func (pmt Pmt) Print() {
 		pmt.entries[i].Print()
 	}
 
-	fmt.Println("\nPacket End////////////////////////////")
+	//fmt.Println("\nPacket End////////////////////////////")
 }
 
-func (pmtEntry PmtEntry) Print() {
+func (pmtEntry *PmtEntry) Print() {
 	fmt.Println("\n:::PmtEntry:::\n")
 	fmt.Println("pid = ", pmtEntry.pid)
 	fmt.Println("streamType = ", pmtEntry.streamType)
 	fmt.Println("infoLength = ", pmtEntry.infoLength)
 	fmt.Println("descriptor = ", pmtEntry.descriptor)
 
-	fmt.Println("\nPacket End////////////////////////////")
+	//fmt.Println("\nPacket End////////////////////////////")
 
 }
 
-func (program Program) Print() {
+func (program *Program) Print() {
 
 	fmt.Println("\n:::Program:::\n")
 	fmt.Println("pid = ", program.pid)
 	fmt.Println("number = ", program.number)
 
 }
+func (pes *Pes) Print() {
 
-func (adaptation Adaptation) Print() {
+	fmt.Println("\n:::PES:::\n")
+	fmt.Println("////////////////////////////////")
+	fmt.Println("//pid = ", pes.pid)
+	fmt.Println("//streamType = ", pes.streamType)
+	fmt.Println("//streamId = ", pes.streamId)
+	fmt.Println("//packetLength = ", pes.packetLength)
+	fmt.Println("//pts = ", pes.pts)
+	fmt.Println("//dts = ", pes.dts)
+	fmt.Println("//payload length= ", len(pes.payload))
+	fmt.Println("//nal = ", pes.nal)
+	fmt.Println("////////////////////////////////")
+
 }
 
-func (tsPacket TsPacket) Print() {
+func (elementaryStreamPacket *ElementaryStreamPacket) Print() {
+	//fmt.Println("\n:::ES:::\n")
+	//fmt.Println("//payload = ", elementaryStreamPacket.payload)
+}
+
+func (adaptation *Adaptation) Print() {
+}
+
+func (tsPacket *TsPacket) Print() {
 
 	fmt.Println("\n:::TsRead:::\n")
 	fmt.Println("sync = ", tsPacket.sync)
