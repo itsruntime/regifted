@@ -266,6 +266,10 @@ func (tsPacket *TsPacket) Read() {
 			elementaryStreamPacket.Read()
 			elementaryStreamPacket.Dispatch()
 
+			fmt.Println("PID = ", tsPacket.pid)
+			fmt.Println("UNITSTART = ", elementaryStreamPacket.unitStart)
+			fmt.Println("BYTECHUCNK1278909878345 = ", len(pesCollector[elementaryStreamPacket.pid].byteChunk))
+
 			elementaryStreamPacket.Print()
 		}
 
@@ -523,7 +527,7 @@ func (pes *Pes) Read() {
 	prefix = data.ReadSegemnt(data.ReadBytes(curser, 3, byteChunk))
 	curser += 3
 
-	fmt.Println("prefix12343232 = ", prefix)
+	//fmt.Println("prefix12343232 = ", byteChunk)
 
 	if prefix == uint32(0x000001) {
 
@@ -559,22 +563,29 @@ func (elementaryStreamPacket *ElementaryStreamPacket) Dispatch() {
 
 	var pesData Pes
 
+	pesData = pesCollector[elementaryStreamPacket.pid]
+
 	if elementaryStreamPacket.unitStart {
 
-		pesData.byteChunk = append(pesData.byteChunk, elementaryStreamPacket.payload...)
+		if pesData, ok := pesCollector[elementaryStreamPacket.pid]; ok {
+			//fmt.Println("BYTTTEEESSS = ", pesData.byteChunk)
+			if len(pesData.byteChunk) != 0 {
+				//fmt.Println("HERE = ", pesData.byteChunk[0])
+				pesData.pid = elementaryStreamPacket.pid
+				pesData.streamType = types[elementaryStreamPacket.pid]
+				pesData.Read()
+				pesData.Print()
 
-		pesCollector[elementaryStreamPacket.pid] = pesData
+				pesData = Pes{}
+			}
 
-	} else {
-		//pesData.Read()
-
-		pesData = pesCollector[elementaryStreamPacket.pid]
-
-		pesData.byteChunk = append(pesData.byteChunk, elementaryStreamPacket.payload...)
-
-		pesCollector[elementaryStreamPacket.pid] = pesData
+		}
 
 	}
+
+	pesData.byteChunk = append(pesData.byteChunk, elementaryStreamPacket.payload...)
+
+	pesCollector[elementaryStreamPacket.pid] = pesData
 
 }
 
