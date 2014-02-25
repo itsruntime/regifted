@@ -1,6 +1,6 @@
 package main
 
-import "mp2parse/data"
+import "github.com/itsruntimebuild/mp2parse/data"
 import "os"
 import "fmt"
 
