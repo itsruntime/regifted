@@ -1,6 +1,6 @@
 package main
 
-import "github.com/itsruntimebuild/mp2parse/data"
+import "github.com/itsruntime/regifted/data"
 import "os"
 import "fmt"
 
