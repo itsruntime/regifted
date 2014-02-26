@@ -1,6 +1,6 @@
 package main
 
-import "github.com/itsruntime/regifted/data"
+import "data"
 import "os"
 import "fmt"
 
@@ -78,7 +78,7 @@ type Adaptation struct {
 	size   uint32
 	pcr    Pcr
 	opcr   Pcr
-	splice int
+	splice uint32
 
 	discontinuity bool
 	random        bool
@@ -91,6 +91,18 @@ type Adaptation struct {
 }
 
 type Pcr struct {
+	pcr       uint32
+	ext       uint32
+	byteChunk []byte
+
+	a  uint32
+	b  uint32
+	c  uint32
+	d  uint32
+	ef uint32
+	e  uint32
+	f  uint32
+	g  uint32
 }
 
 type Pmt struct {
@@ -266,11 +278,11 @@ func (tsPacket *TsPacket) Read() {
 			elementaryStreamPacket.Read()
 			elementaryStreamPacket.Dispatch()
 
-			fmt.Println("PID = ", tsPacket.pid)
-			fmt.Println("UNITSTART = ", elementaryStreamPacket.unitStart)
-			fmt.Println("BYTECHUCNK1278909878345 = ", len(pesCollector[elementaryStreamPacket.pid].byteChunk))
+			//fmt.Println("PID = ", tsPacket.pid)
+			//fmt.Println("UNITSTART = ", elementaryStreamPacket.unitStart)
+			//fmt.Println("BYTECHUCNK1278909878345 = ", len(pesCollector[elementaryStreamPacket.pid].byteChunk))
 
-			elementaryStreamPacket.Print()
+			//elementaryStreamPacket.Print()
 		}
 
 		//if pmtEntry, ok := entryConstructors[tsPacket.pid]; ok {
@@ -286,6 +298,10 @@ func (adaptation *Adaptation) Read() {
 
 	var flags uint32 = 0
 	var curser int = 0
+	var spliceFlag int = 0
+	var pcrFlag int = 0
+	var opcrFlag int = 0
+
 	byteChunk := adaptation.byteChunk
 
 	adaptation.size = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
@@ -298,22 +314,54 @@ func (adaptation *Adaptation) Read() {
 	adaptation.random = flags&0x40 > 0
 	adaptation.priority = flags&0x20 > 0
 	adaptation.hasPCR = flags&0x10 > 0
+	//pcrFlag = flags & 0x10
 	adaptation.hasOPCR = flags&0x08 > 0
+	//opcrFlag = flags & 0x08
 	adaptation.hasSplice = flags&0x04 > 0
+	//spliceFlag = flags & 0x04
 	adaptation.hasPrivate = flags&0x02 > 0
 	adaptation.hasExtension = flags&0x01 > 1
 
 	if adaptation.hasPCR {
-		//TODO
+		fmt.Println("BIG HERE890769 = ", pcrFlag)
+		pcrFlag = 6
+		adaptation.pcr.byteChunk = data.TruncateBytes(curser, byteChunk)
+		adaptation.pcr.Read()
+		curser += 6
 	}
 
 	if adaptation.hasOPCR {
-		//TODO
+		fmt.Println("BIG HERE789087 = ", pcrFlag)
+		opcrFlag = 6
+		adaptation.pcr.byteChunk = data.TruncateBytes(curser, byteChunk)
+		adaptation.opcr.Read()
+		curser += 6
+
 	}
 
 	if adaptation.hasSplice {
-		//TODO
+		fmt.Println("BIG HERE7897890980 = ", pcrFlag)
+		spliceFlag = 1
+		adaptation.splice = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+		curser++
 	}
+
+	fmt.Println("BIG pcrFlag123432 = ", pcrFlag)
+	fmt.Println("BIG opcrFlag = ", opcrFlag)
+	fmt.Println("BIG spliceFlag = ", spliceFlag)
+
+	fmt.Println("BIG pcrFlagAND = ", (pcrFlag & 6))
+	fmt.Println("BIG opcrFlagAND = ", (opcrFlag & 6))
+	fmt.Println("BIG spliceFlagAND = ", (spliceFlag & 1))
+
+	//stuffing := data.ReadBytes(curser, (int(adaptation.size) - 1 - (pcrFlag& 6) - (opcrFlag & 6) - (spliceFlag & 1)),  byteChunk)
+	//fmt.Println("BIG NUMNBER678976789876878909898788789 = ", (adaptation.size - 1 - (pcrFlag) - (opcrFlag) - (spliceFlag & 1)))
+
+
+
+	curser += int(int(adaptation.size) - 1 - pcrFlag - opcrFlag - spliceFlag)
+	fmt.Println("SIZE 67898767890987898709 = ", adaptation.size)
+	fmt.Println("BIG NUMNBER67897678987687890989878909878988789 = ", curser)
 
 	payload := data.TruncateBytes(curser, byteChunk)
 
@@ -397,7 +445,7 @@ func (pat *Pat) Read() {
 		pat.count = pat.count - PROGRAM_SIZE
 	}
 
-	pat.Print()
+	//pat.Print()
 
 }
 
@@ -453,7 +501,6 @@ func (pmt *Pmt) Read() {
 	pmt.count = pmt.sectionLength - SKIP_BYTES - pmt.programInfoLength
 
 	//count = self.sectionLength - self.SKIP_BYTES - self.programInfoLength
-	//pmt.Read()
 
 	for pmt.count > CRC_SIZE {
 
@@ -493,19 +540,50 @@ func (pmtEntry *PmtEntry) Read() {
 	pmtEntry.descriptor = data.ReadBytes(curser, int(pmtEntry.infoLength), byteChunk)
 	curser += int(pmtEntry.infoLength)
 
-	pmtEntry.Print()
+	//pmtEntry.Print()
 
 }
 
-func (pcr Pcr) Read() {
+func (pcr *Pcr) Read() {
+
+	var curser int = 0
+	byteChunk := pcr.byteChunk
+
+	pcr.a = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+	pcr.b = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+	pcr.c = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+	pcr.d = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+	pcr.ef = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+
+	pcr.e = pcr.ef & 0x80
+	if pcr.e > 0 {
+		pcr.e = 1
+	} else {
+		pcr.e = 0
+	}
+
+	pcr.f = pcr.ef & 0x01
+
+	pcr.g = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
+	curser++
+	pcr.pcr = (pcr.a << 25) | (pcr.b << 17) | (pcr.c << 9) | (pcr.d << 1) | (pcr.e&1 | 0)
+	pcr.ext = (pcr.f << 8) | pcr.g
 
 }
 
 func (elementaryStreamPacket *ElementaryStreamPacket) Read() {
-
+	fmt.Println("ADAPTATION =  ", elementaryStreamPacket.hasAdaptation)
 	if !elementaryStreamPacket.hasAdaptation {
+		fmt.Println("PAYLOADSET TO BYTE CHUNK = ")
 		elementaryStreamPacket.payload = elementaryStreamPacket.byteChunk
 
+	} else {
+		fmt.Println("PAYLOADSET = ", elementaryStreamPacket.payload)
 	}
 
 }
@@ -576,12 +654,14 @@ func (elementaryStreamPacket *ElementaryStreamPacket) Dispatch() {
 				pesData.Read()
 				pesData.Print()
 
-				pesData = Pes{}
 			}
+			pesData = Pes{}
 
 		}
 
 	}
+
+	//fmt.Println("6797678909879 = ", elementaryStreamPacket.payload)
 
 	pesData.byteChunk = append(pesData.byteChunk, elementaryStreamPacket.payload...)
 
