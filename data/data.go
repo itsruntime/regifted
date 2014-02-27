@@ -1,62 +1,26 @@
 package data
 
-import "io/ioutil"
+type Reader struct {
+	data []byte
+	cursor uint
+}
 
-var DEBUG_SIZE int = 100
+func NewReader (da []byte) *Reader {
+	r := new(Reader)
+	r.data = da
+	r.cursor = 0
+	return r
+}
 
-func Read(fileName string, curser int) []byte {
-
-	b, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		panic(err)
+func (r *Reader) Read(size uint) uint {
+	
+	var (
+		value uint = 0
+		i uint = 0
+	)
+	for ; i <size ;i++ {
+		value |= (uint(r.data[r.cursor+i]) << ((size-i-1)*8))
 	}
-
-	return b
-}
-
-func ReadSegemnt(bytes []byte) uint32 {
-
-	var segment uint32
-
-	l := len(bytes)
-	for i, b := range bytes {
-		shift := uint32((l - i - 1) * 8)
-
-		segment |= uint32(b) << shift
-	}
-	//fmt.Print("segment:", segment)
-
-	return segment
-}
-
-func ReadBytes(curser int, size int, bytes []byte) []byte {
-
-	return bytes[curser:(curser + size)]
-
-}
-
-func TruncateBytes(curser int, bytes []byte) []byte {
-
-	return bytes[curser:len(bytes)]
-
-}
-
-func ReadHeaderData(bytes []byte) uint32 {
-
-	var curser int = 0
-
-	var a uint32 = (ReadSegemnt(ReadBytes(curser, 1, bytes)) >> 1) & 0x07
-	curser++
-	var b uint32 = ReadSegemnt(ReadBytes(curser, 1, bytes))
-	curser++
-	var c uint32 = (ReadSegemnt(ReadBytes(curser, 1, bytes)) >> 1) & 0x7f
-	curser++
-	var d uint32 = ReadSegemnt(ReadBytes(curser, 1, bytes))
-	curser++
-	var e uint32 = (ReadSegemnt(ReadBytes(curser, 1, bytes)) >> 1) & 0x7f
-	curser++
-	var timestamp uint32 = (a << 30) | (b << 22) | (c << 15) | (d << 7) | e
-
-	return timestamp
-
+	r.cursor += size
+	return value
 }

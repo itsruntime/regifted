@@ -3,9 +3,24 @@ Test of the function and methods in data.go
 */
 package data
 
-import "testing"
+import (
+	"testing"
+	"fmt"
+)
 
-
+func TestRead(t *testing.T) {
+	testData := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+	reader := NewReader(testData)
+	one := reader.Read(1)
+	if one != 1 {
+		t.Fail()
+	}
+	two := reader.Read(2)
+	fmt.Printf("Two equals %d", two)
+	if two != 515 {
+		t.Fail()
+	}
+}
 // struct for Reader
 
 
