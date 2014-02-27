@@ -1,8 +1,11 @@
 package main
 
-import "regifted/data"
-import "os"
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"regifted/data"
+)
+
 
 type Packet interface {
 	Read()
