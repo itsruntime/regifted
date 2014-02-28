@@ -10,6 +10,12 @@ const (
 	BYTESINVERSION = 1
 	BYTESINSEQ = 4
 	BYTESINFLAGS = 3
+	BYTESINTRACKID = 4
+	BYTESINBASEDATAOFFSET = 8
+	BYTESINDESCRIPTIONINDEX = 4
+	BYTESSAMPLEDURATION = 4
+	BYTESSAMPLESIZE = 4
+	BYTESSAMPLEFLAGS = 4
 	MFHD_BOX = 0x6d666864
 	TFHD_BOX = 0x74666864
 	TRUN_BOX = 0x7472756e
@@ -38,21 +44,63 @@ func (m *Mfhd) Read (data *data.Reader){
 
 // Start tfhd
 type Tfhd struct {
-	version                      int
-	trackId                      int
-	baseDataOffsetPresent        bool
-	sampleDescriptionPresent     bool
-	defaultSampleDurationPresent bool
-	defaultSampleSizePresent     bool
-	defaultSampleFlagsPresent    bool
-	durationIsEmpty              bool
-	baseDataOffset               int
-	sampleDescriptionIndex       int
-	defaultSampleDuration        int
-	defaultSampleSize            int
-	defaultSampleFlags           int
+	version                      	uint
+	trackId                      	uint
+	baseDataOffsetPresent        	bool
+	sampleDescriptionPresent     	bool
+	defaultSampleDurationPresent 	bool
+	defaultSampleSizePresent     	bool
+	defaultSampleFlagsPresent    	bool
+	durationIsEmpty              	bool
+	baseDataOffset               	uint
+	sampleDescriptionIndex       	uint
+	defaultSampleDuration        	uint
+	defaultSampleSize            	uint
+	defaultSampleFlags           	uint
+	size 							uint
+	boxtype							uint
+	flags							uint
 }
 
+func (t *Tfhd) Read (data *data.Reader){
+	t.size = data.Read(BYTESINSIZE)
+	t.boxtype = data.Read(BYTESINBOXTYPE)
+	t.version = data.Read(BYTESINVERSION)
+	t.flags = data.Read(BYTESINFLAGS)
+	t.baseDataOffsetPresent = flags & 0x000001
+	t.sampleDescriptionPresent = flags & 0x000002
+	t.defaultSampleDurationPresent = flags & 0x000008
+	t.defaultSampleSizePresent = flags & 0x000010
+	t.defaultSampleFlagsPresent = flags & 0x000020
+	t.durationIsEmpty = flags & 0x010000
+	t.trackId = data.Read(BYTESINTRACKID)
+	if t.baseDataOffsetPresent {
+		t.baseDataOffset = data.Read(BYTESINBASEDATAOFFSET)
+	} else {
+		t.baseDataOffset = 0;
+	}
+	if t.sampleDescriptionPresent {
+		t.sampleDescriptionIndex = data.Read(BYTESINDESCRIPTIONINDEX)
+	} else {
+		t.sampleDescriptionIndex = 0;
+	}
+	if t.defaultSampleDurationPresent {
+		t.defaultSampleDuration = data.Read(BYTESSAMPLEDURATION)
+	} else {
+		t.defaultSampleDuration = 0;
+	}
+	if t.defaultSampleSizePresent {
+		t.defaultSampleSize = data.Read(BYTESSAMPLESIZE)
+	} else {
+		t.defaultSampleSize = 0
+	}
+	if t.defaultSampleFlagsPresent {
+		t.defaultSampleFlags = data.Read(BYTESSAMPLEFLAGS)
+	} else {
+		t.defaultSampleFlags = 0
+	}
+}
+		
 // End tfhd
 
 // Start SampleInformation
