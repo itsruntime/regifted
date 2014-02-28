@@ -7,6 +7,8 @@ import (
 	"fmt"
 )
 
+//Tests for Mfhd
+
 func TestRead(t *testing.T) {
 	testData := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	reader := data.NewReader(testData)
@@ -35,6 +37,7 @@ func TestRead(t *testing.T) {
 }
 
 //Test that flags are set to true
+
 func TestReadTfhdFalse(t *testing.T) {
 	testData := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	reader := data.NewReader(testData)
@@ -78,7 +81,9 @@ func TestReadTfhdFalse(t *testing.T) {
 	}
 }
 
+//Tests for Tfhd
 //Test that flags are set to false
+
 func TestReadTfhdTrue(t *testing.T) {
 	testData := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	for i:=1;i<=40;i++{
@@ -124,3 +129,16 @@ func TestReadTfhdTrue(t *testing.T) {
 		t.Fail()
 	}
 }
+
+//Tests for SampleInformation
+
+//Tests for Trun
+
+//Tests for Traf
+
+//Tests for Box
+
+//Tests for Moof 
+
+//Tests for Mdat
+
