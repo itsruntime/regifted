@@ -68,13 +68,14 @@ func (t *Tfhd) Read (data *data.Reader){
 	t.boxtype = data.Read(BYTESINBOXTYPE)
 	t.version = data.Read(BYTESINVERSION)
 	t.flags = data.Read(BYTESINFLAGS)
+	t.trackId = data.Read(BYTESINTRACKID)
 	t.baseDataOffsetPresent = t.flags & 0x000001
 	t.sampleDescriptionPresent = t.flags & 0x000002
 	t.defaultSampleDurationPresent = t.flags & 0x000008
 	t.defaultSampleSizePresent = t.flags & 0x000010
 	t.defaultSampleFlagsPresent = t.flags & 0x000020
 	t.durationIsEmpty = t.flags & 0x010000
-	t.trackId = data.Read(BYTESINTRACKID)
+	
 	if t.baseDataOffsetPresent != 0 {
 		t.baseDataOffset = uint64(data.Read(BYTESINBASEDATAOFFSET))
 	} else {

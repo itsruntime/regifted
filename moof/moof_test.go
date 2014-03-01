@@ -7,9 +7,9 @@ import (
 	"fmt"
 )
 
-//Tests for Mfhd
+//Tests setting of Mfhd struct fields by Mfhd.Reader(reader Reader)
 
-func TestRead(t *testing.T) {
+func TestReadMfhdBoxFields(t *testing.T) {
 	testData := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	reader := data.NewReader(testData)
 	m := new (Mfhd)
@@ -36,99 +36,250 @@ func TestRead(t *testing.T) {
 	}
 }
 
-//Test that flags are set to true
+// Test setting of fullbox variables in Tfhd by Tfhd.Reader(reader Reader)
 
-func TestReadTfhdFalse(t *testing.T) {
-	testData := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+func TestReadTfhdBoxFields(t *testing.T) {
+	testData := []byte{
+		// size
+		0x00, 0x11, 0x22, 0x33, 
+		// boxtype
+		0x74, 0x66, 0x68, 0x64, 
+		// version
+		0x01, 
+		// flags
+		0x01, 0x00, 0x3b,
+		// trackid
+		0x00, 0x00, 0x00, 0x01,				  
+		// basedataoffset 
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		// sampledescriptionindex
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsampleduration
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsamplesize
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsampleflags
+		0x00, 0x00, 0x00, 0x00}
 	reader := data.NewReader(testData)
 	x := new (Tfhd)
 	x.Read(reader)
 	fmt.Printf("Size = %d\n", x.size)
-	if x.size != 16909060 {
+	if x.size != 1122867 {
 		t.Fail()
 	}
 	fmt.Printf("Type = %d\n", x.boxtype)
-	if x.boxtype != 84281096 {
+	if x.boxtype != 1952868452 {
 		t.Fail()
 	}
 	fmt.Printf("Version = %d\n", x.version)
-	if x.version != 9 {
+	if x.version != 1 {
 		t.Fail()
-	}
+	}	
+}
+
+
+//Simple test that flags are set to TRUE in Tfhd.Read(reader Reader)
+
+func TestReadTfhdFlagsTrue(t *testing.T) {
+	testData := []byte{
+		// size
+		0x00, 0x11, 0x22, 0x33, 
+		// boxtype
+		0x74, 0x66, 0x68, 0x64, 
+		// version
+		0x01, 
+		// flags
+		0x01, 0x00, 0x3b,
+		// trackid
+		0x00, 0x00, 0x00, 0x01,				  
+		// basedataoffset 
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		// sampledescriptionindex
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsampleduration
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsamplesize
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsampleflags
+		0x00, 0x00, 0x00, 0x00}
+	reader := data.NewReader(testData)
+	x := new (Tfhd)
+	x.Read(reader)
 	fmt.Printf("Flags = %d\n", x.flags)
 	if x.flags != 658188 {
 		t.Fail()
 	}
 	fmt.Printf("baseDataOffsetPresent = %t\n", x.baseDataOffsetPresent)
-	if x.baseDataOffsetPresent != true && x.baseDataOffset !=0 {
+	if x.baseDataOffsetPresent != 0 && x.baseDataOffset !=0 {
 		t.Fail()
 	}
 	fmt.Printf("sampleDescriptionPresent = %t\n", x.sampleDescriptionPresent)
-	if x.sampleDescriptionPresent != true && x.sampleDescription != 0 {
+	if x.sampleDescriptionPresent != 0 && x.sampleDescriptionIndex != 0 {
 		t.Fail()
 	}
 	fmt.Printf("defaultSampleDurationPresent = %t\n", x.defaultSampleDurationPresent)
-	if x.defaultSampleDurationPresent != true && x.defaultSampleDuration!=0 {
+	if x.defaultSampleDurationPresent != 0 && x.defaultSampleDuration!=0 {
 		t.Fail()
 	}
 	fmt.Printf("defaultSampleSizePresent = %t\n", x.defaultSampleSizePresent)
-	if x.defaultSampleSizePresent != true && x.defaultSampleSize!=0{
+	if x.defaultSampleSizePresent != 0 && x.defaultSampleSize!=0{
 		t.Fail()
 	}
 	fmt.Printf("defaultSampleFlagsPresent = %t\n", x.defaultSampleFlagsPresent)
-	if x.defaultSampleFlagsPresent != true && x.defaultSampleFlag!=0 {
+	if x.defaultSampleFlagsPresent != 0 && x.defaultSampleFlags!=0 {
 		t.Fail()
 	}
 }
 
-//Tests for Tfhd
-//Test that flags are set to false
+//Simple test that flags are set to FALSE in Tfhd.Read(reader Reader)
 
-func TestReadTfhdTrue(t *testing.T) {
-	testData := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
-	for i:=1;i<=40;i++{
-		testData.append(i-1)
+func TestReadTfhdFlagsFalse(t *testing.T) {
+	testData := []byte{
+		// size
+		0x00, 0x11, 0x22, 0x33, 
+		// boxtype
+		0x74, 0x66, 0x68, 0x64, 
+		// version
+		0x01, 
+		// flags
+		0x01, 0x00, 0x3b,
+		// trackid
+		0x00, 0x00, 0x00, 0x01,				  
+		// basedataoffset 
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		// sampledescriptionindex
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsampleduration
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsamplesize
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsampleflags
+		0x00, 0x00, 0x00, 0x00}
+	reader := data.NewReader(testData)
+	x := new (Tfhd)
+	x.Read(reader)	
+	fmt.Printf("baseDataOffsetPresent = %t\n", x.baseDataOffsetPresent)
+	if x.baseDataOffsetPresent == 0 && x.baseDataOffset ==0 {
+		t.Fail()
 	}
+	fmt.Printf("sampleDescriptionPresent = %t\n", x.sampleDescriptionPresent)
+	if x.sampleDescriptionPresent == 0 && x.sampleDescriptionIndex == 0 {
+		t.Fail()
+	}
+	fmt.Printf("defaultSampleDurationPresent = %t\n", x.defaultSampleDurationPresent)
+	if x.defaultSampleDurationPresent == 0 && x.defaultSampleDuration==0 {
+		t.Fail()
+	}
+	fmt.Printf("defaultSampleSizePresent = %t\n", x.defaultSampleSizePresent)
+	if x.defaultSampleSizePresent == 0 && x.defaultSampleSize==0{
+		t.Fail()
+	}
+	fmt.Printf("defaultSampleFlagsPresent = %t\n", x.defaultSampleFlagsPresent)
+	if x.defaultSampleFlagsPresent == 0 && x.defaultSampleFlags==0 {
+		t.Fail()
+	}
+}
+
+//Simple test of setting flagged fields in Tfhd.Read(reader Reader) when all flags
+//TRUE
+
+func TestReadTfhdFlagFieldsSetTrue(t *testing.T) {
+	testData := []byte{
+		// size
+		0x00, 0x11, 0x22, 0x33, 
+		// boxtype
+		0x74, 0x66, 0x68, 0x64, 
+		// version
+		0x01, 
+		// flags
+		0x01, 0x00, 0x3b,
+		// trackid
+		0x00, 0x00, 0x00, 0x01,				  
+		// basedataoffset 
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		// sampledescriptionindex
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsampleduration
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsamplesize
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsampleflags
+		0x00, 0x00, 0x00, 0x00}
 	reader := data.NewReader(testData)
 	x := new (Tfhd)
 	x.Read(reader)
-	fmt.Printf("Size = %d\n", x.size)
-	if x.size != 16909060 {
+	fmt.Printf("baseDataOffset = %d\n", x.baseDataOffset)
+	if x.baseDataOffset != 16909060 {
 		t.Fail()
 	}
-	fmt.Printf("Type = %d\n", x.boxtype)
-	if x.boxtype != 84281096 {
+	fmt.Printf("sampleDescriptionIndex = %d\n", x.sampleDescriptionIndex)
+	if x.sampleDescriptionIndex != 84281096 {
 		t.Fail()
 	}
-	fmt.Printf("Version = %d\n", x.version)
-	if x.version != 9 {
+	fmt.Printf("defaultSampleDuration = %d\n", x.defaultSampleDuration)
+	if x.defaultSampleDuration != 9 {
 		t.Fail()
 	}
-	fmt.Printf("Flags = %d\n", x.flags)
-	if x.flags != 658188 {
+	fmt.Printf("defaultSampleSize = %d\n", x.defaultSampleSize)
+	if x.defaultSampleSize != 9 {
 		t.Fail()
 	}
-	fmt.Printf("baseDataOffsetPresent = %t\n", x.baseDataOffsetPresent)
-	if x.baseDataOffsetPresent == true && x.baseDataOffset ==0 {
-		t.Fail()
-	}
-	fmt.Printf("sampleDescriptionPresent = %t\n", x.sampleDescriptionPresent)
-	if x.sampleDescriptionPresent == true && x.sampleDescription == 0 {
-		t.Fail()
-	}
-	fmt.Printf("defaultSampleDurationPresent = %t\n", x.defaultSampleDurationPresent)
-	if x.defaultSampleDurationPresent == true && x.defaultSampleDuration==0 {
-		t.Fail()
-	}
-	fmt.Printf("defaultSampleSizePresent = %t\n", x.defaultSampleSizePresent)
-	if x.defaultSampleSizePresent == true && x.defaultSampleSize==0{
-		t.Fail()
-	}
-	fmt.Printf("defaultSampleFlagsPresent = %t\n", x.defaultSampleFlagsPresent)
-	if x.defaultSampleFlagsPresent == true && x.defaultSampleFlag==0 {
+	fmt.Printf("defaultSampleFlags = %d\n", x.defaultSampleFlags)
+	if x.defaultSampleFlags != 9 {
 		t.Fail()
 	}
 }
+
+//Simple test of setting flagged fields in Tfhd.Read(reader Reader) when all flags
+//FALSE
+
+func TestReadTfhdFlagFieldsSetFalse(t *testing.T) {
+	testData := []byte{
+		// size
+		0x00, 0x11, 0x22, 0x33, 
+		// boxtype
+		0x74, 0x66, 0x68, 0x64, 
+		// version
+		0x01, 
+		// flags
+		0x01, 0x00, 0x3b,
+		// trackid
+		0x00, 0x00, 0x00, 0x01,				  
+		// basedataoffset 
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		// sampledescriptionindex
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsampleduration
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsamplesize
+		0x00, 0x00, 0x00, 0x00,
+		// defaultsampleflags
+		0x00, 0x00, 0x00, 0x00}
+	reader := data.NewReader(testData)
+	x := new (Tfhd)
+	x.Read(reader)
+	fmt.Printf("baseDataOffset = %d\n", x.baseDataOffset)
+	if x.baseDataOffset != 16909060 {
+		t.Fail()
+	}
+	fmt.Printf("sampleDescriptionIndex = %d\n", x.sampleDescriptionIndex)
+	if x.sampleDescriptionIndex != 84281096 {
+		t.Fail()
+	}
+	fmt.Printf("defaultSampleDuration = %d\n", x.defaultSampleDuration)
+	if x.defaultSampleDuration != 9 {
+		t.Fail()
+	}
+	fmt.Printf("defaultSampleSize = %d\n", x.defaultSampleSize)
+	if x.defaultSampleSize != 9 {
+		t.Fail()
+	}
+	fmt.Printf("defaultSampleFlags = %d\n", x.defaultSampleFlags)
+	if x.defaultSampleFlags != 9 {
+		t.Fail()
+	}
+}
+
 
 //Tests for SampleInformation
 
