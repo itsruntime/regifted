@@ -227,7 +227,7 @@ func (tsPacket *TsPacket) Read() {
 
 	tsPacket.sync = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
 	curser++
-
+	//assert 
 	if tsPacket.sync == 71 {
 
 		flags = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk))
@@ -687,7 +687,6 @@ func (pmt *Pmt) Print() {
 	fmt.Println("pcrPid = ", pmt.pcrPid)
 	fmt.Println("programInfoLength = ", pmt.programInfoLength)
 	fmt.Println("count = ", pmt.count)
-
 	fmt.Println("descriptor = ", pmt.descriptor)
 
 }
