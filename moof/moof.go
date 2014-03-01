@@ -141,7 +141,7 @@ func (t *Tfhd) calcSize() int{
 }	
 
 func (t *Tfhd) String () string {
-	return fmt.Sprintf("\ntfhd [%d] trackId=%d baseDataOffset=%d sampleDescriptionIndex=%d defaultSampleDuration=%d defaultSampleSize=%d defaultSampleFlags=%08x" ,t.calcSize(), t.trackId, t.baseDataOffset, t.sampleDescriptionIndex, t.defaultSampleDuration, t.defaultSampleSize, t.defaultSampleFlags)
+	return fmt.Sprintf("tfhd [%d] trackId=%d baseDataOffset=%d sampleDescriptionIndex=%d defaultSampleDuration=%d defaultSampleSize=%d defaultSampleFlags=%08x\n" ,t.calcSize(), t.trackId, t.baseDataOffset, t.sampleDescriptionIndex, t.defaultSampleDuration, t.defaultSampleSize, t.defaultSampleFlags)
 }
 // End tfhd
 
@@ -267,13 +267,13 @@ func (trun *Trun) calcSize () int {
 }
 
 func (trun *Trun) String () string {
-	out := fmt.Sprintf("trun [%d] version=%d dataOffsetPresent=%d firstSampleFlagsPresent=%d sampleDurationPresent=%d sampleSizePresent=%d sampleFlagsPresent=%d sampleOffsetPresent=%d sampleCount=%d dataOffset=%d firstSampleFlags=%08x " ,trun.calcSize(), trun.version, trun.dataOffsetPresent, trun.firstSampleFlagsPresent, trun.sampleDurationPresent, trun.sampleSizePresent, trun.sampleFlagsPresent, trun.sampleOffsetPresent, len(trun.samples), trun.dataOffset, trun.firstSampleFlags)
+	out := fmt.Sprintf("trun [%d] version=%d dataOffsetPresent=%d firstSampleFlagsPresent=%d sampleDurationPresent=%d sampleSizePresent=%d sampleFlagsPresent=%d sampleOffsetPresent=%d sampleCount=%d dataOffset=%d firstSampleFlags=%08x \n" ,trun.calcSize(), trun.version, trun.dataOffsetPresent, trun.firstSampleFlagsPresent, trun.sampleDurationPresent, trun.sampleSizePresent, trun.sampleFlagsPresent, trun.sampleOffsetPresent, len(trun.samples), trun.dataOffset, trun.firstSampleFlags)
 	count :=0
 	for _,element := range trun.samples{
 		out = out+ fmt.Sprintf("   %d %s\n" ,count, element.StringSampleInforamtion())
 		count++
 	} 
-	return "\n"+out
+	return out
 }
 // End trun
 
@@ -305,42 +305,40 @@ func (traf *Traf) calcSize () int{
 }
 
 func (traf *Traf) String () string{
-	out := fmt.Sprintf("traf [%d] [%d]" ,traf.calcSize(), len(traf.boxes))
+	out := fmt.Sprintf("traf [%d] [%d]\n" ,traf.calcSize(), len(traf.boxes))
 	count := 0
 	for _,box := range traf.boxes{
-		out = out + fmt.Sprintf("\n %d ",count) + box.String()
+		out = out + fmt.Sprintf(" %d ",count) + box.String()
 		count++
 	}
-	return ""+fmt.Sprintf(out)
+	return fmt.Sprintf(out)
 }
 
 // End traf
 
 // Start box
 type Box struct {
-	size uint
-	name uint
 }
 
 func (box *Box) ReadBox (data *data.Reader) BoxInterface{
-	box.size = data.Read(4)
-	box.name = data.Read(4)
+	size := data.Read(4)
+	name := data.Read(4)
 	data.Cursor -= 8
-	if box.name == TRAF_BOX {
+	if name == TRAF_BOX {
 		traf:=new(Traf)
 		return traf.Read(data)
-	} else if box.name == TRUN_BOX{
+	} else if name == TRUN_BOX{
 		trun := new(Trun)
 		return trun.Read(data)
-	} else if box.name == MFHD_BOX{
+	} else if name == MFHD_BOX{
 		mfhd := new(Mfhd)
 		return mfhd.Read(data)
-	} else if box.name == TFHD_BOX{
+	} else if name == TFHD_BOX{
 		tfhd := new(Tfhd)
 		return tfhd.Read(data)
 	}else{
 		//Error error
-		data.Cursor += uint64(box.size)
+		data.Cursor += uint64(size)
 	}
 	return nil
 }
@@ -371,11 +369,11 @@ func (moof *Moof) Read(data *data.Reader) Moof{
 }
 
 func (moof *Moof) String() string{
-	out := fmt.Sprintf("moof [%d] [%d]",moof.size,len(moof.boxes))
+	out := fmt.Sprintf("moof [%d] [%d]\n",moof.size,len(moof.boxes))
 	for _, box := range moof.boxes{
 		out = out + fmt.Sprintf(box.String())
 	}
-	return "\n"+out
+	return out
 }
 
 func (moof *Moof) calcSize () int{
