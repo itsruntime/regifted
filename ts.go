@@ -191,9 +191,9 @@ func main() {
 
 		tsPacket.byteChunk = byteChunk
 
-    fmt.Println( "tsPacket.Read()" )
+		fmt.Println("tsPacket.Read()")
 		tsPacket.Read()
-		fmt.Println( "/tsPacket.Read()" )
+		fmt.Println("/tsPacket.Read()")
 
 	}
 
@@ -235,7 +235,7 @@ func (tsPacket *TsPacket) Read() {
 
 	tsPacket.sync = data.ReadSegemnt(data.ReadBytes(curser, 1, byteChunk))
 	curser++
-	//assert 
+	//assert
 	if tsPacket.sync == 71 {
 
 		flags = data.ReadSegemnt(data.ReadBytes(curser, 2, byteChunk))

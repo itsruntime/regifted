@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestTransportPacketRead( t *testing.T ) {
+func TestTransportPacketRead(t *testing.T) {
 	// will endian-ness matter theoretically?
 	var packetBytes []byte
 	var packetString string
@@ -22,46 +22,46 @@ func TestTransportPacketRead( t *testing.T ) {
 		0F 23 CB 70 21 DE AE 70 1D A0 F1 22 E1 10 79 1C
 		58 EA D4 4F 50 07 D1 3E D8 77 E4 63 65 2C E6 D0
 		9A 11 82 26 CC 62 D6 2E 00 1F DA C3`
-	generateBytesFromString( &packetBytes, &packetString )
-	packet := TsPacket{ byteChunk: packetBytes }
+	generateBytesFromString(&packetBytes, &packetString)
+	packet := TsPacket{byteChunk: packetBytes}
 	packet.Read()
 	packet.Print()
 	if packet.sync != 71 { // 71 (hex) = 'G' (ascii)
-		t.Error( "Transport Stream Packet read " +
-			 "sync byte incorrectly." )
+		t.Error("Transport Stream Packet read " +
+			"sync byte incorrectly.")
 	}
 	// perhaps read is the wrong word since we don't know what could have
 	// gone wrong
 	if packet.transportError != false {
-		t.Error( "Transport Stream Packet read " +
-			 "transport error bit incorrectly." )
+		t.Error("Transport Stream Packet read " +
+			"transport error bit incorrectly.")
 	}
 	if packet.unitStart != false {
-		t.Error( "Transport Stream Packet read " +
-			 "unit start incorrectly." )
+		t.Error("Transport Stream Packet read " +
+			"unit start incorrectly.")
 	}
 	if packet.pid != 610 {
-		t.Error( "Transport Stream Packet read " +
-			 "packet id incorrectly." )
+		t.Error("Transport Stream Packet read " +
+			"packet id incorrectly.")
 	}
 	if packet.scramble != 0 {
-		t.Error( "Transport Stream Packet read " +
-			 "scrambling control incorrectly." )
+		t.Error("Transport Stream Packet read " +
+			"scrambling control incorrectly.")
 	}
 	if packet.priority != false {
-		t.Error( "Transport Stream Packet read " +
-			 "priority incorrectly." )
+		t.Error("Transport Stream Packet read " +
+			"priority incorrectly.")
 	}
 	if packet.continuity != 7 {
-		t.Error( "Transport Stream Packet read " +
-			 "continuity incorrectly." )
+		t.Error("Transport Stream Packet read " +
+			"continuity incorrectly.")
 	}
 	if packet.hasPayload != true {
-		t.Error( "Transport Stream Packet read " +
-			 "payload indicator incorrectly." )
+		t.Error("Transport Stream Packet read " +
+			"payload indicator incorrectly.")
 	}
 	if packet.hasAdaptation != false {
-		t.Error( "Transport Stream Packet read " +
-			 "adaptation indiciator incorrectly." )
+		t.Error("Transport Stream Packet read " +
+			"adaptation indiciator incorrectly.")
 	}
 }
