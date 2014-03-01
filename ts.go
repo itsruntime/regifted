@@ -1,8 +1,10 @@
 package main
 
-import "regifted/data"
-import "os"
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"regifted/data"
+)
 
 type Packet interface {
 	Read()
@@ -177,11 +179,7 @@ func main() {
 	pat = Pat{}
 	pat.tableId = 0
 
-	pmtConstructors = make(map[uint32]Pmt)
-	entryConstructors = make(map[uint32]PmtEntry)
-	types = make(map[uint32]uint32)
-	pesCollector = make(map[uint32]Pes)
-	elementaryConstructors = make(map[uint32]ElementaryStreamPacket)
+	Init()
 
 	fmt.Println("Size: ", len(bytes))
 
@@ -193,7 +191,9 @@ func main() {
 
 		tsPacket.byteChunk = byteChunk
 
+    fmt.Println( "tsPacket.Read()" )
 		tsPacket.Read()
+		fmt.Println( "/tsPacket.Read()" )
 
 	}
 
@@ -203,6 +203,14 @@ func main() {
 
 	}
 
+}
+
+func Init() {
+	pmtConstructors = make(map[uint32]Pmt)
+	entryConstructors = make(map[uint32]PmtEntry)
+	types = make(map[uint32]uint32)
+	pesCollector = make(map[uint32]Pes)
+	elementaryConstructors = make(map[uint32]ElementaryStreamPacket)
 }
 
 func CreateAndDispensePes(pid uint32, streamType uint32) {
