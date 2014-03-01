@@ -28,7 +28,11 @@ func main(){
 	}else{
 		reader := data.NewReader(fullFile)
 		moof := new(moof.Moof)
-		fmt.Println(moof.Read(reader))
+		fmt.Println()
+		fmt.Println()
+		fmt.Println()
+		moof.Read(reader)
+		fmt.Println(moof)
 	}
 	
 	

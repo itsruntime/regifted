@@ -54,7 +54,7 @@ func (m *Mfhd) calcSize() int{
 }
 
 func (m *Mfhd) String () string {
-	return fmt.Sprintf("mfhd [%d] flags=%x sequence=%d", m.calcSize(), m.flags, m.sequence)
+	return fmt.Sprintf("mfhd [%d] flags=%x sequence=%d\n", m.calcSize(), m.flags, m.sequence)
 }
 
 // End mfhd
@@ -141,7 +141,7 @@ func (t *Tfhd) calcSize() int{
 }	
 
 func (t *Tfhd) String () string {
-	return fmt.Sprintf("tfhd [%d] trackId=%d baseDataOffset=%d sampleDescriptionIndex=%d defaultSampleDuration=%d defaultSampleSize=%d defaultSampleFlags=%08x" ,t.calcSize(), t.trackId, t.baseDataOffset, t.sampleDescriptionIndex, t.defaultSampleDuration, t.defaultSampleSize, t.defaultSampleFlags)
+	return fmt.Sprintf("\ntfhd [%d] trackId=%d baseDataOffset=%d sampleDescriptionIndex=%d defaultSampleDuration=%d defaultSampleSize=%d defaultSampleFlags=%08x" ,t.calcSize(), t.trackId, t.baseDataOffset, t.sampleDescriptionIndex, t.defaultSampleDuration, t.defaultSampleSize, t.defaultSampleFlags)
 }
 // End tfhd
 
@@ -247,6 +247,7 @@ func (trun *Trun) Read (data *data.Reader) BoxInterface{
     for count>0 {
     	si := SampleInformation{}
     	trun.samples = append(trun.samples, si.Read(data, trun))
+    	count--
     }
     return trun
 }
@@ -266,13 +267,13 @@ func (trun *Trun) calcSize () int {
 }
 
 func (trun *Trun) String () string {
-	out := fmt.Sprintf("trun [%d] version=%d dataOffsetPresent=%d firstSampleFlagsPresent=%d sampleDurationPresent=%d sampleSizePresent=%d sampleFlagsPresent=%d sampleOffsetPresent=%d sampleCount=%d dataOffset=%d firstSampleFlags=%08x" ,trun.calcSize(), trun.version, trun.dataOffsetPresent, trun.firstSampleFlagsPresent, trun.sampleDurationPresent, trun.sampleSizePresent, trun.sampleFlagsPresent, trun.sampleOffsetPresent, len(trun.samples), trun.dataOffset, trun.firstSampleFlags)
+	out := fmt.Sprintf("trun [%d] version=%d dataOffsetPresent=%d firstSampleFlagsPresent=%d sampleDurationPresent=%d sampleSizePresent=%d sampleFlagsPresent=%d sampleOffsetPresent=%d sampleCount=%d dataOffset=%d firstSampleFlags=%08x " ,trun.calcSize(), trun.version, trun.dataOffsetPresent, trun.firstSampleFlagsPresent, trun.sampleDurationPresent, trun.sampleSizePresent, trun.sampleFlagsPresent, trun.sampleOffsetPresent, len(trun.samples), trun.dataOffset, trun.firstSampleFlags)
 	count :=0
 	for _,element := range trun.samples{
-		out = out+ fmt.Sprintf("  %d %s" ,count, element.StringSampleInforamtion())
+		out = out+ fmt.Sprintf("   %d %s\n" ,count, element.StringSampleInforamtion())
 		count++
 	} 
-	return out
+	return "\n"+out
 }
 // End trun
 
@@ -307,10 +308,10 @@ func (traf *Traf) String () string{
 	out := fmt.Sprintf("traf [%d] [%d]" ,traf.calcSize(), len(traf.boxes))
 	count := 0
 	for _,box := range traf.boxes{
-		out = out + box.String() + fmt.Sprintf(" %d ",count)
+		out = out + fmt.Sprintf("\n %d ",count) + box.String()
 		count++
 	}
-	return "\n"+fmt.Sprintf(out)
+	return ""+fmt.Sprintf(out)
 }
 
 // End traf
@@ -370,7 +371,11 @@ func (moof *Moof) Read(data *data.Reader) Moof{
 }
 
 func (moof *Moof) String() string{
-	return fmt.Sprintf("moof [%d] [%d]",moof.size,len(moof.boxes))
+	out := fmt.Sprintf("moof [%d] [%d]",moof.size,len(moof.boxes))
+	for _, box := range moof.boxes{
+		out = out + fmt.Sprintf(box.String())
+	}
+	return "\n"+out
 }
 
 func (moof *Moof) calcSize () int{
