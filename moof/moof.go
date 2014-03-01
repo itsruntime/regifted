@@ -24,6 +24,13 @@ const (
 	MOOF_BOX = 0x6d6f6f66
 	MDAT_BOX = 0x6d646174
 )
+//BOX interface
+type BoxInterface interface{
+	Read(data *data.Reader) BoxInterface
+	calcSize() int
+	String() string
+}
+
 // Start mfhd
 type Mfhd struct {
 	version  	uint
@@ -33,12 +40,21 @@ type Mfhd struct {
 	boxtype		uint
 }
 
-func (m *Mfhd) Read (data *data.Reader){
+func (m *Mfhd) Read (data *data.Reader) BoxInterface{
 	m.size = data.Read(BYTESINSIZE)
 	m.boxtype = data.Read(BYTESINBOXTYPE)
 	m.version = data.Read(BYTESINVERSION)
 	m.flags = data.Read(BYTESINFLAGS)
 	m.sequence = data.Read(BYTESINSEQ)
+	return m
+}
+
+func (m *Mfhd) calcSize() int{
+	return BYTESINSIZE+BYTESINBOXTYPE+BYTESINVERSION+BYTESINFLAGS+BYTESINSEQ
+}
+
+func (m *Mfhd) String () string {
+	return fmt.Sprintf("mfhd [%d] flags=%x sequence=%d", m.calcSize(), m.flags, m.sequence)
 }
 
 // End mfhd
@@ -63,7 +79,7 @@ type Tfhd struct {
 	flags							uint
 }
 
-func (t *Tfhd) Read (data *data.Reader){
+func (t *Tfhd) Read (data *data.Reader) BoxInterface{
 	t.size = data.Read(BYTESINSIZE)
 	t.boxtype = data.Read(BYTESINBOXTYPE)
 	t.version = data.Read(BYTESINVERSION)
@@ -101,8 +117,32 @@ func (t *Tfhd) Read (data *data.Reader){
 	} else {
 		t.defaultSampleFlags = 0
 	}
+	return t
 }
-		
+	
+func (t *Tfhd) calcSize() int{
+	sum := BYTESINSIZE + BYTESINBOXTYPE + BYTESINVERSION + BYTESINFLAGS + BYTESINTRACKID
+	if t.baseDataOffsetPresent !=0 {
+		sum += BYTESINBASEDATAOFFSET
+	}
+	if t.sampleDescriptionPresent != 0 {
+		sum += BYTESINDESCRIPTIONINDEX
+	}
+	if t.defaultSampleDurationPresent !=0 {
+		sum += BYTESSAMPLEDURATION
+	}
+	if t.defaultSampleSizePresent != 0 {
+		sum += BYTESSAMPLESIZE
+	}
+	if t.defaultSampleFlagsPresent != 0 {
+		sum +=BYTESSAMPLEFLAGS
+	}
+	return sum
+}	
+
+func (t *Tfhd) String () string {
+	return fmt.Sprintf("tfhd [%d] trackId=%d baseDataOffset=%d sampleDescriptionIndex=%d defaultSampleDuration=%d defaultSampleSize=%d defaultSampleFlags=%08x" ,t.calcSize(), t.trackId, t.baseDataOffset, t.sampleDescriptionIndex, t.defaultSampleDuration, t.defaultSampleSize, t.defaultSampleFlags)
+}
 // End tfhd
 
 // Start SampleInformation
@@ -137,7 +177,26 @@ func (si *SampleInformation) Read (data *data.Reader, trun *Trun) SampleInformat
 	return *si
 }
 
+func (si *SampleInformation) calcSize (trun *Trun) int{
+	sum := 0 
+	if trun.sampleDurationPresent!=0 {
+		sum+=4
+	}
+	if trun.sampleSizePresent != 0 {
+		sum+=4
+	}
+	if trun.sampleFlagsPresent !=0 {
+		sum+=4
+	}
+	if trun.sampleOffsetPresent !=0{
+		sum+=4
+	}
+	return sum
+}
 
+func (si *SampleInformation) StringSampleInforamtion() string{
+	return fmt.Sprintf("s duration=%d size=%d flags=%08x offset=%08x" ,si.duration, si.size, si.flags, si.offset)
+}
 
 // End SampleInformation
 
@@ -152,13 +211,13 @@ type Trun struct {
 	sampleOffsetPresent     uint
 	dataOffset              int64
 	firstSampleFlags        uint
-	samples                 []SampleInformation //I think
+	samples                 []SampleInformation 
 
 	size uint
 	name uint
 }
 
-func (trun *Trun) Read (data *data.Reader){
+func (trun *Trun) Read (data *data.Reader) BoxInterface{
 	trun.size = data.Read(4)
 	trun.name = data.Read(4)
 	//Test for Error
@@ -189,27 +248,69 @@ func (trun *Trun) Read (data *data.Reader){
     	si := SampleInformation{}
     	trun.samples = append(trun.samples, si.Read(data, trun))
     }
+    return trun
 }
 
+func (trun *Trun) calcSize () int {
+	sum := BYTESINSIZE + BYTESINBOXTYPE + BYTESINVERSION + BYTESINFLAGS + 4 //count
+	if trun.dataOffsetPresent != 0 {
+		sum +=4
+	}
+	if trun.firstSampleFlagsPresent != 0 {
+		sum += 4
+	}
+	for _,element := range trun.samples{
+		sum += element.calcSize(trun)
+	}
+	return sum
+}
+
+func (trun *Trun) String () string {
+	out := fmt.Sprintf("trun [%d] version=%d dataOffsetPresent=%d firstSampleFlagsPresent=%d sampleDurationPresent=%d sampleSizePresent=%d sampleFlagsPresent=%d sampleOffsetPresent=%d sampleCount=%d dataOffset=%d firstSampleFlags=%08x" ,trun.calcSize(), trun.version, trun.dataOffsetPresent, trun.firstSampleFlagsPresent, trun.sampleDurationPresent, trun.sampleSizePresent, trun.sampleFlagsPresent, trun.sampleOffsetPresent, len(trun.samples), trun.dataOffset, trun.firstSampleFlags)
+	count :=0
+	for _,element := range trun.samples{
+		out = out+ fmt.Sprintf("  %d %s" ,count, element.StringSampleInforamtion())
+		count++
+	} 
+	return out
+}
 // End trun
 
 // Start traf
 type Traf struct {
-	boxes []Box
+	boxes []BoxInterface
 	size uint
 	name uint
 }
 
-func (traf *Traf) Read(data *data.Reader){
+func (traf *Traf) Read(data *data.Reader) BoxInterface{
 	cursor:=data.Cursor
 	traf.size = data.Read(4)
 	traf.name = data.Read(4)
 	//Test name to BOXTYPE
 	for (data.Cursor-cursor)<uint64(traf.size) {
-		box := Box{}
-		traf.boxes = append(traf.boxes, box.Read(data))
+		box := new(Box)
+		traf.boxes = append(traf.boxes, box.ReadBox(data))
 	}
+	return traf
+}
 
+func (traf *Traf) calcSize () int{
+	sum := BYTESINSIZE + BYTESINBOXTYPE
+	for _,box := range traf.boxes{
+		sum += box.calcSize()
+	}
+	return sum
+}
+
+func (traf *Traf) String () string{
+	out := fmt.Sprintf("traf [%d] [%d]" ,traf.calcSize(), len(traf.boxes))
+	count := 0
+	for _,box := range traf.boxes{
+		out = out + box.String() + fmt.Sprintf(" %d ",count)
+		count++
+	}
+	return "\n"+fmt.Sprintf(out)
 }
 
 // End traf
@@ -220,34 +321,38 @@ type Box struct {
 	name uint
 }
 
-func (box *Box) Read (data *data.Reader) Box{
+func (box *Box) ReadBox (data *data.Reader) BoxInterface{
 	box.size = data.Read(4)
 	box.name = data.Read(4)
 	data.Cursor -= 8
 	if box.name == TRAF_BOX {
 		traf:=new(Traf)
-		traf.Read(data)
+		return traf.Read(data)
 	} else if box.name == TRUN_BOX{
 		trun := new(Trun)
-		trun.Read(data)
+		return trun.Read(data)
 	} else if box.name == MFHD_BOX{
 		mfhd := new(Mfhd)
-		mfhd.Read(data)
+		return mfhd.Read(data)
 	} else if box.name == TFHD_BOX{
 		tfhd := new(Tfhd)
-		tfhd.Read(data)
+		return tfhd.Read(data)
 	}else{
 		//Error error
 		data.Cursor += uint64(box.size)
 	}
-	return *box
+	return nil
 }
+
+//func (box *Box) String(addition string) string{
+//	return fmt.Sprintf(addition + "box %d %d", box.name, box.size)
+//}
 
 // End box
 
 // Start moof
 type Moof struct {
-	boxes []Box
+	boxes []BoxInterface
 	size uint
 	name uint
 }
@@ -259,13 +364,21 @@ func (moof *Moof) Read(data *data.Reader) Moof{
 	//Test name to BOXTYPE
 	for (data.Cursor-cursor)<uint64(moof.size) {
 		box := Box{}
-		moof.boxes = append(moof.boxes, box.Read(data))
+		moof.boxes = append(moof.boxes, box.ReadBox(data))
 	}
 	return *moof
 }
 
 func (moof *Moof) String() string{
 	return fmt.Sprintf("moof [%d] [%d]",moof.size,len(moof.boxes))
+}
+
+func (moof *Moof) calcSize () int{
+	sum := BYTESINSIZE + BYTESINBOXTYPE
+	for _,box:= range moof.boxes {
+		sum += box.calcSize()
+	}
+	return sum
 }
 // End moof
 
@@ -284,6 +397,16 @@ func (mdat *Mdat) Read (data *data.Reader) {
 		mdat.size = uint64(data.Read(8))
 	}
 	mdat.bytes = data.ReadBytes(mdat.size)
+}
+
+func (mdat *Mdat) calcSize () int{
+	return 16 + len(mdat.bytes)
+}
+
+func (mdat *Mdat) String() string{
+	out:= fmt.Sprintf("mdat [%d] [%d]", mdat.calcSize(), len(mdat.bytes)) 
+	//add more to print out
+	return out
 }
 
 // End mdat
