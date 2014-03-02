@@ -164,9 +164,6 @@ func main() {
 
 	fileName := os.Args[1]
 
-	//var index int = 0
-	//var size int = 188
-
 	fmt.Printf("Attempting to read file, Run 7" + fileName + "\n")
 
 	bytes, err := ioutil.ReadFile(fileName)
@@ -187,8 +184,6 @@ func main() {
 
 		byteChunk := reader.ReadBytes(188)
 
-		//index = index + 188
-
 		tsPacket := TsPacket{}
 
 		tsPacket.byteChunk = byteChunk
@@ -205,6 +200,8 @@ func main() {
 
 }
 
+//CreateAndDispensePes
+//Dump the remaining PES
 func CreateAndDispensePes(pid uint, streamType uint) {
 
 	pes := pesCollector[pid]
@@ -219,6 +216,8 @@ func CreateAndDispensePes(pid uint, streamType uint) {
 
 }
 
+//Init
+//Initialize the constructors
 func Init() {
 	pmtConstructors = make(map[uint]Pmt)
 	entryConstructors = make(map[uint]PmtEntry)
@@ -227,6 +226,19 @@ func Init() {
 	elementaryConstructors = make(map[uint]ElementaryStreamPacket)
 }
 
+//TsPacket Read
+//TsPacket
+//The first read of every packet
+//flags:
+//asserts 'G' - 8 bits
+//transportError - Set by demodulator if can't correct errors in the stream, to tell the demultiplexer that the packet has an uncorrectable error (1 bit)
+//unitStart - Boolean flag with a value of true meaning the start of PES data or PSI otherwise zero only. (1 bit)
+//priority - Boolean flag with a value of true meaning the current packet has a higher priority than other packets with the same PID. (1 bit)
+//pid - Packet Identifier (13 bit)
+//scramble - '00' = Not scrambled, '01' = Reserved for future use, '10' = Scrambled with even key, '11' = Scrambled with odd key (2 bits)
+//hasAdaptation - If adaption field exist value is true (0 or more bits)
+//hasPayload - 	If contains payload value is true (0 or more bits)
+//continuity - Sequence number of payload packets, Incremented only when a payload is present (i.e., payload value is true) (4 bits)
 func (tsPacket *TsPacket) Read() {
 
 	var flags uint = 0
@@ -291,14 +303,40 @@ func (tsPacket *TsPacket) Read() {
 
 }
 
+//Pat Read
+//table_id – This is an 8-bit field, which shall be set to 0x00 a
+//
+//sectionSyntaxIndicator – The section_syntax_indicator is a 1-bit field which shall be set to '1'.
+//
+//sectionLength – This is a 12-bit field, the first two bits of which shall be '00'. The remaining 10 bits specify the number
+//of bytes of the section, starting immediately following the section_length field, and including the CRC. The value in this
+//field shall not exceed 1021 (0x3FD).
+//
+//transportStreamId – This is a 16-bit field which serves as a label to identify this Transport Stream from any other
+//multiplex within a network. Its value is defined by the user.
+//
+//versionNumber – This 5-bit field is the version number of the whole Program Association Table. The version number
+//shall be incremented by 1 modulo 32 whenever the definition of the Program Association Table changes. When the
+//current_next_indicator is set to '1', then the version_number shall be that of the currently applicable Program Association
+//Table. When the current_next_indicator is set to '0', then the version_number shall be that of the next applicable Program
+//Association Table.
+//
+//currentNext – A 1-bit indicator, which when set to '1' indicates that the Program Association Table sent is
+//currently applicable. When the bit is set to '0', it indicates that the table sent is not yet applicable and shall be the next
+//table to become valid.
+//
+//sectionNumber – This 8-bit field gives the number of this section. The section_number of the first section in the
+//Program Association Table shall be 0x00. It shall be incremented by 1 with each additional section in the Program
+//Association Table.
+//
+//lastSectionNumber – This 8-bit field specifies the number of the last section (that is, the section with the highest
+//section_number) of the complete Program Association Table.
 func (pat *Pat) Read() {
 
 	var SKIP_BYTES uint = 5
 	var CRC_SIZE uint = 4
 	var PROGRAM_SIZE uint = 4
 	var flags uint = 0
-
-	//var READ_SIZE int = 4
 
 	var flag bool = false
 
@@ -337,8 +375,6 @@ func (pat *Pat) Read() {
 		program := Program{}
 		pmt := Pmt{}
 
-		//program.byteChunk =  reader.ReadBytes(reader.Size - reader.Cursor)
-
 		program.Read(reader)
 
 		pat.programs = append(pat.programs, program)
@@ -349,6 +385,38 @@ func (pat *Pat) Read() {
 
 }
 
+//Pmt Read
+//tableId – This is an 8-bit field, which in the case of a TS_program_map_section shall be always set to 0x02
+//
+//sectionSyntaxIndicator – The section_syntax_indicator is a 1-bit field which shall be set to '1'.
+//
+//sectionLength – This is a 12-bit field, the first two bits of which shall be '00'. The remaining 10 bits specify the number
+//of bytes of the section starting immediately following the section_length field, and including the CRC. The value in this
+//field shall not exceed 1021 (0x3FD).
+//
+//programNumber – program_number is a 16-bit field. It specifies the program to which the program_map_PID is
+//applicable. One program definition shall be carried within only one TS_program_map_section. This implies that a
+//program definition is never longer than 1016 (0x3F8). See Informative Annex C for ways to deal with the cases when
+//that length is not sufficient. The program_number may be used as a designation for a broadcast channel, for example. By
+//describing the different program elements belonging to a program, data from different sources (e.g. sequential events)
+//can be concatenated together to form a continuous set of streams using a program_number.
+//
+//versionNumber – This 5-bit field is the version number of the TS_program_map_section. The version number shall be
+//incremented by 1 modulo 32 when a change in the information carried within the section occurs. Version number refers
+//to the definition of a single program, and therefore to a single section. When the current_next_indicator is set to '1', then
+//the version_number shall be that of the currently applicable TS_program_map_section. When the current_next_indicator
+//is set to '0', then the version_number shall be that of the next applicable TS_program_map_section.
+//
+//sectionNumber – The value of this 8-bit field shall be 0x00.
+//
+//lastSectionNumber – The value of this 8-bit field shall be 0x00.
+//
+//pcrPid – This is a 13-bit field indicating the PID of the Transport Stream packets which shall contain the PCR fields
+//valid for the program specified by program_number. If no PCR is associated with a program definition for private
+//streams, then this field shall take the value of 0x1FFF.
+//
+//programInfoLength – This is a 12-bit field, the first two bits of which shall be '00'. The remaining 10 bits specify the
+//number of bytes of the descriptors immediately following the program_info_length field.
 func (pmt *Pmt) Read() {
 
 	var CRC_SIZE uint = 4
@@ -406,6 +474,24 @@ func (pmt *Pmt) Read() {
 
 }
 
+//Adaptation Read
+//size - Number of bytes in the adaptation field immediately following this byte (8 bits)
+//
+//discontinuity - Set to 1 if current TS packet is in a discontinuity state with respect to either the continuity counter or the program clock reference (1 bit)
+//
+//random - Set to 1 if the PES packet in this TS packet starts a video/audio sequence (1 bit)
+//
+//priority - 1 = higher priority
+//
+//hasPCR - 1 means adaptation field does contain a PCR field
+//
+//hasOPCR - 1 means adaptation field does contain an OPCR field
+//
+//hasSplice - 1 means presence of splice countdown field in adaptation field
+//
+//hasPrivate - 1 means presence of private data bytes in adaptation field
+//
+//hasExtension - 1 means presence of adaptation field extension
 func (adaptation *Adaptation) Read() {
 
 	var flags uint = 0
@@ -434,21 +520,18 @@ func (adaptation *Adaptation) Read() {
 	if adaptation.hasPCR {
 
 		pcrFlag = 6
-		//adaptation.pcr.byteChunk = reader.TruncateBytes(int(reader.Size - reader.Cursor))
+
 		adaptation.pcr.byteChunk = reader.ReadBytes(6)
 
 		adaptation.pcr.Read()
-		//reader.Cursor += 6
 	}
 
 	if adaptation.hasOPCR {
 
 		opcrFlag = 6
-		//adaptation.pcr.byteChunk = reader.TruncateBytes(int(reader.Size - reader.Cursor))
 
 		adaptation.pcr.byteChunk = reader.ReadBytes(6)
 		adaptation.opcr.Read()
-		//reader.Cursor += 6
 
 	}
 
@@ -471,6 +554,16 @@ func (adaptation *Adaptation) Read() {
 
 }
 
+//Program Read
+//number – Program_number is a 16-bit field. It specifies the program to which the program_map_PID is
+//applicable. When set to 0x0000, then the following PID reference shall be the network PID. For all other cases the value
+//of this field is user defined. This field shall not take any single value more than once within one version of the Program
+//Association Table
+//
+//pid – The program_map_PID is a 13-bit field specifying the PID of the Transport Stream packets
+//which shall contain the program_map_section applicable for the program as specified by the program_number. No
+//program_number shall have more than one program_map_PID assignment. The value of the program_map_PID is
+//defined by the user, but shall only take values
 func (program *Program) Read(reader *data.Reader) {
 
 	//reader := data.NewReader(program.byteChunk)
@@ -483,6 +576,9 @@ func (program *Program) Read(reader *data.Reader) {
 
 }
 
+//PCR Read
+//PCR fields
+//valid for the program specified by program_number
 func (pcr *Pcr) Read() {
 
 	reader := data.NewReader(pcr.byteChunk)
@@ -515,9 +611,16 @@ func (pcr *Pcr) Read() {
 
 }
 
+//PmtEntry Read
+//streamType – This is an 8-bit field specifying the type of program element carried within the packets with the PID
+//whose value is specified by the elementary_PID.
+//
+//pid – This is a 13-bit field specifying the PID of the Transport Stream packets which carry the associated
+//program element.
+//
+//infoLength – This is a 12-bit field, the first two bits of which shall be '00'. The remaining 10 bits specify the number
+//of bytes of the descriptors of the associated program element immediately following the ES_info_length field.
 func (pmtEntry *PmtEntry) Read(reader *data.Reader) {
-
-	//reader := data.NewReader(pmtEntry.byteChunk)
 
 	pmtEntry.streamType = reader.Read(1)
 
@@ -531,6 +634,14 @@ func (pmtEntry *PmtEntry) Read(reader *data.Reader) {
 
 }
 
+//Pes Read
+//prefix – The packet_start_code_prefix is a 24-bit code. Together with the stream_id that follows, it
+//constitutes a packet start code that identifies the beginning of a packet. The packet_start_code_prefix is the bit string
+//'0000 0000 0000 0000 0000 0001' (0x000001 in hexadecimal).
+//
+//streamId – This 8-bit field shall have a value '1111 1111' (0xFF).
+//
+//packetLength – The PES_packet_length is a 16-bit field indicating the total number of bytes in the program_stream_directory immediately following this field
 func (pes *Pes) Read() {
 
 	reader := data.NewReader(pes.byteChunk)
@@ -569,6 +680,9 @@ func (pes *Pes) Read() {
 
 }
 
+//ElementaryStreamPacket Dispatch
+//if unitstart, dump current PES and construct a new one,
+//else append the es payload
 func (elementaryStreamPacket *ElementaryStreamPacket) Dispatch() {
 
 	var pesData Pes
