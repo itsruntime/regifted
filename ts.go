@@ -566,8 +566,6 @@ func (adaptation *Adaptation) Read() {
 //defined by the user, but shall only take values
 func (program *Program) Read(reader *data.Reader) {
 
-	//reader := data.NewReader(program.byteChunk)
-
 	program.number = reader.Read(2)
 
 	program.pid = reader.Read(2) & 0x1fff
