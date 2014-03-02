@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"regifted/data"
 )
@@ -247,60 +248,61 @@ func (tsPacket *TsPacket) Read() {
 
 	tsPacket.sync = reader.Read(1)
 
-	if tsPacket.sync == 71 {
+	if tsPacket.sync != 71 {
+    log.Printf("sync byte not 'G'\n")
+    return
+  }
+  // asserted tsPacket.sync == 'G'
 
-		flags = reader.Read(2)
+	flags = reader.Read(2)
 
-		tsPacket.transportError = flags&0x8000 > 0
-		tsPacket.unitStart = flags&0x4000 > 0
-		tsPacket.priority = flags&0x2000 > 0
-		tsPacket.pid = flags & 0x1fff
-		fmt.Println("pid", tsPacket.pid)
+	tsPacket.transportError = flags&0x8000 > 0
+	tsPacket.unitStart = flags&0x4000 > 0
+	tsPacket.priority = flags&0x2000 > 0
+	tsPacket.pid = flags & 0x1fff
+	fmt.Println("pid", tsPacket.pid)
 
-		flags = reader.Read(1)
+	flags = reader.Read(1)
 
-		tsPacket.scramble = flags & 0xc0 >> 6
-		tsPacket.hasAdaptation = flags&0x20 > 0
-		tsPacket.hasPayload = flags&0x10 > 0
-		tsPacket.continuity = flags & 0x0f
+	tsPacket.scramble = flags & 0xc0 >> 6
+	tsPacket.hasAdaptation = flags&0x20 > 0
+	tsPacket.hasPayload = flags&0x10 > 0
+	tsPacket.continuity = flags & 0x0f
 
-		tsPacket.Print()
+	tsPacket.Print()
 
-		if tsPacket.hasAdaptation {
-			tsPacket.adaptation.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
-			tsPacket.adaptation.Read()
-		}
-
-		if tsPacket.pid == 0 {
-			pat.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
-
-			pat.unitStart = tsPacket.unitStart
-			pat.Read()
-		}
-
-		if pmt, ok := pmtConstructors[tsPacket.pid]; ok {
-			pmt.unitStart = tsPacket.unitStart
-			pmt.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
-			pmt.Read()
-		}
-
-		if elementaryStreamPacket, ok := elementaryConstructors[tsPacket.pid]; ok {
-
-			elementaryStreamPacket.pid = tsPacket.pid
-			elementaryStreamPacket.unitStart = tsPacket.unitStart
-
-			if tsPacket.hasAdaptation {
-				elementaryStreamPacket.payload = tsPacket.adaptation.payload
-			} else {
-				elementaryStreamPacket.payload = reader.ReadBytes(reader.Size - reader.Cursor)
-			}
-
-			elementaryStreamPacket.Dispatch()
-			elementaryStreamPacket.Print()
-		}
-
+	if tsPacket.hasAdaptation {
+		tsPacket.adaptation.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
+		tsPacket.adaptation.Read()
 	}
 
+	if tsPacket.pid == 0 {
+		pat.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
+
+		pat.unitStart = tsPacket.unitStart
+		pat.Read()
+	}
+
+	if pmt, ok := pmtConstructors[tsPacket.pid]; ok {
+		pmt.unitStart = tsPacket.unitStart
+		pmt.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
+		pmt.Read()
+	}
+
+	if elementaryStreamPacket, ok := elementaryConstructors[tsPacket.pid]; ok {
+
+		elementaryStreamPacket.pid = tsPacket.pid
+		elementaryStreamPacket.unitStart = tsPacket.unitStart
+
+		if tsPacket.hasAdaptation {
+			elementaryStreamPacket.payload = tsPacket.adaptation.payload
+		} else {
+			elementaryStreamPacket.payload = reader.ReadBytes(reader.Size - reader.Cursor)
+		}
+
+		elementaryStreamPacket.Dispatch()
+		elementaryStreamPacket.Print()
+	}
 }
 
 //Pat Read
