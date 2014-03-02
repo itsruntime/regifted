@@ -222,7 +222,7 @@ func CreateAndDispensePes(pid uint, streamType uint) {
 //Initialize the constructors
 func Init() bool {
 	if globals_initialized == true {
-		log.Printf("WW attempted to initialize globals twice\n")
+		log.Printf("EE attempted to initialize globals twice\n")
 		return false // I'm unsure of how this behavior should be defined. I figure
 								 // that if we want to use Init() as reset, it should be
 								 // explicit in that we change the behavior at that time.

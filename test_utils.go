@@ -1,10 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"encoding/hex"
-	"log"
-	"unicode"
+  "bytes"
+  "encoding/hex"
+  "log"
+  "unicode"
 )
 
 // reads human-readable hex string (src) into a []byte (dest).
@@ -39,20 +39,25 @@ import (
 //  dest pointer to the destination []byte
 //  src pointer to the incoming string
 func generateBytesFromString(dest *[]byte, src *string) {
-	// todo( mathew guest ) this should check string input size. e.g. src
-	// must be a multiple of 2 or it must break down correctly
-	var stringBytes []byte
-	stringBytes = deFormatStringForHexDecode(src)
+  // todo( mathew guest ) this should check string input size. e.g. src
+  // must be a multiple of 2 or it must break down correctly
+  var stringBytes []byte
+  stringBytes = deFormatStringForHexDecode(src)
 
-	// size is divided by 2 because two characters in hexadecimal (e.g. AF)
-	// equate only one byte
-	dest_size := len(stringBytes) / 2
-	*dest = make([]byte, dest_size, dest_size)
-	n_bytes_read, err := hex.Decode(*dest, stringBytes)
-	_ = n_bytes_read
-	if err != nil {
-		log.Println(err)
-	}
+  // size is divided by 2 because two characters in hexadecimal (e.g. AF)
+  // equate only one byte
+  dest_size := len(stringBytes) / 2
+  *dest = make([]byte, dest_size, dest_size)
+  n_bytes_read, err := hex.Decode(*dest, stringBytes)
+  if n_bytes_read != 188 {
+    log.Printf( "EE: packet size not 188 bytes!\n" )
+    // todo( mathew guest ) return error code and check it in ts_test
+  }
+  _ = n_bytes_read
+  log.Printf( "\nbytes read: %d\n", n_bytes_read )
+  if err != nil {
+    log.Println(err)
+  }
 }
 
 // removes white space from a string and also converts into byte array
@@ -62,11 +67,11 @@ func generateBytesFromString(dest *[]byte, src *string) {
 // then convert it right back out of a string. This function just needs more
 // appropriately named.
 func deFormatStringForHexDecode(s *string) []byte {
-	var buff bytes.Buffer
-	for _, ch := range *s {
-		if !unicode.IsSpace(ch) {
-			buff.WriteRune(ch)
-		}
-	}
-	return buff.Bytes()
+  var buff bytes.Buffer
+  for _, ch := range *s {
+    if !unicode.IsSpace(ch) {
+      buff.WriteRune(ch)
+    }
+  }
+  return buff.Bytes()
 }
