@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -163,7 +164,11 @@ var types map[uint]uint
 var pat Pat
 
 func main() {
-
+  argc := flag.NArg()
+  if argc < 1 {
+  	log.Printf( "Usage: " + os.Args[0] + " [input ts file]\n" )
+    os.Exit(66)
+  }
 	fileName := os.Args[1]
 
 	fmt.Printf("Attempting to read file, Run 7" + fileName + "\n")
@@ -172,11 +177,11 @@ func main() {
 	if err != nil {
 		log.Printf( "did not open file\n" )
 		// os.Exit(66)
-		// seems like panic is better?
+		// seems like panic is
 		panic(err)
 	}
-	err = Init()
-	if err != nil {
+	rc := Init()
+	if rc != false {
 		log.Printf( "could not initialize global state\n" )
 		os.Exit(71)
 	}
