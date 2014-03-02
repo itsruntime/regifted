@@ -224,6 +224,7 @@ func getFilepath() (string, int) {
   }
   if argc > 1 {
   	log.Printf( "Ignoring all but first argument.\n" )
+  	os.Exit(1)
   }
 	fileName := os.Args[1]
 	return fileName, 0

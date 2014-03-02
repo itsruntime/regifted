@@ -1,14 +1,44 @@
 package main
 
 import (
-	// "fmt"
-	"log"
-	"testing"
+  // "fmt"
+  "io/ioutil"
+  "log"
+  "testing"
+  "os"
 )
 
 func awfulStateSetup() {
 	DeleteState()
 	Init()
+}
+
+const TESTFP = "test1.ts"
+
+func TestReader( t *testing.T ) {
+  // compare file size from os and then counted from buffer
+  fp, err := os.Open( TESTFP )
+  if err != nil {
+    t.Fatalf( "did not open test file\n" )
+  }
+  fi, err := fp.Stat()
+  if err != nil {
+    // Could not obtain stat, handle error
+  }
+  fileSizeOS := fi.Size()
+  fp.Close()
+  _ = fileSizeOS
+
+  bytes, err := ioutil.ReadFile(TESTFP)
+  if err != nil {
+    t.Fatalf( "did not open test file\n" )
+  }
+  fileSizeBuff := len( bytes )
+  if uint64( fileSizeOS ) != uint64( fileSizeBuff ) {
+    t.Error( "file size calculated from buffer does not match size returned from OS\n" )
+  }
+
+  // t.Error( "print" )
 }
 
 func TestTransportPacketRead(t *testing.T) {
