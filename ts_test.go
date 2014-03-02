@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 	"log"
 	"testing"
 )
 
 func awfulStateSetup() {
-	globals_initialized = false
+	DeleteState()
 	Init()
 }
 
@@ -109,6 +109,7 @@ func TestTransportPacketRead(t *testing.T) {
 			"continuity incorrectly.")
 	}
 
+	awfulStateSetup()
   packetString = `
    47 00 01 17 80 70 24 F1 31 D4 33 F3 88 8B 23 5A
    94 13 D4 1D DD CD 61 D8 73 08 82 88 B1 13 85 BB
@@ -166,7 +167,7 @@ func TestTransportPacketRead(t *testing.T) {
 	}
 
 	// PAT
-  fmt.Println( "\n\ntest #2:\n" )
+  awfulStateSetup()
   packetString = `
   4740 0010 0000 b00d 0001 c100 0000 01f0
   002a b104 b2ff ffff ffff ffff ffff ffff
@@ -186,6 +187,10 @@ func TestTransportPacketRead(t *testing.T) {
 	}
   packet = TsPacket{byteChunk: packetBytes}
   packet.Read()
+  if packet.sync != 0X47 { // 71 = 'G' = 0x47
+		t.Error("Transport Stream Packet read " +
+			"sync byte incorrectly.")
+	}
   if packet.transportError != false {
 		t.Error("Transport Stream Packet read " +
 			"transport error bit incorrectly.")
@@ -211,6 +216,63 @@ func TestTransportPacketRead(t *testing.T) {
 			"adaptation indiciator incorrectly.")
 	}
 	if packet.hasPayload != true {
+		t.Error("Transport Stream Packet read " +
+			"payload indicator incorrectly.")
+	}
+	if packet.continuity != 0 {
+		t.Error("Transport Stream Packet read " +
+			"continuity incorrectly.")
+	}
+
+	// incorrect sync byte on PAT
+  packetString = `
+  4640 0010 0000 b00d 0001 c100 0000 01f0
+  002a b104 b2ff ffff ffff ffff ffff ffff
+  ffff ffff ffff ffff ffff ffff ffff ffff
+  ffff ffff ffff ffff ffff ffff ffff ffff
+  ffff ffff ffff ffff ffff ffff ffff ffff
+  ffff ffff ffff ffff ffff ffff ffff ffff
+  ffff ffff ffff ffff ffff ffff ffff ffff
+  ffff ffff ffff ffff ffff ffff ffff ffff
+  ffff ffff ffff ffff ffff ffff ffff ffff
+  ffff ffff ffff ffff ffff ffff ffff ffff
+  ffff ffff ffff ffff ffff ffff ffff ffff
+  ffff ffff ffff ffff ffff ffff`
+  err = generateBytesFromString(&packetBytes, &packetString)
+  if err != nil {
+		log.Printf( "EE problem in test suite" )
+	}
+  packet = TsPacket{byteChunk: packetBytes}
+  packet.Read()
+  if packet.sync == 0X47 { // 71 = 'G' = 0x47
+		t.Error("Transport Stream Packet read " +
+			"sync byte incorrectly.")
+	}
+  if packet.transportError != false {
+		t.Error("Transport Stream Packet read " +
+			"transport error bit incorrectly.")
+	}
+	if packet.unitStart != false {
+		t.Error("Transport Stream Packet read " +
+			"unit start incorrectly.")
+	}
+	if packet.priority != false {
+		t.Error("Transport Stream Packet read " +
+			"priority incorrectly.")
+	}
+	if packet.pid != 0 {
+		t.Error("Transport Stream Packet read " +
+			"packet id incorrectly.")
+	}
+	if packet.scramble != 0 {
+		t.Error("Transport Stream Packet read " +
+			"scrambling control incorrectly.")
+	}
+	if packet.hasAdaptation != false {
+		t.Error("Transport Stream Packet read " +
+			"adaptation indiciator incorrectly.")
+	}
+	if packet.hasPayload != false {
 		t.Error("Transport Stream Packet read " +
 			"payload indicator incorrectly.")
 	}
