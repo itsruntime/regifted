@@ -284,6 +284,14 @@ func DeleteState() {
 //hasPayload - 	If contains payload value is true (0 or more bits)
 //continuity - Sequence number of payload packets, Incremented only when a payload is present (i.e., payload value is true) (4 bits)
 func (tsPacket *TsPacket) Read() {
+	if tsPacket == nil {
+		log.Printf( "attempted to read from nil pointer\n" )
+		return
+	}
+	if tsPacket.byteChunk == nil {
+		log.Printf( "attempted to read from nil pointer\n" )
+		return
+	}
 
 	var flags uint = 0
 

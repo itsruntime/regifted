@@ -2,10 +2,10 @@ package main
 
 import (
 	// "fmt"
-	"io/ioutil"
-	"log"
-	"os"
-	"testing"
+  "io/ioutil"
+  "log"
+  "os"
+  "testing"
 )
 
 func awfulStateSetup() {
@@ -309,11 +309,15 @@ func TestTransportPacketRead(t *testing.T) {
 		t.Error("Transport Stream Packet read " +
 			"continuity incorrectly.")
 	}
+
+  // empty packet
+  packet = TsPacket{}
+  packet.Read()
 }
 
 func TestInit(t *testing.T) {
 	var rc bool
-	globals_initialized = false
+	DeleteState()
 	// todo( mathew guest ) assert objects empty
 	rc = Init()
 	if rc == false {
