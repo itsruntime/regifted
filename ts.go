@@ -284,10 +284,6 @@ func DeleteState() {
 //hasPayload - 	If contains payload value is true (0 or more bits)
 //continuity - Sequence number of payload packets, Incremented only when a payload is present (i.e., payload value is true) (4 bits)
 func (tsPacket *TsPacket) Read() {
-	if tsPacket == nil {
-		log.Printf( "attempted to read from nil pointer\n" )
-		return
-	}
 	if tsPacket.byteChunk == nil {
 		log.Printf( "attempted to read from nil pointer\n" )
 		return
@@ -299,7 +295,7 @@ func (tsPacket *TsPacket) Read() {
 
 	tsPacket.sync = reader.Read(1)
 
-	if tsPacket.sync != 71 {
+	if tsPacket.sync != 0x47 {
 		log.Printf("sync byte not 'G'\n")
 		return
 	}
@@ -385,6 +381,10 @@ func (tsPacket *TsPacket) Read() {
 //lastSectionNumber – This 8-bit field specifies the number of the last section (that is, the section with the highest
 //section_number) of the complete Program Association Table.
 func (pat *Pat) Read() {
+	if pat.byteChunk == nil {
+		log.Printf( "attempted to read from nil pointer: byteChunk\n" )
+		return
+	}
 
 	var SKIP_BYTES uint = 5
 	var CRC_SIZE uint = 4
@@ -471,6 +471,10 @@ func (pat *Pat) Read() {
 //programInfoLength – This is a 12-bit field, the first two bits of which shall be '00'. The remaining 10 bits specify the
 //number of bytes of the descriptors immediately following the program_info_length field.
 func (pmt *Pmt) Read() {
+	if pmt.byteChunk == nil {
+		log.Printf( "attempted to read from nil pointer: byteChunk\n" )
+		return
+	}
 
 	var CRC_SIZE uint = 4
 	var SKIP_BYTES uint = 9
@@ -546,6 +550,10 @@ func (pmt *Pmt) Read() {
 //
 //hasExtension - 1 means presence of adaptation field extension
 func (adaptation *Adaptation) Read() {
+	if adaptation.byteChunk == nil {
+		log.Printf( "attempted to read from nil pointer: byteChunk\n" )
+		return
+	}
 
 	var flags uint = 0
 	var spliceFlag int = 0
