@@ -1,10 +1,12 @@
 package data
 
+// Contains a file saved as byte array. 
 type Reader struct {
 	data []byte
 	Cursor uint64
 }
 
+// Creates a new Reader for reading the data from the byte array.
 func NewReader (da []byte) *Reader {
 	r := new(Reader)
 	r.data = da
@@ -12,6 +14,9 @@ func NewReader (da []byte) *Reader {
 	return r
 }
 
+// Reads the number of bytes passed in as size from the data byte array in
+// the Reader struct. It then concatinates the bytes and returns them as a 
+// unsigned integer. 
 func (r *Reader) Read(size uint) uint {
 	
 	var (
@@ -25,6 +30,9 @@ func (r *Reader) Read(size uint) uint {
 	return value
 }
 
+// Reads the number of bytes passed in as size from the data byte array in the Reader 
+// struct. It returns a byte array from the cursors current position to the cursor 
+// plus the size. 
 func (r *Reader) ReadBytes(size uint64) []byte {
 	value:=r.data[r.Cursor:r.Cursor+size]
 	r.Cursor += size
