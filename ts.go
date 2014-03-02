@@ -154,6 +154,7 @@ type Program struct {
 	number uint
 }
 
+var globals_initialized bool
 var pesCollector map[uint]Pes
 var pmtConstructors map[uint]Pmt
 var entryConstructors map[uint]PmtEntry
@@ -219,12 +220,20 @@ func CreateAndDispensePes(pid uint, streamType uint) {
 
 //Init
 //Initialize the constructors
-func Init() {
+func Init() bool {
+	if globals_initialized == true {
+		log.Printf("WW attempted to initialize globals twice\n")
+		return false // I'm unsure of how this behavior should be defined. I figure
+								 // that if we want to use Init() as reset, it should be
+								 // explicit in that we change the behavior at that time.
+	}
 	pmtConstructors = make(map[uint]Pmt)
 	entryConstructors = make(map[uint]PmtEntry)
 	types = make(map[uint]uint)
 	pesCollector = make(map[uint]Pes)
 	elementaryConstructors = make(map[uint]ElementaryStreamPacket)
+	globals_initialized = true
+	return true
 }
 
 //TsPacket Read
