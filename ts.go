@@ -187,12 +187,10 @@ func main() {
 		os.Exit(71)
 	}
 
-	pat = Pat{}
-	pat.tableId = 0
-
 	fmt.Println("Size: ", len(bytes))
 
-	for reader.Cursor < uint64(len(bytes)) {
+	s := uint64(len(bytes))
+	for reader.Cursor < s {
 
 		byteChunk := reader.ReadBytes(188)
 
@@ -257,6 +255,8 @@ func Init() bool {
 	types = make(map[uint]uint)
 	pesCollector = make(map[uint]Pes)
 	elementaryConstructors = make(map[uint]ElementaryStreamPacket)
+	pat = Pat{}
+	pat.tableId = 0
 	globals_initialized = true
 	return true
 }
@@ -265,11 +265,8 @@ func DeleteState() {
 	if globals_initialized == false {
 		return
 	}
-	pmtConstructors = make(map[uint]Pmt)
-	entryConstructors = make(map[uint]PmtEntry)
-	types = make(map[uint]uint)
-	pesCollector = make(map[uint]Pes)
-	elementaryConstructors = make(map[uint]ElementaryStreamPacket)
+	globals_initialized = false
+	Init()
 	globals_initialized = false
 }
 

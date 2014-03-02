@@ -27,7 +27,6 @@ func TestReader(t *testing.T) {
 	}
 	fileSizeOS := fi.Size()
 	fp.Close()
-	_ = fileSizeOS
 
 	bytes, err := ioutil.ReadFile(TESTFP)
 	if err != nil {
