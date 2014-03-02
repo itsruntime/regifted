@@ -24,14 +24,25 @@ const (
 	MOOF_BOX = 0x6d6f6f66
 	MDAT_BOX = 0x6d646174
 )
-//BOX interface
+
+// A interface that defines all the methods that have to be 
+// implemented in order to be considered a box. 
 type BoxInterface interface{
+	// Reads the information about a box from the reader and 
+	// saves it to the correct variables. It then returns 
+	// a pointer to the struct that was being edited.
 	Read(data *data.Reader) BoxInterface
+	// Calculates the size of the variables that have been 
+	// initialized after calling Read. This is the size of 
+	// variable not what it contains. The value returned is 
+	// the sum of all the variables in the box. 
 	calcSize() int
+	// Returns 	a string representation of the box.
 	String() string
 }
 
-// Start mfhd
+// Contains all the information about 
+// Movie Fragment Header box (Mfhd)
 type Mfhd struct {
 	version  	uint
 	flags    	uint
@@ -40,6 +51,9 @@ type Mfhd struct {
 	boxtype		uint
 }
 
+// Reads the information about the Mfhd from the reader and 
+// saves it to the correct variables. It then returns 
+// a pointer to the struct that was being edited.
 func (m *Mfhd) Read (data *data.Reader) BoxInterface{
 	m.size = data.Read(BYTESINSIZE)
 	m.boxtype = data.Read(BYTESINBOXTYPE)
@@ -49,17 +63,20 @@ func (m *Mfhd) Read (data *data.Reader) BoxInterface{
 	return m
 }
 
+// Calculates the size of the variables that have been 
+// initialized after calling Read. This is the size of 
+// variable not what it contains. The value returned is 
+// the sum of all the variables in the box. 
 func (m *Mfhd) calcSize() int{
 	return BYTESINSIZE+BYTESINBOXTYPE+BYTESINVERSION+BYTESINFLAGS+BYTESINSEQ
 }
 
+// Returns 	a string representation of the Mfhd struct.
 func (m *Mfhd) String () string {
 	return fmt.Sprintf("mfhd [%d] flags=%x sequence=%d\n", m.calcSize(), m.flags, m.sequence)
 }
 
-// End mfhd
-
-// Start tfhd
+// Contains all the information about the Track Fragment Header (Tfhd)
 type Tfhd struct {
 	version                      	uint
 	trackId                      	uint
@@ -79,6 +96,9 @@ type Tfhd struct {
 	flags							uint
 }
 
+// Reads the information about the Tfhd from the reader and 
+// saves it to the correct variables. It then returns 
+// a pointer to the struct that was being edited.
 func (t *Tfhd) Read (data *data.Reader) BoxInterface{
 	t.size = data.Read(BYTESINSIZE)
 	t.boxtype = data.Read(BYTESINBOXTYPE)
@@ -120,6 +140,10 @@ func (t *Tfhd) Read (data *data.Reader) BoxInterface{
 	return t
 }
 	
+// Calculates the size of the variables that have been 
+// initialized after calling Read. This is the size of 
+// variable not what it contains. The value returned is 
+// the sum of all the variables in the box. 
 func (t *Tfhd) calcSize() int{
 	sum := BYTESINSIZE + BYTESINBOXTYPE + BYTESINVERSION + BYTESINFLAGS + BYTESINTRACKID
 	if t.baseDataOffsetPresent !=0 {
@@ -140,12 +164,12 @@ func (t *Tfhd) calcSize() int{
 	return sum
 }	
 
+// Returns 	a string representation of the Tfhd struct.
 func (t *Tfhd) String () string {
 	return fmt.Sprintf("tfhd [%d] trackId=%d baseDataOffset=%d sampleDescriptionIndex=%d defaultSampleDuration=%d defaultSampleSize=%d defaultSampleFlags=%08x\n" ,t.calcSize(), t.trackId, t.baseDataOffset, t.sampleDescriptionIndex, t.defaultSampleDuration, t.defaultSampleSize, t.defaultSampleFlags)
 }
-// End tfhd
 
-// Start SampleInformation
+// Contains
 type SampleInformation struct {
 	duration uint
 	size     uint
@@ -153,6 +177,9 @@ type SampleInformation struct {
 	offset   uint
 }
 
+// Reads the information about the smaple information from 
+// the reader and saves it to the correct variables. It 
+// then returns a pointer to the struct that was being edited.
 func (si *SampleInformation) Read (data *data.Reader, trun *Trun) SampleInformation{
 	if trun.sampleDurationPresent != 0 {
 		si.duration=data.Read(4)
@@ -177,6 +204,10 @@ func (si *SampleInformation) Read (data *data.Reader, trun *Trun) SampleInformat
 	return *si
 }
 
+// Calculates the size of the variables that have been 
+// initialized after calling Read. This is the size of 
+// variable not what it contains. The value returned is 
+// the sum of all the variables in the box. 
 func (si *SampleInformation) calcSize (trun *Trun) int{
 	sum := 0 
 	if trun.sampleDurationPresent!=0 {
@@ -194,13 +225,14 @@ func (si *SampleInformation) calcSize (trun *Trun) int{
 	return sum
 }
 
+// Returns 	a string representation of the variables in
+// the sample information struct.
 func (si *SampleInformation) StringSampleInforamtion() string{
 	return fmt.Sprintf("s duration=%d size=%d flags=%08x offset=%08x" ,si.duration, si.size, si.flags, si.offset)
 }
 
-// End SampleInformation
-
-// Start trun
+// Contains the information about the Track Fragment Run (Trun)
+// box
 type Trun struct {
 	version                 uint
 	dataOffsetPresent       uint
@@ -217,6 +249,9 @@ type Trun struct {
 	name uint
 }
 
+// Reads the information about the Trun from the reader and 
+// saves it to the correct variables. It then returns 
+// a pointer to the struct that was being edited.
 func (trun *Trun) Read (data *data.Reader) BoxInterface{
 	trun.size = data.Read(4)
 	trun.name = data.Read(4)
@@ -252,6 +287,10 @@ func (trun *Trun) Read (data *data.Reader) BoxInterface{
     return trun
 }
 
+// Calculates the size of the variables that have been 
+// initialized after calling Read. This is the size of 
+// variable not what it contains. The value returned is 
+// the sum of all the variables in the box. 
 func (trun *Trun) calcSize () int {
 	sum := BYTESINSIZE + BYTESINBOXTYPE + BYTESINVERSION + BYTESINFLAGS + 4 //count
 	if trun.dataOffsetPresent != 0 {
@@ -266,6 +305,7 @@ func (trun *Trun) calcSize () int {
 	return sum
 }
 
+// Returns 	a string representation of the Trun struct.
 func (trun *Trun) String () string {
 	out := fmt.Sprintf("trun [%d] version=%d dataOffsetPresent=%d firstSampleFlagsPresent=%d sampleDurationPresent=%d sampleSizePresent=%d sampleFlagsPresent=%d sampleOffsetPresent=%d sampleCount=%d dataOffset=%d firstSampleFlags=%08x \n" ,trun.calcSize(), trun.version, trun.dataOffsetPresent, trun.firstSampleFlagsPresent, trun.sampleDurationPresent, trun.sampleSizePresent, trun.sampleFlagsPresent, trun.sampleOffsetPresent, len(trun.samples), trun.dataOffset, trun.firstSampleFlags)
 	count :=0
@@ -275,27 +315,32 @@ func (trun *Trun) String () string {
 	} 
 	return out
 }
-// End trun
 
-// Start traf
+// Contains the information about the Track Fragment box (Traf)
 type Traf struct {
 	boxes []BoxInterface
 	size uint
 	name uint
 }
 
+// Reads the information about the Traf from the reader and 
+// saves it to the correct variables. It then returns 
+// a pointer to the struct that was being edited.
 func (traf *Traf) Read(data *data.Reader) BoxInterface{
 	cursor:=data.Cursor
 	traf.size = data.Read(4)
 	traf.name = data.Read(4)
 	//Test name to BOXTYPE
 	for (data.Cursor-cursor)<uint64(traf.size) {
-		box := new(Box)
-		traf.boxes = append(traf.boxes, box.ReadBox(data))
+		traf.boxes = append(traf.boxes, ReadBox(data))
 	}
 	return traf
 }
 
+// Calculates the size of the variables that have been 
+// initialized after calling Read. This is the size of 
+// variable not what it contains. The value returned is 
+// the sum of all the variables in the box. 
 func (traf *Traf) calcSize () int{
 	sum := BYTESINSIZE + BYTESINBOXTYPE
 	for _,box := range traf.boxes{
@@ -304,6 +349,7 @@ func (traf *Traf) calcSize () int{
 	return sum
 }
 
+// Returns 	a string representation of the Traf struct.
 func (traf *Traf) String () string{
 	out := fmt.Sprintf("traf [%d] [%d]\n" ,traf.calcSize(), len(traf.boxes))
 	count := 0
@@ -314,13 +360,11 @@ func (traf *Traf) String () string{
 	return fmt.Sprintf(out)
 }
 
-// End traf
-
-// Start box
-type Box struct {
-}
-
-func (box *Box) ReadBox (data *data.Reader) BoxInterface{
+// Reads the information about a box from the reader and 
+// resets the cursor before calling the box founds Read 
+// function. It then returns a pointer to the struct 
+// found. 
+func ReadBox (data *data.Reader) BoxInterface{
 	size := data.Read(4)
 	name := data.Read(4)
 	data.Cursor -= 8
@@ -343,31 +387,28 @@ func (box *Box) ReadBox (data *data.Reader) BoxInterface{
 	return nil
 }
 
-//func (box *Box) String(addition string) string{
-//	return fmt.Sprintf(addition + "box %d %d", box.name, box.size)
-//}
-
-// End box
-
-// Start moof
+// Contains the information about the Movie Fragment box (Moof)
 type Moof struct {
 	boxes []BoxInterface
 	size uint
 	name uint
 }
 
+// Reads the information about the Moof from the reader and 
+// saves it to the correct variables. It then returns 
+// a pointer to the struct that was being edited.
 func (moof *Moof) Read(data *data.Reader) Moof{
 	cursor:=data.Cursor
 	moof.size = data.Read(4)
 	moof.name = data.Read(4)
 	//Test name to BOXTYPE
 	for (data.Cursor-cursor)<uint64(moof.size) {
-		box := Box{}
-		moof.boxes = append(moof.boxes, box.ReadBox(data))
+		moof.boxes = append(moof.boxes, ReadBox(data))
 	}
 	return *moof
 }
 
+// Returns 	a string representation of the Moof struct.
 func (moof *Moof) String() string{
 	out := fmt.Sprintf("moof [%d] [%d]\n",moof.size,len(moof.boxes))
 	for _, box := range moof.boxes{
@@ -376,6 +417,10 @@ func (moof *Moof) String() string{
 	return out
 }
 
+// Calculates the size of the variables that have been 
+// initialized after calling Read. This is the size of 
+// variable not what it contains. The value returned is 
+// the sum of all the variables in the box. 
 func (moof *Moof) calcSize () int{
 	sum := BYTESINSIZE + BYTESINBOXTYPE
 	for _,box:= range moof.boxes {
@@ -383,15 +428,18 @@ func (moof *Moof) calcSize () int{
 	}
 	return sum
 }
-// End moof
 
-// Start mdat
+// Contains the information about the Media Data Container (Mdat) 
+// box.
 type Mdat struct {
 	bytes []byte //I think
 	size uint64
 	name uint
 }
 
+// Reads the information about the Mdat from the reader and 
+// saves it to the correct variables. It then returns 
+// a pointer to the struct that was being edited.
 func (mdat *Mdat) Read (data *data.Reader) {
 	mdat.size = uint64(data.Read(4))
 	mdat.name = data.Read(4)
@@ -402,14 +450,17 @@ func (mdat *Mdat) Read (data *data.Reader) {
 	mdat.bytes = data.ReadBytes(mdat.size)
 }
 
+// Calculates the size of the variables that have been 
+// initialized after calling Read. This is the size of 
+// variable not what it contains. The value returned is 
+// the sum of all the variables in the box. 
 func (mdat *Mdat) calcSize () int{
 	return 16 + len(mdat.bytes)
 }
 
+// Returns 	a string representation of the Mdat struct.
 func (mdat *Mdat) String() string{
 	out:= fmt.Sprintf("mdat [%d] [%d]", mdat.calcSize(), len(mdat.bytes)) 
 	//add more to print out
 	return out
 }
-
-// End mdat
