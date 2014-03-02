@@ -1,19 +1,19 @@
 package main
 
 import (
-  "bytes"
-  "encoding/hex"
-  "fmt"
-  "log"
-  "unicode"
+	"bytes"
+	"encoding/hex"
+	"fmt"
+	"log"
+	"unicode"
 )
 
 type InvalidInputError struct {
-  input_to_error string
+	input_to_error string
 }
 
 func (e InvalidInputError) Error() string {
-  return fmt.Sprintf( "error: %s", e.input_to_error )
+	return fmt.Sprintf("error: %s", e.input_to_error)
 }
 
 // reads human-readable hex string (src) into a []byte (dest).
@@ -50,26 +50,26 @@ func (e InvalidInputError) Error() string {
 //  dest pointer to the destination []byte
 //  src pointer to the incoming string
 func generateBytesFromString(dest *[]byte, src *string) error {
-  // todo( mathew guest ) this should check string input size. e.g. src
-  // must be a multiple of 2 or it must break down correctly
-  var stringBytes []byte
-  stringBytes = deFormatStringForHexDecode(src)
+	// todo( mathew guest ) this should check string input size. e.g. src
+	// must be a multiple of 2 or it must break down correctly
+	var stringBytes []byte
+	stringBytes = deFormatStringForHexDecode(src)
 
-  // size is divided by 2 because two characters in hexadecimal (e.g. AF)
-  // equate only one byte
-  dest_size := len(stringBytes) / 2
-  *dest = make([]byte, dest_size, dest_size)
-  n_bytes_read, err := hex.Decode(*dest, stringBytes)
-  if n_bytes_read != 188 {
-    log.Printf( "EE: packet size not 188 bytes!\n" )
-    return InvalidInputError{ "packet is corrupt. size is not 188 bytes" }
-  }
-  _ = n_bytes_read
-  log.Printf( "\nbytes read: %d\n", n_bytes_read )
-  if err != nil {
-    log.Println(err)
-  }
-  return nil
+	// size is divided by 2 because two characters in hexadecimal (e.g. AF)
+	// equate only one byte
+	dest_size := len(stringBytes) / 2
+	*dest = make([]byte, dest_size, dest_size)
+	n_bytes_read, err := hex.Decode(*dest, stringBytes)
+	if n_bytes_read != 188 {
+		log.Printf("EE: packet size not 188 bytes!\n")
+		return InvalidInputError{"packet is corrupt. size is not 188 bytes"}
+	}
+	_ = n_bytes_read
+	log.Printf("\nbytes read: %d\n", n_bytes_read)
+	if err != nil {
+		log.Println(err)
+	}
+	return nil
 }
 
 // removes white space from a string and also converts into byte array
@@ -79,11 +79,11 @@ func generateBytesFromString(dest *[]byte, src *string) error {
 // then convert it right back out of a string. This function just needs more
 // appropriately named.
 func deFormatStringForHexDecode(s *string) []byte {
-  var buff bytes.Buffer
-  for _, ch := range *s {
-    if !unicode.IsSpace(ch) {
-      buff.WriteRune(ch)
-    }
-  }
-  return buff.Bytes()
+	var buff bytes.Buffer
+	for _, ch := range *s {
+		if !unicode.IsSpace(ch) {
+			buff.WriteRune(ch)
+		}
+	}
+	return buff.Bytes()
 }

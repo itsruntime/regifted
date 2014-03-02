@@ -1,11 +1,11 @@
 package main
 
 import (
-  // "fmt"
-  "io/ioutil"
-  "log"
-  "testing"
-  "os"
+	// "fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"testing"
 )
 
 func awfulStateSetup() {
@@ -15,35 +15,35 @@ func awfulStateSetup() {
 
 const TESTFP = "test1.ts"
 
-func TestReader( t *testing.T ) {
-  // compare file size from os and then counted from buffer
-  fp, err := os.Open( TESTFP )
-  if err != nil {
-    t.Fatalf( "did not open test file\n" )
-  }
-  fi, err := fp.Stat()
-  if err != nil {
-    // Could not obtain stat, handle error
-  }
-  fileSizeOS := fi.Size()
-  fp.Close()
-  _ = fileSizeOS
+func TestReader(t *testing.T) {
+	// compare file size from os and then counted from buffer
+	fp, err := os.Open(TESTFP)
+	if err != nil {
+		t.Fatalf("did not open test file\n")
+	}
+	fi, err := fp.Stat()
+	if err != nil {
+		// Could not obtain stat, handle error
+	}
+	fileSizeOS := fi.Size()
+	fp.Close()
+	_ = fileSizeOS
 
-  bytes, err := ioutil.ReadFile(TESTFP)
-  if err != nil {
-    t.Fatalf( "did not open test file\n" )
-  }
-  fileSizeBuff := len( bytes )
-  if uint64( fileSizeOS ) != uint64( fileSizeBuff ) {
-    t.Error( "file size calculated from buffer does not match size returned from OS\n" )
-  }
+	bytes, err := ioutil.ReadFile(TESTFP)
+	if err != nil {
+		t.Fatalf("did not open test file\n")
+	}
+	fileSizeBuff := len(bytes)
+	if uint64(fileSizeOS) != uint64(fileSizeBuff) {
+		t.Error("file size calculated from buffer does not match size returned from OS\n")
+	}
 
-  // t.Error( "print" )
+	// t.Error( "print" )
 }
 
 func TestTransportPacketRead(t *testing.T) {
-  // ts header
-  // n_bits value
+	// ts header
+	// n_bits value
 	// 8			sync byte is always 'G' 0x47
 	// 1			transport error flag
 	// 1			payload unit start indicator
@@ -56,25 +56,25 @@ func TestTransportPacketRead(t *testing.T) {
 	//
 	// bars are byte marks. header is 4 bytes total; i.e. 8 hex chars.
 	//                     |                    |                    |
-  // [sync]                [tei] [psi] [tp] [         pid        ]   [sc] [af] [pf] [cont]
+	// [sync]                [tei] [psi] [tp] [         pid        ]   [sc] [af] [pf] [cont]
 
-  // bin  	hex
-  // 0000 	0
-  // 0001 	1
-  // 0010 	2
-  // 0011 	3
-  // 0100 	4
-  // 0101 	5
-  // 0110 	6
-  // 0111 	7
-  // 1000 	8
-  // 1001 	9
-  // 1010 	A
-  // 1011 	B
-  // 1100 	C
-  // 1101 	D
-  // 1110 	E
-  // 1111 	F
+	// bin  	hex
+	// 0000 	0
+	// 0001 	1
+	// 0010 	2
+	// 0011 	3
+	// 0100 	4
+	// 0101 	5
+	// 0110 	6
+	// 0111 	7
+	// 1000 	8
+	// 1001 	9
+	// 1010 	A
+	// 1011 	B
+	// 1100 	C
+	// 1101 	D
+	// 1110 	E
+	// 1111 	F
 
 	// could endian-ness matter theoretically?
 	var packetBytes []byte
@@ -98,7 +98,7 @@ func TestTransportPacketRead(t *testing.T) {
 		9A 11 82 26 CC 62 D6 2E 00 1F DA C3`
 	err = generateBytesFromString(&packetBytes, &packetString)
 	if err != nil {
-		log.Printf( "EE problem in test suite" )
+		log.Printf("EE problem in test suite")
 	}
 	packet := TsPacket{byteChunk: packetBytes}
 	packet.Read()
@@ -140,7 +140,7 @@ func TestTransportPacketRead(t *testing.T) {
 	}
 
 	awfulStateSetup()
-  packetString = `
+	packetString = `
    47 00 01 17 80 70 24 F1 31 D4 33 F3 88 8B 23 5A
    94 13 D4 1D DD CD 61 D8 73 08 82 88 B1 13 85 BB
    D0 93 C4 41 54 BE 68 70 70 EA 3D CF 70 1F 50 CD
@@ -153,13 +153,13 @@ func TestTransportPacketRead(t *testing.T) {
    0F 23 CB 70 21 DE AE 70 1D A0 F1 22 E1 10 79 1C
    58 EA D4 4F 50 07 D1 3E D8 77 E4 63 65 2C E6 D0
    9A 11 82 26 CC 62 D6 2E 00 1F DA C3`
-  err = generateBytesFromString(&packetBytes, &packetString)
-  if err != nil {
-		log.Printf( "EE problem in test suite" )
+	err = generateBytesFromString(&packetBytes, &packetString)
+	if err != nil {
+		log.Printf("EE problem in test suite")
 	}
-  packet = TsPacket{byteChunk: packetBytes}
-  packet.Read()
-  if packet.sync != 0X47 { // 71 = 'G' = 0x47
+	packet = TsPacket{byteChunk: packetBytes}
+	packet.Read()
+	if packet.sync != 0X47 { // 71 = 'G' = 0x47
 		t.Error("Transport Stream Packet read " +
 			"sync byte incorrectly.")
 	}
@@ -197,8 +197,8 @@ func TestTransportPacketRead(t *testing.T) {
 	}
 
 	// PAT
-  awfulStateSetup()
-  packetString = `
+	awfulStateSetup()
+	packetString = `
   4740 0010 0000 b00d 0001 c100 0000 01f0
   002a b104 b2ff ffff ffff ffff ffff ffff
   ffff ffff ffff ffff ffff ffff ffff ffff
@@ -211,17 +211,17 @@ func TestTransportPacketRead(t *testing.T) {
   ffff ffff ffff ffff ffff ffff ffff ffff
   ffff ffff ffff ffff ffff ffff ffff ffff
   ffff ffff ffff ffff ffff ffff`
-  err = generateBytesFromString(&packetBytes, &packetString)
-  if err != nil {
-		log.Printf( "EE problem in test suite" )
+	err = generateBytesFromString(&packetBytes, &packetString)
+	if err != nil {
+		log.Printf("EE problem in test suite")
 	}
-  packet = TsPacket{byteChunk: packetBytes}
-  packet.Read()
-  if packet.sync != 0X47 { // 71 = 'G' = 0x47
+	packet = TsPacket{byteChunk: packetBytes}
+	packet.Read()
+	if packet.sync != 0X47 { // 71 = 'G' = 0x47
 		t.Error("Transport Stream Packet read " +
 			"sync byte incorrectly.")
 	}
-  if packet.transportError != false {
+	if packet.transportError != false {
 		t.Error("Transport Stream Packet read " +
 			"transport error bit incorrectly.")
 	}
@@ -255,7 +255,7 @@ func TestTransportPacketRead(t *testing.T) {
 	}
 
 	// incorrect sync byte on PAT
-  packetString = `
+	packetString = `
   4640 0010 0000 b00d 0001 c100 0000 01f0
   002a b104 b2ff ffff ffff ffff ffff ffff
   ffff ffff ffff ffff ffff ffff ffff ffff
@@ -268,17 +268,17 @@ func TestTransportPacketRead(t *testing.T) {
   ffff ffff ffff ffff ffff ffff ffff ffff
   ffff ffff ffff ffff ffff ffff ffff ffff
   ffff ffff ffff ffff ffff ffff`
-  err = generateBytesFromString(&packetBytes, &packetString)
-  if err != nil {
-		log.Printf( "EE problem in test suite" )
+	err = generateBytesFromString(&packetBytes, &packetString)
+	if err != nil {
+		log.Printf("EE problem in test suite")
 	}
-  packet = TsPacket{byteChunk: packetBytes}
-  packet.Read()
-  if packet.sync == 0X47 { // 71 = 'G' = 0x47
+	packet = TsPacket{byteChunk: packetBytes}
+	packet.Read()
+	if packet.sync == 0X47 { // 71 = 'G' = 0x47
 		t.Error("Transport Stream Packet read " +
 			"sync byte incorrectly.")
 	}
-  if packet.transportError != false {
+	if packet.transportError != false {
 		t.Error("Transport Stream Packet read " +
 			"transport error bit incorrectly.")
 	}
@@ -316,13 +316,13 @@ func TestInit(t *testing.T) {
 	var rc bool
 	globals_initialized = false
 	// todo( mathew guest ) assert objects empty
-  rc = Init()
-  if rc == false {
-  	t.Error("initial Init() failed")
-  }
-  rc = Init()
-  // todo( mathew guest ) assert objects unchanged
-  if rc == true {
-  	t.Error("secondary Init() returned success when it should have failed")
-  }
+	rc = Init()
+	if rc == false {
+		t.Error("initial Init() failed")
+	}
+	rc = Init()
+	// todo( mathew guest ) assert objects unchanged
+	if rc == true {
+		t.Error("secondary Init() returned success when it should have failed")
+	}
 }

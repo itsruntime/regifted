@@ -173,7 +173,7 @@ func main() {
 
 	bytes, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		log.Printf( "did not open file\n" )
+		log.Printf("did not open file\n")
 		// os.Exit(66)
 		// seems like panic is better?
 		panic(err)
@@ -183,13 +183,12 @@ func main() {
 
 	rc := Init()
 	if rc != true {
-		log.Printf( "could not initialize global state\n" )
+		log.Printf("could not initialize global state\n")
 		os.Exit(71)
 	}
 
 	pat = Pat{}
 	pat.tableId = 0
-
 
 	fmt.Println("Size: ", len(bytes))
 
@@ -217,15 +216,15 @@ func main() {
 // it's a little slow so I'm cheating
 func getFilepath() (string, int) {
 	flag.Parse()
-  argc := flag.NArg()
-  if argc < 1 {
-  	log.Printf( "Usage: " + os.Args[0] + " [input ts file]\n" )
-    return "", 66
-  }
-  if argc > 1 {
-  	log.Printf( "Ignoring all but first argument.\n" )
-  	os.Exit(1)
-  }
+	argc := flag.NArg()
+	if argc < 1 {
+		log.Printf("Usage: " + os.Args[0] + " [input ts file]\n")
+		return "", 66
+	}
+	if argc > 1 {
+		log.Printf("Ignoring all but first argument.\n")
+		os.Exit(1)
+	}
 	fileName := os.Args[1]
 	return fileName, 0
 }
@@ -296,10 +295,10 @@ func (tsPacket *TsPacket) Read() {
 	tsPacket.sync = reader.Read(1)
 
 	if tsPacket.sync != 71 {
-    log.Printf("sync byte not 'G'\n")
-    return
-  }
-  // asserted tsPacket.sync == 'G'
+		log.Printf("sync byte not 'G'\n")
+		return
+	}
+	// asserted tsPacket.sync == 'G'
 
 	flags = reader.Read(2)
 
