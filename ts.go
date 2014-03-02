@@ -170,7 +170,15 @@ func main() {
 
 	bytes, err := ioutil.ReadFile(fileName)
 	if err != nil {
+		log.Printf( "did not open file\n" )
+		// os.Exit(66)
+		// seems like panic is better?
 		panic(err)
+	}
+	err = Init()
+	if err != nil {
+		log.Printf( "could not initialize global state\n" )
+		os.Exit(71)
 	}
 
 	reader := data.NewReader(bytes)
@@ -178,7 +186,6 @@ func main() {
 	pat = Pat{}
 	pat.tableId = 0
 
-	Init()
 
 	fmt.Println("Size: ", len(bytes))
 
@@ -223,9 +230,7 @@ func CreateAndDispensePes(pid uint, streamType uint) {
 func Init() bool {
 	if globals_initialized == true {
 		log.Printf("EE attempted to initialize globals twice\n")
-		return false // I'm unsure of how this behavior should be defined. I figure
-								 // that if we want to use Init() as reset, it should be
-								 // explicit in that we change the behavior at that time.
+		return false
 	}
 	pmtConstructors = make(map[uint]Pmt)
 	entryConstructors = make(map[uint]PmtEntry)
@@ -234,6 +239,18 @@ func Init() bool {
 	elementaryConstructors = make(map[uint]ElementaryStreamPacket)
 	globals_initialized = true
 	return true
+}
+
+func DeleteState() {
+	if globals_initialized == false {
+		return
+	}
+	pmtConstructors = make(map[uint]Pmt)
+	entryConstructors = make(map[uint]PmtEntry)
+	types = make(map[uint]uint)
+	pesCollector = make(map[uint]Pes)
+	elementaryConstructors = make(map[uint]ElementaryStreamPacket)
+	globals_initialized = false
 }
 
 //TsPacket Read
