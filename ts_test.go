@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"testing"
 )
 
@@ -48,6 +49,7 @@ func TestTransportPacketRead(t *testing.T) {
 	// could endian-ness matter theoretically?
 	var packetBytes []byte
 	var packetString string
+	var err error
 
 	awfulStateSetup()
 
@@ -64,7 +66,10 @@ func TestTransportPacketRead(t *testing.T) {
 		0F 23 CB 70 21 DE AE 70 1D A0 F1 22 E1 10 79 1C
 		58 EA D4 4F 50 07 D1 3E D8 77 E4 63 65 2C E6 D0
 		9A 11 82 26 CC 62 D6 2E 00 1F DA C3`
-	generateBytesFromString(&packetBytes, &packetString)
+	err = generateBytesFromString(&packetBytes, &packetString)
+	if err != nil {
+		log.Printf( "EE problem in test suite" )
+	}
 	packet := TsPacket{byteChunk: packetBytes}
 	packet.Read()
 	if packet.sync != 0X47 { // 71 = 'G' = 0x47
@@ -117,9 +122,16 @@ func TestTransportPacketRead(t *testing.T) {
    0F 23 CB 70 21 DE AE 70 1D A0 F1 22 E1 10 79 1C
    58 EA D4 4F 50 07 D1 3E D8 77 E4 63 65 2C E6 D0
    9A 11 82 26 CC 62 D6 2E 00 1F DA C3`
-  generateBytesFromString(&packetBytes, &packetString)
+  err = generateBytesFromString(&packetBytes, &packetString)
+  if err != nil {
+		log.Printf( "EE problem in test suite" )
+	}
   packet = TsPacket{byteChunk: packetBytes}
   packet.Read()
+  if packet.sync != 0X47 { // 71 = 'G' = 0x47
+		t.Error("Transport Stream Packet read " +
+			"sync byte incorrectly.")
+	}
 	if packet.transportError != false {
 		t.Error("Transport Stream Packet read " +
 			"transport error bit incorrectly.")
@@ -168,7 +180,10 @@ func TestTransportPacketRead(t *testing.T) {
   ffff ffff ffff ffff ffff ffff ffff ffff
   ffff ffff ffff ffff ffff ffff ffff ffff
   ffff ffff ffff ffff ffff ffff`
-  generateBytesFromString(&packetBytes, &packetString)
+  err = generateBytesFromString(&packetBytes, &packetString)
+  if err != nil {
+		log.Printf( "EE problem in test suite" )
+	}
   packet = TsPacket{byteChunk: packetBytes}
   packet.Read()
   if packet.transportError != false {
