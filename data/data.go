@@ -1,5 +1,8 @@
 package data
 
+import (
+	"log"
+)
 
 var DEBUG_SIZE int = 100
 
@@ -20,7 +23,10 @@ func NewReader (da []byte) *Reader {
 
 
 func (r *Reader) Read(size uint) uint {
-
+	if r.data == nil {
+		log.Printf( "attempted to read from null buffer in data.Read()\n" )
+		return 0
+	}
 	var (
 		value uint = 0
 		i uint64 = 0
