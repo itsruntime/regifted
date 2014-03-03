@@ -246,7 +246,9 @@ type Trun struct {
 	samples                 []SampleInformation 
 
 	size uint
-	name uint
+	boxtype uint
+	flags uint
+	count uint
 }
 
 // Reads the information about the Trun from the reader and 
@@ -254,17 +256,17 @@ type Trun struct {
 // a pointer to the struct that was being edited.
 func (trun *Trun) Read (data *data.Reader) BoxInterface{
 	trun.size = data.Read(4)
-	trun.name = data.Read(4)
+	trun.boxtype = data.Read(4)
 	//Test for Error
 	trun.version = data.Read(1)
-	flags := data.Read(3)
-	trun.dataOffsetPresent = flags & 0x000001
-	trun.firstSampleFlagsPresent =             flags & 0x000004
-    trun.sampleDurationPresent =               flags & 0x000100
-    trun.sampleSizePresent =                   flags & 0x000200
-    trun.sampleFlagsPresent =                  flags & 0x000400
-    trun.sampleOffsetPresent = flags & 0x000800
-    count := data.Read(4)
+	trun.flags = data.Read(3)
+	trun.dataOffsetPresent = trun.flags & 0x000001
+	trun.firstSampleFlagsPresent =             trun.flags & 0x000004
+    trun.sampleDurationPresent =               trun.flags & 0x000100
+    trun.sampleSizePresent =                   trun.flags & 0x000200
+    trun.sampleFlagsPresent =                  trun.flags & 0x000400
+    trun.sampleOffsetPresent = trun.flags & 0x000800
+    trun.count = data.Read(4)
     if trun.dataOffsetPresent != 0 {
     	trun.dataOffset = int64(data.Read(4))
     }else {
@@ -279,10 +281,10 @@ func (trun *Trun) Read (data *data.Reader) BoxInterface{
     	trun.firstSampleFlags = 0
     }
     
-    for count>0 {
+    for trun.count>0 {
     	si := SampleInformation{}
     	trun.samples = append(trun.samples, si.Read(data, trun))
-    	count--
+    	trun.count--
     }
     return trun
 }
@@ -320,7 +322,7 @@ func (trun *Trun) String () string {
 type Traf struct {
 	boxes []BoxInterface
 	size uint
-	name uint
+	boxtype uint
 }
 
 // Reads the information about the Traf from the reader and 
@@ -329,7 +331,7 @@ type Traf struct {
 func (traf *Traf) Read(data *data.Reader) BoxInterface{
 	cursor:=data.Cursor
 	traf.size = data.Read(4)
-	traf.name = data.Read(4)
+	traf.boxtype = data.Read(4)
 	//Test name to BOXTYPE
 	for (data.Cursor-cursor)<uint64(traf.size) {
 		traf.boxes = append(traf.boxes, ReadBox(data))
@@ -366,18 +368,18 @@ func (traf *Traf) String () string{
 // found. 
 func ReadBox (data *data.Reader) BoxInterface{
 	size := data.Read(4)
-	name := data.Read(4)
+	boxtype := data.Read(4)
 	data.Cursor -= 8
-	if name == TRAF_BOX {
+	if boxtype == TRAF_BOX {
 		traf:=new(Traf)
 		return traf.Read(data)
-	} else if name == TRUN_BOX{
+	} else if boxtype == TRUN_BOX{
 		trun := new(Trun)
 		return trun.Read(data)
-	} else if name == MFHD_BOX{
+	} else if boxtype == MFHD_BOX{
 		mfhd := new(Mfhd)
 		return mfhd.Read(data)
-	} else if name == TFHD_BOX{
+	} else if boxtype == TFHD_BOX{
 		tfhd := new(Tfhd)
 		return tfhd.Read(data)
 	}else{
@@ -391,7 +393,7 @@ func ReadBox (data *data.Reader) BoxInterface{
 type Moof struct {
 	boxes []BoxInterface
 	size uint
-	name uint
+	boxtype uint
 }
 
 // Reads the information about the Moof from the reader and 
@@ -400,7 +402,7 @@ type Moof struct {
 func (moof *Moof) Read(data *data.Reader) Moof{
 	cursor:=data.Cursor
 	moof.size = data.Read(4)
-	moof.name = data.Read(4)
+	moof.boxtype = data.Read(4)
 	//Test name to BOXTYPE
 	for (data.Cursor-cursor)<uint64(moof.size) {
 		moof.boxes = append(moof.boxes, ReadBox(data))
@@ -434,7 +436,7 @@ func (moof *Moof) calcSize () int{
 type Mdat struct {
 	bytes []byte //I think
 	size uint64
-	name uint
+	boxtype uint
 }
 
 // Reads the information about the Mdat from the reader and 
@@ -442,7 +444,7 @@ type Mdat struct {
 // a pointer to the struct that was being edited.
 func (mdat *Mdat) Read (data *data.Reader) {
 	mdat.size = uint64(data.Read(4))
-	mdat.name = data.Read(4)
+	mdat.boxtype = data.Read(4)
 	//Compare Name to MDAT_BOX
 	if mdat.size==1 {
 		mdat.size = uint64(data.Read(8))
