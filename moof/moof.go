@@ -1,7 +1,7 @@
 package moof
 
 import (
-	"moof/data"
+	"regifted/data"
 	"fmt"
 )
 

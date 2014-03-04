@@ -2,7 +2,7 @@
 package moof
 
 import (
-	"moof/data"
+	"regifted/data"
 	"testing"
 	"fmt"
 )

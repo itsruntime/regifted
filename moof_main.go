@@ -2,8 +2,8 @@ package main
 
 import(
 		"fmt"
-		"moof/moof"
-		"moof/data"
+		"regifted/moof"
+		"regifted/data"
 		"os"
 		"io/ioutil"
 )
