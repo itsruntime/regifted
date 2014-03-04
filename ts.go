@@ -20,7 +20,6 @@ type Pes struct {
 	pts          uint
 	dts          uint
 	payload      []byte
-	nal	     Nal
 }
 
 
@@ -839,7 +838,6 @@ func (pes *Pes) Print() {
 	fmt.Println("//pts = ", pes.pts)
 	fmt.Println("//dts = ", pes.dts)
 	fmt.Println("//payload length= ", len(pes.payload))
-	fmt.Println("//nal = ", pes.nal)
 	fmt.Println("////////////////////////////////")
 
 }
