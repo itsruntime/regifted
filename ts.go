@@ -1,8 +1,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"regifted/data"
 )
@@ -152,6 +154,7 @@ type Program struct {
 	number uint
 }
 
+var globals_initialized bool
 var pesCollector map[uint]Pes
 var pmtConstructors map[uint]Pmt
 var entryConstructors map[uint]PmtEntry
@@ -160,26 +163,33 @@ var types map[uint]uint
 var pat Pat
 
 func main() {
+	fileName, rv := getFilepath()
+	if rv != 0 {
+		os.Exit(rv)
+	}
 
-	fileName := os.Args[1]
-
-	fmt.Printf("Attempting to read file, Run 7" + fileName + "\n")
+	fmt.Printf("Attempting to read file, Run 7 " + fileName + "\n")
 
 	bytes, err := ioutil.ReadFile(fileName)
 	if err != nil {
+		log.Printf("did not open file\n")
+		// os.Exit(66)
+		// seems like panic is better?
 		panic(err)
 	}
 
 	reader := data.NewReader(bytes)
 
-	pat = Pat{}
-	pat.tableId = 0
-
-	Init()
+	rc := Init()
+	if rc != true {
+		log.Printf("could not initialize global state\n")
+		os.Exit(71)
+	}
 
 	fmt.Println("Size: ", len(bytes))
 
-	for reader.Cursor < uint64(len(bytes)) {
+	s := uint64(len(bytes))
+	for reader.Cursor < s {
 
 		byteChunk := reader.ReadBytes(188)
 
@@ -197,6 +207,23 @@ func main() {
 
 	}
 
+}
+
+// todo( mathew guest ) I think golang wants to use error as return codes but
+// it's a little slow so I'm cheating
+func getFilepath() (string, int) {
+	flag.Parse()
+	argc := flag.NArg()
+	if argc < 1 {
+		log.Printf("Usage: " + os.Args[0] + " [input ts file]\n")
+		return "", 66
+	}
+	if argc > 1 {
+		log.Printf("Ignoring all but first argument.\n")
+		os.Exit(1)
+	}
+	fileName := os.Args[1]
+	return fileName, 0
 }
 
 //CreateAndDispensePes
@@ -217,12 +244,29 @@ func CreateAndDispensePes(pid uint, streamType uint) {
 
 //Init
 //Initialize the constructors
-func Init() {
+func Init() bool {
+	if globals_initialized == true {
+		log.Printf("EE attempted to initialize globals twice\n")
+		return false
+	}
 	pmtConstructors = make(map[uint]Pmt)
 	entryConstructors = make(map[uint]PmtEntry)
 	types = make(map[uint]uint)
 	pesCollector = make(map[uint]Pes)
 	elementaryConstructors = make(map[uint]ElementaryStreamPacket)
+	pat = Pat{}
+	pat.tableId = 0
+	globals_initialized = true
+	return true
+}
+
+func DeleteState() {
+	if globals_initialized == false {
+		return
+	}
+	globals_initialized = false
+	Init()
+	globals_initialized = false
 }
 
 //TsPacket Read
@@ -239,6 +283,10 @@ func Init() {
 //hasPayload - 	If contains payload value is true (0 or more bits)
 //continuity - Sequence number of payload packets, Incremented only when a payload is present (i.e., payload value is true) (4 bits)
 func (tsPacket *TsPacket) Read() {
+	if tsPacket.byteChunk == nil {
+		log.Printf( "attempted to read from nil pointer\n" )
+		return
+	}
 
 	var flags uint = 0
 
@@ -246,60 +294,61 @@ func (tsPacket *TsPacket) Read() {
 
 	tsPacket.sync = reader.Read(1)
 
-	if tsPacket.sync == 71 {
+	if tsPacket.sync != 0x47 {
+		log.Printf("sync byte not 'G'\n")
+		return
+	}
+	// asserted tsPacket.sync == 'G'
 
-		flags = reader.Read(2)
+	flags = reader.Read(2)
 
-		tsPacket.transportError = flags&0x8000 > 0
-		tsPacket.unitStart = flags&0x4000 > 0
-		tsPacket.priority = flags&0x2000 > 0
-		tsPacket.pid = flags & 0x1fff
-		fmt.Println("pid", tsPacket.pid)
+	tsPacket.transportError = flags&0x8000 > 0
+	tsPacket.unitStart = flags&0x4000 > 0
+	tsPacket.priority = flags&0x2000 > 0
+	tsPacket.pid = flags & 0x1fff
+	fmt.Println("pid", tsPacket.pid)
 
-		flags = reader.Read(1)
+	flags = reader.Read(1)
 
-		tsPacket.scramble = flags & 0xc0 >> 6
-		tsPacket.hasAdaptation = flags&0x20 > 0
-		tsPacket.hasPayload = flags&0x10 > 0
-		tsPacket.continuity = flags & 0x0f
+	tsPacket.scramble = flags & 0xc0 >> 6
+	tsPacket.hasAdaptation = flags&0x20 > 0
+	tsPacket.hasPayload = flags&0x10 > 0
+	tsPacket.continuity = flags & 0x0f
 
-		tsPacket.Print()
+	tsPacket.Print()
 
-		if tsPacket.hasAdaptation {
-			tsPacket.adaptation.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
-			tsPacket.adaptation.Read()
-		}
-
-		if tsPacket.pid == 0 {
-			pat.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
-
-			pat.unitStart = tsPacket.unitStart
-			pat.Read()
-		}
-
-		if pmt, ok := pmtConstructors[tsPacket.pid]; ok {
-			pmt.unitStart = tsPacket.unitStart
-			pmt.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
-			pmt.Read()
-		}
-
-		if elementaryStreamPacket, ok := elementaryConstructors[tsPacket.pid]; ok {
-
-			elementaryStreamPacket.pid = tsPacket.pid
-			elementaryStreamPacket.unitStart = tsPacket.unitStart
-
-			if tsPacket.hasAdaptation {
-				elementaryStreamPacket.payload = tsPacket.adaptation.payload
-			} else {
-				elementaryStreamPacket.payload = reader.ReadBytes(reader.Size - reader.Cursor)
-			}
-
-			elementaryStreamPacket.Dispatch()
-			elementaryStreamPacket.Print()
-		}
-
+	if tsPacket.hasAdaptation {
+		tsPacket.adaptation.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
+		tsPacket.adaptation.Read()
 	}
 
+	if tsPacket.pid == 0 {
+		pat.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
+
+		pat.unitStart = tsPacket.unitStart
+		pat.Read()
+	}
+
+	if pmt, ok := pmtConstructors[tsPacket.pid]; ok {
+		pmt.unitStart = tsPacket.unitStart
+		pmt.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
+		pmt.Read()
+	}
+
+	if elementaryStreamPacket, ok := elementaryConstructors[tsPacket.pid]; ok {
+
+		elementaryStreamPacket.pid = tsPacket.pid
+		elementaryStreamPacket.unitStart = tsPacket.unitStart
+
+		if tsPacket.hasAdaptation {
+			elementaryStreamPacket.payload = tsPacket.adaptation.payload
+		} else {
+			elementaryStreamPacket.payload = reader.ReadBytes(reader.Size - reader.Cursor)
+		}
+
+		elementaryStreamPacket.Dispatch()
+		elementaryStreamPacket.Print()
+	}
 }
 
 //Pat Read
@@ -331,6 +380,10 @@ func (tsPacket *TsPacket) Read() {
 //lastSectionNumber – This 8-bit field specifies the number of the last section (that is, the section with the highest
 //section_number) of the complete Program Association Table.
 func (pat *Pat) Read() {
+	if pat.byteChunk == nil {
+		log.Printf( "attempted to read from nil pointer: byteChunk\n" )
+		return
+	}
 
 	var SKIP_BYTES uint = 5
 	var CRC_SIZE uint = 4
@@ -417,6 +470,10 @@ func (pat *Pat) Read() {
 //programInfoLength – This is a 12-bit field, the first two bits of which shall be '00'. The remaining 10 bits specify the
 //number of bytes of the descriptors immediately following the program_info_length field.
 func (pmt *Pmt) Read() {
+	if pmt.byteChunk == nil {
+		log.Printf( "attempted to read from nil pointer: byteChunk\n" )
+		return
+	}
 
 	var CRC_SIZE uint = 4
 	var SKIP_BYTES uint = 9
@@ -492,6 +549,10 @@ func (pmt *Pmt) Read() {
 //
 //hasExtension - 1 means presence of adaptation field extension
 func (adaptation *Adaptation) Read() {
+	if adaptation.byteChunk == nil {
+		log.Printf( "attempted to read from nil pointer: byteChunk\n" )
+		return
+	}
 
 	var flags uint = 0
 	var spliceFlag int = 0
