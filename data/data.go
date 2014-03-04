@@ -1,8 +1,5 @@
 package data
 
-import (
-	"log"
-)
 
 var DEBUG_SIZE int = 100
 
