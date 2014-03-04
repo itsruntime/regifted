@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 package data
 
 import (
@@ -15,7 +14,7 @@ func TestData(t *testing.T) {
   reader.Read(100)
   _ = reader
 }
-=======
+
 /*
 Test of the function and methods in data.go
 */
@@ -68,4 +67,3 @@ func TestRead(t *testing.T) {
 // def getSize(self)
 
 // def __str__(self)
->>>>>>> moof
