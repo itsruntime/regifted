@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"regifted/data"
-	"nal"
 )
 
 type Pes struct {
@@ -21,7 +20,6 @@ type Pes struct {
 	pts          uint
 	dts          uint
 	payload      []byte
-	nal          Nal
 }
 
 
