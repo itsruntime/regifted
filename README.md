@@ -36,12 +36,15 @@ Test Process
 #### Running the unit tests
 ##### 1. Visit http://golang.org/cmd/go/#hdr-Test_packages for more on the GO testing suite.
 ##### 2. From the regifted folder you make these calls:
-					1. go test -v regifted/moof
-					2. go test ts_test.go
+					i.  go test -v regifted/moof
+					ii. go test ts_test.go
 
 
 Implementation Documentation  
-============================  
-#### You can find a link to a prezi-based diagrams demonstrating the activity of ts.go here:
+============================
+##### 1. Steps to generate godocs. From the regifted folder:
+					i.  godoc regifted/moof
+					ii. godoc regifted/ts
+##### 2. You can find a link to a prezi-based diagrams demonstrating the activity of ts.go here:
 ##### https://github.com/itsruntime/regifted/wiki/Design-Documentation
 (A similar diagram for moof.go is forthcoming.)
