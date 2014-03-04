@@ -62,5 +62,3 @@ func (r *Reader) ReadBytes(size uint64) []byte {
 	r.Cursor += size
 	return value
 }
-}
-
