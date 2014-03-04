@@ -20,6 +20,7 @@ type Pes struct {
 	pts          uint
 	dts          uint
 	payload      []byte
+	nal	     Nal
 }
 
 
