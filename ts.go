@@ -21,8 +21,7 @@ type Pes struct {
 	nal          Nal
 }
 
-type Nal struct {
-}
+
 
 type Pat struct {
 	SKIP_BYTES int
