@@ -42,4 +42,6 @@ Test Process
 
 Implementation Documentation  
 ============================  
-The language documentation with go is connected to libraries. I think maybe 
+#### You can find a link to a prezi-based diagrams demonstrating the activity of ts.go here:
+##### https://github.com/itsruntime/regifted/wiki/Design-Documentation
+(A similar diagram for moof.go is forthcoming.)
