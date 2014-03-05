@@ -18,7 +18,6 @@ type ElementaryStreamPacket struct {
 //if unitstart, dump current PES and construct a new one,
 //else append the es payload
 func (elementaryStreamPacket *ElementaryStreamPacket) Dispatch() {
-
 	var pesData Pes
 
 	pesData = state.pesCollector[elementaryStreamPacket.pid]

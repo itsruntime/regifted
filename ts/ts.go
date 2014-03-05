@@ -87,6 +87,7 @@ func (state *TSState) main() {
 
 	for key := range state.pesCollector {
 		state.CreateAndDispensePes(key, state.types[key])
+
 	}
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"regifted/data"
 )
 
@@ -24,7 +25,10 @@ type Pcr struct {
 //PCR fields
 //valid for the program specified by program_number
 func (pcr *Pcr) Read() {
-
+	if pcr.byteChunk == nil {
+		log.Printf("attempted to read from nil pointer: byteChunk\n")
+		return
+	}
 	reader := data.NewReader(pcr.byteChunk)
 
 	pcr.a = reader.Read(1)

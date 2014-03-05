@@ -45,6 +45,7 @@ func (tsPacket *TsPacket) Read() (int, *data.Reader) {
 	}
 	var packetType int = PACKET_TYPE_ERROR
 	var flags uint = 0
+	var pid uint
 
 	reader := data.NewReader(tsPacket.byteChunk)
 
@@ -61,8 +62,9 @@ func (tsPacket *TsPacket) Read() (int, *data.Reader) {
 	tsPacket.transportError = flags&0x8000 > 0
 	tsPacket.unitStart = flags&0x4000 > 0
 	tsPacket.priority = flags&0x2000 > 0
-	tsPacket.pid = flags & 0x1fff
-	fmt.Println("pid", tsPacket.pid)
+	pid = flags & 0x1fff
+	tsPacket.pid = pid
+	fmt.Println("pid", pid)
 
 	flags = reader.Read(1)
 
@@ -78,19 +80,20 @@ func (tsPacket *TsPacket) Read() (int, *data.Reader) {
 		tsPacket.adaptation.Read()
 	}
 
-	if tsPacket.pid == 0 {
+	if pid == 0 {
 		return PACKET_TYPE_PAT, reader
 	}
 
-	if pmt, ok := state.pmtConstructors[tsPacket.pid]; ok {
-		_ = pmt
+	if _, ok := state.elementaryConstructors[pid]; ok {
+		// _ = elementaryStreamPacket
+		return PACKET_TYPE_ES, reader
+	}
+
+	if _, ok := state.pmtConstructors[pid]; ok {
+		// _ = pmt
 		return PACKET_TYPE_PMT, reader
 	}
 
-	if elementaryStreamPacket, ok := state.elementaryConstructors[tsPacket.pid]; ok {
-		_ = elementaryStreamPacket
-		return PACKET_TYPE_ES, reader
-	}
 	return packetType, nil
 }
 

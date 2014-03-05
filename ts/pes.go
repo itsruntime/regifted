@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"regifted/data"
 )
 
@@ -27,7 +28,10 @@ type Pes struct {
 //
 //packetLength – The PES_packet_length is a 16-bit field indicating the total number of bytes in the program_stream_directory immediately following this field
 func (pes *Pes) Read() {
-
+	if pes.byteChunk == nil {
+		log.Printf("attempted to read from nil pointer: byteChunk\n")
+		return
+	}
 	reader := data.NewReader(pes.byteChunk)
 
 	var prefix uint
