@@ -2,10 +2,11 @@ package data
 
 import (
 	//"fmt"
+	"bytes"
 	"testing"
 )
 
-func TestData(t *testing.T) {
+func TestReader(t *testing.T) {
 	// todo( mathew guest ) I'm unsure if go has a way to do death tests. Slices
 	// still allow you to runtime panic if you access out of bounds. We need a
 	// way to recover from failure aka death tests. I don't see anything obvious
@@ -46,6 +47,23 @@ func TestData(t *testing.T) {
 	s = make([]byte, 5, 5)
 	reader = NewReader(s)
 	reader.Read(5)
+}
+
+func TestReaderConstructor(t *testing.T) {
+	empty := []byte{}
+	batman := []byte{'b', 'a', 't', 'm', 'a', 'n'}
+	var reader *Reader
+
+	reader = NewReader(empty)
+	if !bytes.Equal(empty, reader.data) {
+		t.Error("constructor failed")
+	}
+
+	reader = NewReader(batman)
+	if !bytes.Equal(batman, reader.data) {
+		t.Error("constructor failed")
+	}
+
 }
 
 // struct for Reader

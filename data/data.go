@@ -2,6 +2,7 @@ package data
 
 import (
 	"log"
+	"unsafe"
 )
 
 // const DEBUG_SIZE int = 100
@@ -10,6 +11,11 @@ type Reader struct {
 	data   []byte
 	Cursor uint64
 	Size   uint64
+}
+
+type Writer struct {
+	chunks []byte
+	size   int
 }
 
 // Creates a new Reader for reading the data from the byte array.
@@ -25,6 +31,12 @@ func NewReader(da []byte) *Reader {
 // the Reader struct. It then concatinates the bytes and returns them as a
 // unsigned integer.
 func (r *Reader) Read(size uint) uint {
+	var uint_ uint = 0
+	const N_MAX_BYTES = uint(unsafe.Sizeof(uint_))
+	if size > N_MAX_BYTES {
+		log.Printf("attempted to overflow register\n")
+		return 0
+	}
 	if r.data == nil {
 		log.Printf("attempted to read from null buffer in data.Read()\n")
 		return 0

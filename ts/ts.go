@@ -19,11 +19,6 @@ const PACKET_TYPE_PMT = 5
 const PACKET_TYPE_PROGRAM = 6
 const PACKET_TYPE_TS = 7
 
-type Writer struct {
-	chunks []byte
-	size   int
-}
-
 type TSState struct {
 	globals_initialized    bool
 	pesCollector           map[uint]Pes
