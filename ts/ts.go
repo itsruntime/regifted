@@ -14,6 +14,7 @@ const PACKET_TYPE_ERROR = 0
 const PACKET_TYPE_PAT = 2
 const PACKET_TYPE_PCR = 3
 const PACKET_TYPE_PES = 4
+const PACKET_TYPE_ES = 1
 const PACKET_TYPE_PMT = 5
 const PACKET_TYPE_PROGRAM = 6
 const PACKET_TYPE_TS = 7
@@ -72,34 +73,15 @@ func (state *TSState) main() {
 		tsPacket.byteChunk = byteChunk
 		packetType, packetReader := tsPacket.Read()
 
-		// depending on what kind of packet it is, process it for that packet
-		if packetType == PACKET_TYPE_PAT {
-			state.pat.byteChunk = packetReader.ReadBytes(packetReader.Size - packetReader.Cursor)
-			state.pat.unitStart = tsPacket.unitStart
-			state.pat.Read()
+		switch {
+		case packetType == PACKET_TYPE_PAT:
+			readPat(&tsPacket, packetReader)
 
-		} else if packetType == PACKET_TYPE_PMT {
-			if pmt, ok := state.pmtConstructors[tsPacket.pid]; ok {
-				pmt.unitStart = tsPacket.unitStart
-				pmt.byteChunk = packetReader.ReadBytes(packetReader.Size - packetReader.Cursor)
-				pmt.Read()
-			}
+		case packetType == PACKET_TYPE_PMT:
+			readPMT(&tsPacket, packetReader)
 
-		} else if packetType == PACKET_TYPE_PES {
-			if elementaryStreamPacket, ok := state.elementaryConstructors[tsPacket.pid]; ok {
-				elementaryStreamPacket.pid = tsPacket.pid
-				elementaryStreamPacket.unitStart = tsPacket.unitStart
-
-				if tsPacket.hasAdaptation {
-					elementaryStreamPacket.payload = tsPacket.adaptation.payload
-				} else {
-					elementaryStreamPacket.payload = packetReader.ReadBytes(packetReader.Size - packetReader.Cursor)
-				}
-
-				elementaryStreamPacket.Dispatch()
-				elementaryStreamPacket.Print()
-			}
-
+		case packetType == PACKET_TYPE_ES:
+			readES(&tsPacket, packetReader)
 		}
 	}
 
@@ -116,6 +98,34 @@ func (state *TSState) CreateAndDispensePes(pid uint, streamType uint) {
 	pes.streamType = streamType
 	pes.Read()
 	pes.Print()
+}
+
+func readPat(tsPacket *TsPacket, reader *data.Reader) {
+	state.pat.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
+	state.pat.unitStart = tsPacket.unitStart
+	state.pat.Read()
+}
+
+func readPMT(tsPacket *TsPacket, reader *data.Reader) {
+	pmt, _ := state.pmtConstructors[tsPacket.pid]
+	pmt.unitStart = tsPacket.unitStart
+	pmt.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
+	pmt.Read()
+}
+
+func readES(tsPacket *TsPacket, reader *data.Reader) {
+	elementaryStreamPacket, _ := state.elementaryConstructors[tsPacket.pid]
+	elementaryStreamPacket.pid = tsPacket.pid
+	elementaryStreamPacket.unitStart = tsPacket.unitStart
+
+	if tsPacket.hasAdaptation {
+		elementaryStreamPacket.payload = tsPacket.adaptation.payload
+	} else {
+		elementaryStreamPacket.payload = reader.ReadBytes(reader.Size - reader.Cursor)
+	}
+
+	elementaryStreamPacket.Dispatch()
+	elementaryStreamPacket.Print()
 }
 
 // todo( mathew guest ) I think golang wants to use error as return codes but

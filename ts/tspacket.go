@@ -89,7 +89,7 @@ func (tsPacket *TsPacket) Read() (int, *data.Reader) {
 
 	if elementaryStreamPacket, ok := state.elementaryConstructors[tsPacket.pid]; ok {
 		_ = elementaryStreamPacket
-		return PACKET_TYPE_PES, reader
+		return PACKET_TYPE_ES, reader
 	}
 	return packetType, nil
 }
