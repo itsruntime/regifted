@@ -22,8 +22,6 @@ type Pes struct {
 	payload      []byte
 }
 
-
-
 type Pat struct {
 	SKIP_BYTES int
 	CRC_SIZE   int
@@ -283,7 +281,7 @@ func DeleteState() {
 //continuity - Sequence number of payload packets, Incremented only when a payload is present (i.e., payload value is true) (4 bits)
 func (tsPacket *TsPacket) Read() {
 	if tsPacket.byteChunk == nil {
-		log.Printf( "attempted to read from nil pointer\n" )
+		log.Printf("attempted to read from nil pointer\n")
 		return
 	}
 
@@ -380,7 +378,7 @@ func (tsPacket *TsPacket) Read() {
 //section_number) of the complete Program Association Table.
 func (pat *Pat) Read() {
 	if pat.byteChunk == nil {
-		log.Printf( "attempted to read from nil pointer: byteChunk\n" )
+		log.Printf("attempted to read from nil pointer: byteChunk\n")
 		return
 	}
 
@@ -470,7 +468,7 @@ func (pat *Pat) Read() {
 //number of bytes of the descriptors immediately following the program_info_length field.
 func (pmt *Pmt) Read() {
 	if pmt.byteChunk == nil {
-		log.Printf( "attempted to read from nil pointer: byteChunk\n" )
+		log.Printf("attempted to read from nil pointer: byteChunk\n")
 		return
 	}
 
@@ -549,7 +547,7 @@ func (pmt *Pmt) Read() {
 //hasExtension - 1 means presence of adaptation field extension
 func (adaptation *Adaptation) Read() {
 	if adaptation.byteChunk == nil {
-		log.Printf( "attempted to read from nil pointer: byteChunk\n" )
+		log.Printf("attempted to read from nil pointer: byteChunk\n")
 		return
 	}
 

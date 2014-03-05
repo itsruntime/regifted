@@ -2,10 +2,10 @@ package main
 
 import (
 	// "fmt"
-  "io/ioutil"
-  "log"
-  "os"
-  "testing"
+	"io/ioutil"
+	"log"
+	"os"
+	"testing"
 )
 
 func awfulStateSetup() {
@@ -310,9 +310,9 @@ func TestTransportPacketRead(t *testing.T) {
 			"continuity incorrectly.")
 	}
 
-  // empty packet
-  packet = TsPacket{}
-  packet.Read()
+	// empty packet
+	packet = TsPacket{}
+	packet.Read()
 }
 
 func TestInit(t *testing.T) {

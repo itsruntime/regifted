@@ -4,8 +4,8 @@ Test of the function and methods in data.go
 package data
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestRead(t *testing.T) {
@@ -21,11 +21,10 @@ func TestRead(t *testing.T) {
 		t.Fail()
 	}
 }
+
 // struct for Reader
 
-
 // struct for Writer
-
 
 // def read(self, size)
 
