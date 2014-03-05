@@ -1,11 +1,10 @@
-package main
+package moof
 
 import (
 	"fmt"
 	"io/ioutil"
 	"os"
 	"regifted/data"
-	"regifted/moof"
 )
 
 func main() {
@@ -15,7 +14,7 @@ func main() {
 		fmt.Println("Error reading file")
 	} else {
 		reader := data.NewReader(fullFile)
-		moof := new(moof.Moof)
+		moof := new(Moof)
 		fmt.Println()
 		fmt.Println()
 		fmt.Println()

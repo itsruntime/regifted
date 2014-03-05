@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"bytes"
@@ -49,7 +49,7 @@ func (e InvalidInputError) Error() string {
 // Params:
 //  dest pointer to the destination []byte
 //  src pointer to the incoming string
-func generateBytesFromString(dest *[]byte, src *string) error {
+func GenerateBytesFromString(dest *[]byte, src *string) error {
 	// todo( mathew guest ) this should check string input size. e.g. src
 	// must be a multiple of 2 or it must break down correctly
 	var stringBytes []byte
