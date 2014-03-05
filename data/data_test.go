@@ -1,6 +1,3 @@
-/*
-Test of the function and methods in data.go
-*/
 package data
 
 import (
@@ -8,18 +5,50 @@ import (
 	"testing"
 )
 
-func TestRead(t *testing.T) {
-	testData := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
-	reader := NewReader(testData)
-	one := reader.Read(1)
-	if one != 1 {
-		t.Fail()
-	}
-	two := reader.Read(2)
-	fmt.Printf("Two equals %d", two)
-	if two != 515 {
-		t.Fail()
-	}
+func TestData(t *testing.T) {
+	// todo( mathew guest ) I'm unsure if go has a way to do death tests. Slices
+	// still allow you to runtime panic if you access out of bounds. We need a
+	// way to recover from failure aka death tests. I don't see anything obvious
+	// in the go testing library but maybe with panic or something unknown.
+	var s []byte
+	baseline := []byte{'b', 'a', 't', 'm', 'a', 'n'}
+
+	// null slice - the best I can currently do is that they don't segfault
+	s = make([]byte, 6, 6)
+	copy(s, baseline)
+	reader := NewReader(s)
+	_ = reader
+	reader.Read(100)
+	reader.ReadBytes(100)
+
+	s = make([]byte, 6, 6)
+	copy(s, baseline)
+	reader = NewReader(s)
+	reader.ReadBytes(100)
+	reader.Read(100)
+
+	// read past end
+	s = make([]byte, 6, 6)
+	copy(s, baseline)
+	reader = NewReader(s)
+	reader.Read(100000000)
+
+	// read after cursor is too far
+	_ = reader.Read(0)
+	_ = reader.Read(1)
+	_ = reader.Read(10)
+
+	s = []byte{'b', 'a', 't', 'm', 'a', 'n'}
+	fmt.Println(s)
+	reader = NewReader(s)
+	reader.Read(0)
+	reader.Read(0)
+
+	s = make([]byte, 5, 5)
+	reader = NewReader(s)
+	reader.Read(5)
+
+	t.Error("print")
 }
 
 // struct for Reader
