@@ -31,8 +31,8 @@ func NewReader(da []byte) *Reader {
 // the Reader struct. It then concatinates the bytes and returns them as a
 // unsigned integer.
 func (r *Reader) Read(size uint) uint {
-	var uint_ uint = 0
-	const N_MAX_BYTES = uint(unsafe.Sizeof(uint_))
+	const N_MAX_BYTES = uint(unsafe.Sizeof(size)) // nothing to do with size
+	// i'm just borrowing the var
 	if size > N_MAX_BYTES {
 		log.Printf("attempted to overflow register\n")
 		return 0
@@ -41,6 +41,10 @@ func (r *Reader) Read(size uint) uint {
 		log.Printf("attempted to read from null buffer in data.Read()\n")
 		return 0
 	}
+	// if size < 0 {
+	// 	log.Printf("attempted to read <0 bytes\n")
+	// 	return 0
+	// }
 
 	var idx uint = uint(r.Cursor) + size
 	var idx_max uint = uint(len(r.data))
@@ -48,6 +52,7 @@ func (r *Reader) Read(size uint) uint {
 	if idx <= idx_max {
 		idx_ = idx
 	} else {
+		log.Printf("attempted to read past end of buffer\n")
 		idx_ = idx_max
 	}
 	idx_ -= uint(r.Cursor)
@@ -65,12 +70,15 @@ func (r *Reader) Read(size uint) uint {
 // Reads the number of bytes passed in as size from the data byte array in the Reader
 // struct. It returns a byte array from the cursors current position to the cursor
 // plus the size.
-
 func (r *Reader) ReadBytes(size uint64) []byte {
 	if r.data == nil {
 		log.Printf("attempted to read from null buffer in data.Read()\n")
 		return nil
 	}
+	// if size < 0 {
+	// 	log.Printf("attempted to read <0 bytes\n")
+	// 	return 0
+	// }
 
 	var idx uint = uint(r.Cursor) + uint(size)
 	var idx_max uint = uint(len(r.data))

@@ -20,7 +20,8 @@ const PACKET_TYPE_PROGRAM = 6
 const PACKET_TYPE_TS = 7
 
 type TSState struct {
-	globals_initialized    bool
+	globals_initialized bool
+	// the keys in these maps are pids
 	pesCollector           map[uint]Pes
 	pmtConstructors        map[uint]Pmt
 	entryConstructors      map[uint]PmtEntry

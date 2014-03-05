@@ -1,8 +1,11 @@
 package data
 
 import (
-	//"fmt"
+	// "fmt"
 	"bytes"
+	"encoding/binary"
+	// "encoding/hex"
+	// "os"
 	"testing"
 )
 
@@ -51,7 +54,7 @@ func TestReader(t *testing.T) {
 
 func TestReaderConstructor(t *testing.T) {
 	empty := []byte{}
-	batman := []byte{'b', 'a', 't', 'm', 'a', 'n'}
+	batman := []byte{'a', 'a', 't', 'm', 'a', 'n'}
 	var reader *Reader
 
 	reader = NewReader(empty)
@@ -62,6 +65,42 @@ func TestReaderConstructor(t *testing.T) {
 	reader = NewReader(batman)
 	if !bytes.Equal(batman, reader.data) {
 		t.Error("constructor failed")
+	}
+}
+
+func TestReaderRead(t *testing.T) {
+	// arr := []byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x04}
+	arr := []byte{0x00, 0x00, 0x00, 0x0a}
+	arr_int := binary.BigEndian.Uint32(arr)
+	// binary.UVarint only reads one byte for me unless the first bytes are 0xff
+	// not sure.... The other function works.
+
+	// big endian - we are at processor level and the registers have already
+	// been converted for us
+
+	var reader *Reader
+	var uint_ uint
+
+	// one byte at a time
+	reader = NewReader(arr)
+	for _, v := range arr {
+		x := reader.Read(1)
+		if byte(x) != v {
+			t.Error("Reader.Read() failed")
+		}
+	}
+
+	// 4 bytes
+	reader = NewReader(arr)
+	uint_ = reader.Read(4)
+	bytes_ := make([]byte, 4)
+	binary.BigEndian.PutUint32(bytes_, uint32(uint_))
+
+	if !bytes.Equal(arr, bytes_) {
+		t.Errorf("Read(4): got %s; want %s", bytes_, arr)
+	}
+	if uint32(uint_) != arr_int {
+		t.Errorf("Read(4): got %d; want %d", uint_, arr_int)
 	}
 
 }
