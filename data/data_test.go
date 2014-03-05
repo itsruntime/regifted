@@ -1,7 +1,7 @@
 package data
 
 import (
-	"fmt"
+	//"fmt"
 	"testing"
 )
 
@@ -39,7 +39,6 @@ func TestData(t *testing.T) {
 	_ = reader.Read(10)
 
 	s = []byte{'b', 'a', 't', 'm', 'a', 'n'}
-	fmt.Println(s)
 	reader = NewReader(s)
 	reader.Read(0)
 	reader.Read(0)
@@ -47,8 +46,6 @@ func TestData(t *testing.T) {
 	s = make([]byte, 5, 5)
 	reader = NewReader(s)
 	reader.Read(5)
-
-	t.Error("print")
 }
 
 // struct for Reader

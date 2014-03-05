@@ -1,4 +1,4 @@
-package moof
+package main
 
 import (
 	"fmt"

@@ -1,10 +1,11 @@
-package ts
+package main
 
 import (
   "fmt"
   "log"
   "regifted/data"
 )
+
 type Pmt struct {
   byteChunk              []byte
   pointerField           bool

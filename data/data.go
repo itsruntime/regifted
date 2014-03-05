@@ -4,7 +4,7 @@ import (
 	"log"
 )
 
-var DEBUG_SIZE int = 100
+// const DEBUG_SIZE int = 100
 
 type Reader struct {
 	data   []byte
