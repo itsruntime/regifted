@@ -9,25 +9,37 @@ import (
 	"regifted/data"
 )
 
+const TS_PACKET_SIZE = 188
+
 type Writer struct {
 	chunks []byte
 	size   int
 }
 
-var globals_initialized bool
-var pesCollector map[uint]Pes
-var pmtConstructors map[uint]Pmt
-var entryConstructors map[uint]PmtEntry
-var elementaryConstructors map[uint]ElementaryStreamPacket
-var types map[uint]uint
-var pat Pat
+type TSState struct {
+	globals_initialized    bool
+	pesCollector           map[uint]Pes
+	pmtConstructors        map[uint]Pmt
+	entryConstructors      map[uint]PmtEntry
+	elementaryConstructors map[uint]ElementaryStreamPacket
+	types                  map[uint]uint
+	pat                    Pat
+}
+
+// this is still global state - it's a temporary step in-between
+var state TSState
 
 func main() {
+	state_ := TSState{}
+	state = state_
+	state_.main()
+}
+
+func (state *TSState) main() {
 	fileName, rv := getFilepath()
 	if rv != 0 {
 		os.Exit(rv)
 	}
-
 	fmt.Printf("Attempting to read file, Run 7 " + fileName + "\n")
 
 	bytes, err := ioutil.ReadFile(fileName)
@@ -37,36 +49,47 @@ func main() {
 		// seems like panic is better?
 		panic(err)
 	}
-
 	reader := data.NewReader(bytes)
+	_ = reader
 
 	rc := Init()
 	if rc != true {
 		log.Printf("could not initialize global state\n")
 		os.Exit(71)
 	}
-
 	fmt.Println("Size: ", len(bytes))
 
 	s := uint64(len(bytes))
 	for reader.Cursor < s {
-
-		byteChunk := reader.ReadBytes(188)
-
+		byteChunk := reader.ReadBytes(TS_PACKET_SIZE)
 		tsPacket := TsPacket{}
-
 		tsPacket.byteChunk = byteChunk
-
 		tsPacket.Read()
-
 	}
 
-	for key := range pesCollector {
-
-		CreateAndDispensePes(key, types[key])
-
+	for key := range state.pesCollector {
+		state.CreateAndDispensePes(key, state.types[key])
 	}
+}
 
+//CreateAndDispensePes
+//Dump the remaining PES
+func (state *TSState) CreateAndDispensePes(pid uint, streamType uint) {
+	pes := state.pesCollector[pid]
+	pes.pid = pid
+	pes.streamType = streamType
+	pes.Read()
+	pes.Print()
+}
+
+//CreateAndDispensePes
+//Dump the remaining PES
+func CreateAndDispensePes(pid uint, streamType uint) {
+	pes := state.pesCollector[pid]
+	pes.pid = pid
+	pes.streamType = streamType
+	pes.Read()
+	pes.Print()
 }
 
 // todo( mathew guest ) I think golang wants to use error as return codes but
@@ -86,65 +109,40 @@ func getFilepath() (string, int) {
 	return fileName, 0
 }
 
-//CreateAndDispensePes
-//Dump the remaining PES
-func CreateAndDispensePes(pid uint, streamType uint) {
-
-	pes := pesCollector[pid]
-
-	pes.pid = pid
-
-	pes.streamType = streamType
-
-	pes.Read()
-
-	pes.Print()
-
-}
-
 //Init
 //Initialize the constructors
 func Init() bool {
-	if globals_initialized == true {
+	if state.globals_initialized == true {
 		log.Printf("EE attempted to initialize globals twice\n")
 		return false
 	}
-	pmtConstructors = make(map[uint]Pmt)
-	entryConstructors = make(map[uint]PmtEntry)
-	types = make(map[uint]uint)
-	pesCollector = make(map[uint]Pes)
-	elementaryConstructors = make(map[uint]ElementaryStreamPacket)
-	pat = Pat{}
-	pat.tableId = 0
-	globals_initialized = true
+	state.pmtConstructors = make(map[uint]Pmt)
+	state.entryConstructors = make(map[uint]PmtEntry)
+	state.types = make(map[uint]uint)
+	state.pesCollector = make(map[uint]Pes)
+	state.elementaryConstructors = make(map[uint]ElementaryStreamPacket)
+	state.pat = Pat{}
+	state.pat.tableId = 0
+	state.globals_initialized = true
 	return true
 }
 
 func DeleteState() {
-	if globals_initialized == false {
+	if state.globals_initialized == false {
 		return
 	}
-	globals_initialized = false
+	state.globals_initialized = false
 	Init()
-	globals_initialized = false
+	state.globals_initialized = false
 }
 
 func ReadHeaderData(bytes []byte) uint {
-
 	reader := data.NewReader(bytes)
-
 	var a uint = (reader.Read(1) >> 1) & 0x07
-
 	var b uint = reader.Read(1)
-
 	var c uint = (reader.Read(1) >> 1) & 0x7f
-
 	var d uint = reader.Read(1)
-
 	var e uint = (reader.Read(1) >> 1) & 0x7f
-
 	var timestamp uint = (a << 30) | (b << 22) | (c << 15) | (d << 7) | e
-
 	return timestamp
-
 }

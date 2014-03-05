@@ -120,8 +120,8 @@ func (pmt *Pmt) Read() {
 		pmtEntry.Read(reader)
 
 		pmt.entries = append(pmt.entries, pmtEntry)
-		types[pmtEntry.pid] = pmtEntry.streamType
-		elementaryConstructors[pmtEntry.pid] = ElementaryStreamPacket{}
+		state.types[pmtEntry.pid] = pmtEntry.streamType
+		state.elementaryConstructors[pmtEntry.pid] = ElementaryStreamPacket{}
 
 		pmt.count -= (5 + pmtEntry.infoLength)
 

@@ -79,19 +79,19 @@ func (tsPacket *TsPacket) Read() {
 	}
 
 	if tsPacket.pid == 0 {
-		pat.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
+		state.pat.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
 
-		pat.unitStart = tsPacket.unitStart
-		pat.Read()
+		state.pat.unitStart = tsPacket.unitStart
+		state.pat.Read()
 	}
 
-	if pmt, ok := pmtConstructors[tsPacket.pid]; ok {
+	if pmt, ok := state.pmtConstructors[tsPacket.pid]; ok {
 		pmt.unitStart = tsPacket.unitStart
 		pmt.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
 		pmt.Read()
 	}
 
-	if elementaryStreamPacket, ok := elementaryConstructors[tsPacket.pid]; ok {
+	if elementaryStreamPacket, ok := state.elementaryConstructors[tsPacket.pid]; ok {
 
 		elementaryStreamPacket.pid = tsPacket.pid
 		elementaryStreamPacket.unitStart = tsPacket.unitStart

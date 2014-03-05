@@ -21,14 +21,14 @@ func (elementaryStreamPacket *ElementaryStreamPacket) Dispatch() {
 
 	var pesData Pes
 
-	pesData = pesCollector[elementaryStreamPacket.pid]
+	pesData = state.pesCollector[elementaryStreamPacket.pid]
 
 	if elementaryStreamPacket.unitStart {
 
-		if pesData, ok := pesCollector[elementaryStreamPacket.pid]; ok {
+		if pesData, ok := state.pesCollector[elementaryStreamPacket.pid]; ok {
 
 			pesData.pid = elementaryStreamPacket.pid
-			pesData.streamType = types[elementaryStreamPacket.pid]
+			pesData.streamType = state.types[elementaryStreamPacket.pid]
 			pesData.Read()
 			pesData.Print()
 
@@ -39,7 +39,7 @@ func (elementaryStreamPacket *ElementaryStreamPacket) Dispatch() {
 
 	pesData.byteChunk = append(pesData.byteChunk, elementaryStreamPacket.payload...)
 
-	pesCollector[elementaryStreamPacket.pid] = pesData
+	state.pesCollector[elementaryStreamPacket.pid] = pesData
 
 }
 

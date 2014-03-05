@@ -108,7 +108,7 @@ func (pat *Pat) Read() {
 		program.Read(reader)
 
 		pat.programs = append(pat.programs, program)
-		pmtConstructors[program.pid] = pmt
+		state.pmtConstructors[program.pid] = pmt
 
 		pat.count = pat.count - PROGRAM_SIZE
 	}
