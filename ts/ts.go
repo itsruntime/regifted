@@ -10,6 +10,13 @@ import (
 )
 
 const TS_PACKET_SIZE = 188
+const PACKET_TYPE_ERROR = 0
+const PACKET_TYPE_PAT = 2
+const PACKET_TYPE_PCR = 3
+const PACKET_TYPE_PES = 4
+const PACKET_TYPE_PMT = 5
+const PACKET_TYPE_PROGRAM = 6
+const PACKET_TYPE_TS = 7
 
 type Writer struct {
 	chunks []byte
@@ -30,9 +37,8 @@ type TSState struct {
 var state TSState
 
 func main() {
-	state_ := TSState{}
-	state = state_
-	state_.main()
+	state = TSState{}
+	state.main()
 }
 
 func (state *TSState) main() {
@@ -64,7 +70,37 @@ func (state *TSState) main() {
 		byteChunk := reader.ReadBytes(TS_PACKET_SIZE)
 		tsPacket := TsPacket{}
 		tsPacket.byteChunk = byteChunk
-		tsPacket.Read()
+		packetType, packetReader := tsPacket.Read()
+
+		// depending on what kind of packet it is, process it for that packet
+		if packetType == PACKET_TYPE_PAT {
+			state.pat.byteChunk = packetReader.ReadBytes(packetReader.Size - packetReader.Cursor)
+			state.pat.unitStart = tsPacket.unitStart
+			state.pat.Read()
+
+		} else if packetType == PACKET_TYPE_PMT {
+			if pmt, ok := state.pmtConstructors[tsPacket.pid]; ok {
+				pmt.unitStart = tsPacket.unitStart
+				pmt.byteChunk = packetReader.ReadBytes(packetReader.Size - packetReader.Cursor)
+				pmt.Read()
+			}
+
+		} else if packetType == PACKET_TYPE_PES {
+			if elementaryStreamPacket, ok := state.elementaryConstructors[tsPacket.pid]; ok {
+				elementaryStreamPacket.pid = tsPacket.pid
+				elementaryStreamPacket.unitStart = tsPacket.unitStart
+
+				if tsPacket.hasAdaptation {
+					elementaryStreamPacket.payload = tsPacket.adaptation.payload
+				} else {
+					elementaryStreamPacket.payload = packetReader.ReadBytes(packetReader.Size - packetReader.Cursor)
+				}
+
+				elementaryStreamPacket.Dispatch()
+				elementaryStreamPacket.Print()
+			}
+
+		}
 	}
 
 	for key := range state.pesCollector {
@@ -75,16 +111,6 @@ func (state *TSState) main() {
 //CreateAndDispensePes
 //Dump the remaining PES
 func (state *TSState) CreateAndDispensePes(pid uint, streamType uint) {
-	pes := state.pesCollector[pid]
-	pes.pid = pid
-	pes.streamType = streamType
-	pes.Read()
-	pes.Print()
-}
-
-//CreateAndDispensePes
-//Dump the remaining PES
-func CreateAndDispensePes(pid uint, streamType uint) {
 	pes := state.pesCollector[pid]
 	pes.pid = pid
 	pes.streamType = streamType

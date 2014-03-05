@@ -38,12 +38,12 @@ type TsPacket struct {
 //hasAdaptation - If adaption field exist value is true (0 or more bits)
 //hasPayload -  If contains payload value is true (0 or more bits)
 //continuity - Sequence number of payload packets, Incremented only when a payload is present (i.e., payload value is true) (4 bits)
-func (tsPacket *TsPacket) Read() {
+func (tsPacket *TsPacket) Read() (int, *data.Reader) {
 	if tsPacket.byteChunk == nil {
 		log.Printf("attempted to read from nil pointer\n")
-		return
+		return PACKET_TYPE_ERROR, nil
 	}
-
+	var packetType int = PACKET_TYPE_ERROR
 	var flags uint = 0
 
 	reader := data.NewReader(tsPacket.byteChunk)
@@ -52,7 +52,7 @@ func (tsPacket *TsPacket) Read() {
 
 	if tsPacket.sync != 0x47 {
 		log.Printf("sync byte not 'G'\n")
-		return
+		return PACKET_TYPE_ERROR, nil
 	}
 	// asserted tsPacket.sync == 'G'
 
@@ -79,32 +79,19 @@ func (tsPacket *TsPacket) Read() {
 	}
 
 	if tsPacket.pid == 0 {
-		state.pat.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
-
-		state.pat.unitStart = tsPacket.unitStart
-		state.pat.Read()
+		return PACKET_TYPE_PAT, reader
 	}
 
 	if pmt, ok := state.pmtConstructors[tsPacket.pid]; ok {
-		pmt.unitStart = tsPacket.unitStart
-		pmt.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
-		pmt.Read()
+		_ = pmt
+		return PACKET_TYPE_PMT, reader
 	}
 
 	if elementaryStreamPacket, ok := state.elementaryConstructors[tsPacket.pid]; ok {
-
-		elementaryStreamPacket.pid = tsPacket.pid
-		elementaryStreamPacket.unitStart = tsPacket.unitStart
-
-		if tsPacket.hasAdaptation {
-			elementaryStreamPacket.payload = tsPacket.adaptation.payload
-		} else {
-			elementaryStreamPacket.payload = reader.ReadBytes(reader.Size - reader.Cursor)
-		}
-
-		elementaryStreamPacket.Dispatch()
-		elementaryStreamPacket.Print()
+		_ = elementaryStreamPacket
+		return PACKET_TYPE_PES, reader
 	}
+	return packetType, nil
 }
 
 func (tsPacket *TsPacket) Print() {
