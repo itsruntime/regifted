@@ -1,41 +1,40 @@
 package main
 
 import (
-  "fmt"
-  "log"
-  "regifted/data"
+	"fmt"
+	"log"
+	"regifted/data"
 )
 
 type Pmt struct {
-  byteChunk              []byte
-  pointerField           bool
-  unitStart              bool
-  tableId                uint
-  sectionSyntaxIndicator bool
-  sectionLength          uint
-  programNumber          uint
-  versionNumber          uint
-  sectionNumber          uint
-  lastSectionNumber      uint
+	byteChunk              []byte
+	pointerField           bool
+	unitStart              bool
+	tableId                uint
+	sectionSyntaxIndicator bool
+	sectionLength          uint
+	programNumber          uint
+	versionNumber          uint
+	sectionNumber          uint
+	lastSectionNumber      uint
 
-  pcrPid            uint
-  programInfoLength uint
-  descriptor        []byte
-  count             uint
-  entries           []PmtEntry
+	pcrPid            uint
+	programInfoLength uint
+	descriptor        []byte
+	count             uint
+	entries           []PmtEntry
 
-  types map[uint32]uint
+	types map[uint32]uint
 }
 
 type PmtEntry struct {
-  byteChunk []byte
+	byteChunk []byte
 
-  streamType uint
-  pid        uint
-  infoLength uint
-  descriptor []byte
+	streamType uint
+	pid        uint
+	infoLength uint
+	descriptor []byte
 }
-
 
 //Pmt Read
 //tableId – This is an 8-bit field, which in the case of a TS_program_map_section shall be always set to 0x02
@@ -70,66 +69,65 @@ type PmtEntry struct {
 //programInfoLength – This is a 12-bit field, the first two bits of which shall be '00'. The remaining 10 bits specify the
 //number of bytes of the descriptors immediately following the program_info_length field.
 func (pmt *Pmt) Read() {
-  if pmt.byteChunk == nil {
-    log.Printf("attempted to read from nil pointer: byteChunk\n")
-    return
-  }
+	if pmt.byteChunk == nil {
+		log.Printf("attempted to read from nil pointer: byteChunk\n")
+		return
+	}
 
-  var CRC_SIZE uint = 4
-  var SKIP_BYTES uint = 9
-  var flags uint = 0
+	var CRC_SIZE uint = 4
+	var SKIP_BYTES uint = 9
+	var flags uint = 0
 
-  var flag bool = false
+	var flag bool = false
 
-  reader := data.NewReader(pmt.byteChunk)
+	reader := data.NewReader(pmt.byteChunk)
 
-  if reader.Read(1) == 1 {
-    flag = true
-  }
+	if reader.Read(1) == 1 {
+		flag = true
+	}
 
-  pmt.pointerField = (pmt.unitStart && flag) || false
+	pmt.pointerField = (pmt.unitStart && flag) || false
 
-  pmt.tableId = reader.Read(1)
+	pmt.tableId = reader.Read(1)
 
-  flags = reader.Read(2)
+	flags = reader.Read(2)
 
-  pmt.sectionSyntaxIndicator = flags&0x8000 > 0
-  pmt.sectionLength = flags & 0x3ff
+	pmt.sectionSyntaxIndicator = flags&0x8000 > 0
+	pmt.sectionLength = flags & 0x3ff
 
-  pmt.programNumber = reader.Read(2)
+	pmt.programNumber = reader.Read(2)
 
-  pmt.versionNumber = reader.Read(1)
+	pmt.versionNumber = reader.Read(1)
 
-  pmt.sectionNumber = reader.Read(1)
+	pmt.sectionNumber = reader.Read(1)
 
-  pmt.lastSectionNumber = reader.Read(1)
+	pmt.lastSectionNumber = reader.Read(1)
 
-  pmt.pcrPid = reader.Read(2) & 0x1fff
+	pmt.pcrPid = reader.Read(2) & 0x1fff
 
-  pmt.programInfoLength = reader.Read(2) & 0x3ff
+	pmt.programInfoLength = reader.Read(2) & 0x3ff
 
-  pmt.descriptor = reader.ReadBytes(uint64(pmt.programInfoLength))
+	pmt.descriptor = reader.ReadBytes(uint64(pmt.programInfoLength))
 
-  pmt.count = pmt.sectionLength - SKIP_BYTES - pmt.programInfoLength
+	pmt.count = pmt.sectionLength - SKIP_BYTES - pmt.programInfoLength
 
-  pmt.Print()
+	pmt.Print()
 
-  for pmt.count > CRC_SIZE {
+	for pmt.count > CRC_SIZE {
 
-    pmtEntry := PmtEntry{}
+		pmtEntry := PmtEntry{}
 
-    pmtEntry.Read(reader)
+		pmtEntry.Read(reader)
 
-    pmt.entries = append(pmt.entries, pmtEntry)
-    types[pmtEntry.pid] = pmtEntry.streamType
-    elementaryConstructors[pmtEntry.pid] = ElementaryStreamPacket{}
+		pmt.entries = append(pmt.entries, pmtEntry)
+		types[pmtEntry.pid] = pmtEntry.streamType
+		elementaryConstructors[pmtEntry.pid] = ElementaryStreamPacket{}
 
-    pmt.count -= (5 + pmtEntry.infoLength)
+		pmt.count -= (5 + pmtEntry.infoLength)
 
-  }
+	}
 
 }
-
 
 //PmtEntry Read
 //streamType – This is an 8-bit field specifying the type of program element carried within the packets with the PID
@@ -142,42 +140,42 @@ func (pmt *Pmt) Read() {
 //of bytes of the descriptors of the associated program element immediately following the ES_info_length field.
 func (pmtEntry *PmtEntry) Read(reader *data.Reader) {
 
-  pmtEntry.streamType = reader.Read(1)
+	pmtEntry.streamType = reader.Read(1)
 
-  pmtEntry.pid = reader.Read(2) & 0x1fff
+	pmtEntry.pid = reader.Read(2) & 0x1fff
 
-  pmtEntry.infoLength = reader.Read(2) & 0x3ff
+	pmtEntry.infoLength = reader.Read(2) & 0x3ff
 
-  pmtEntry.descriptor = reader.ReadBytes(uint64(pmtEntry.infoLength))
+	pmtEntry.descriptor = reader.ReadBytes(uint64(pmtEntry.infoLength))
 
-  pmtEntry.Print()
+	pmtEntry.Print()
 
 }
 
 func (pmt *Pmt) Print() {
 
-  fmt.Println("\n:::Pmt65435:::\n")
-  fmt.Println("tableId = ", pmt.tableId)
-  fmt.Println("pointerField = ", pmt.pointerField)
-  fmt.Println("sectionSyntaxIndicator = ", pmt.sectionSyntaxIndicator)
-  fmt.Println("sectionLength = ", pmt.sectionLength)
-  fmt.Println("programNumber = ", pmt.programNumber)
-  fmt.Println("versionNumber = ", pmt.versionNumber)
-  fmt.Println("sectionNumber = ", pmt.sectionNumber)
-  fmt.Println("lastSectionNumber = ", pmt.lastSectionNumber)
-  fmt.Println("pcrPid = ", pmt.pcrPid)
-  fmt.Println("programInfoLength = ", pmt.programInfoLength)
-  fmt.Println("count = ", pmt.count)
+	fmt.Println("\n:::Pmt65435:::\n")
+	fmt.Println("tableId = ", pmt.tableId)
+	fmt.Println("pointerField = ", pmt.pointerField)
+	fmt.Println("sectionSyntaxIndicator = ", pmt.sectionSyntaxIndicator)
+	fmt.Println("sectionLength = ", pmt.sectionLength)
+	fmt.Println("programNumber = ", pmt.programNumber)
+	fmt.Println("versionNumber = ", pmt.versionNumber)
+	fmt.Println("sectionNumber = ", pmt.sectionNumber)
+	fmt.Println("lastSectionNumber = ", pmt.lastSectionNumber)
+	fmt.Println("pcrPid = ", pmt.pcrPid)
+	fmt.Println("programInfoLength = ", pmt.programInfoLength)
+	fmt.Println("count = ", pmt.count)
 
-  fmt.Println("descriptor = ", pmt.descriptor)
+	fmt.Println("descriptor = ", pmt.descriptor)
 
 }
 
 func (pmtEntry *PmtEntry) Print() {
-  fmt.Println("\n:::PmtEntry:::\n")
-  fmt.Println("pid = ", pmtEntry.pid)
-  fmt.Println("streamType = ", pmtEntry.streamType)
-  fmt.Println("infoLength = ", pmtEntry.infoLength)
-  fmt.Println("descriptor = ", pmtEntry.descriptor)
+	fmt.Println("\n:::PmtEntry:::\n")
+	fmt.Println("pid = ", pmtEntry.pid)
+	fmt.Println("streamType = ", pmtEntry.streamType)
+	fmt.Println("infoLength = ", pmtEntry.infoLength)
+	fmt.Println("descriptor = ", pmtEntry.descriptor)
 
 }

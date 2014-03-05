@@ -1,21 +1,21 @@
 package main
 
 import (
-  "fmt"
-  "regifted/data"
+	"fmt"
+	"regifted/data"
 )
 
 type Pes struct {
-  byteChunk []byte
+	byteChunk []byte
 
-  pid          uint
-  streamType   uint
-  streamId     uint
-  packetLength uint
-  flags        uint
-  pts          uint
-  dts          uint
-  payload      []byte
+	pid          uint
+	streamType   uint
+	streamId     uint
+	packetLength uint
+	flags        uint
+	pts          uint
+	dts          uint
+	payload      []byte
 }
 
 //Pes Read
@@ -28,53 +28,53 @@ type Pes struct {
 //packetLength – The PES_packet_length is a 16-bit field indicating the total number of bytes in the program_stream_directory immediately following this field
 func (pes *Pes) Read() {
 
-  reader := data.NewReader(pes.byteChunk)
+	reader := data.NewReader(pes.byteChunk)
 
-  var prefix uint
+	var prefix uint
 
-  var headerLength uint
+	var headerLength uint
 
-  var headerData []byte
+	var headerData []byte
 
-  var flags uint
+	var flags uint
 
-  prefix = reader.Read(3)
+	prefix = reader.Read(3)
 
-  if prefix == uint(0x000001) {
+	if prefix == uint(0x000001) {
 
-    pes.streamId = reader.Read(1)
+		pes.streamId = reader.Read(1)
 
-    pes.packetLength = reader.Read(2)
+		pes.packetLength = reader.Read(2)
 
-    flags = reader.Read(2)
+		flags = reader.Read(2)
 
-    headerLength = reader.Read(1)
+		headerLength = reader.Read(1)
 
-    headerData = reader.ReadBytes(uint64(headerLength))
+		headerData = reader.ReadBytes(uint64(headerLength))
 
-    if (flags & 0x0080) == 1 {
-      pes.pts = ReadHeaderData(headerData)
-    }
-    if (flags & 0x0040) == 1 {
-      pes.dts = ReadHeaderData(headerData)
-    }
-    pes.payload = reader.ReadBytes(reader.Size - reader.Cursor)
+		if (flags & 0x0080) == 1 {
+			pes.pts = ReadHeaderData(headerData)
+		}
+		if (flags & 0x0040) == 1 {
+			pes.dts = ReadHeaderData(headerData)
+		}
+		pes.payload = reader.ReadBytes(reader.Size - reader.Cursor)
 
-  }
+	}
 
 }
 
 func (pes *Pes) Print() {
 
-  fmt.Println("\n:::PES:::\n")
-  fmt.Println("////////////////////////////////")
-  fmt.Println("//pid = ", pes.pid)
-  fmt.Println("//streamType = ", pes.streamType)
-  fmt.Println("//streamId = ", pes.streamId)
-  fmt.Println("//packetLength = ", pes.packetLength)
-  fmt.Println("//pts = ", pes.pts)
-  fmt.Println("//dts = ", pes.dts)
-  fmt.Println("//payload length= ", len(pes.payload))
-  fmt.Println("////////////////////////////////")
+	fmt.Println("\n:::PES:::\n")
+	fmt.Println("////////////////////////////////")
+	fmt.Println("//pid = ", pes.pid)
+	fmt.Println("//streamType = ", pes.streamType)
+	fmt.Println("//streamId = ", pes.streamId)
+	fmt.Println("//packetLength = ", pes.packetLength)
+	fmt.Println("//pts = ", pes.pts)
+	fmt.Println("//dts = ", pes.dts)
+	fmt.Println("//payload length= ", len(pes.payload))
+	fmt.Println("////////////////////////////////")
 
 }

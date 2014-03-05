@@ -1,28 +1,28 @@
 package main
 
 import (
-  "fmt"
-  "log"
-  "regifted/data"
+	"fmt"
+	"log"
+	"regifted/data"
 )
 
 type TsPacket struct {
-  byteChunk []byte
+	byteChunk []byte
 
-  sync  uint
-  flags uint
+	sync  uint
+	flags uint
 
-  payload []byte
+	payload []byte
 
-  transportError bool
-  unitStart      bool
-  priority       bool
-  pid            uint
-  scramble       uint
-  hasAdaptation  bool
-  hasPayload     bool
-  continuity     uint
-  adaptation     Adaptation
+	transportError bool
+	unitStart      bool
+	priority       bool
+	pid            uint
+	scramble       uint
+	hasAdaptation  bool
+	hasPayload     bool
+	continuity     uint
+	adaptation     Adaptation
 }
 
 //TsPacket Read
@@ -39,84 +39,84 @@ type TsPacket struct {
 //hasPayload -  If contains payload value is true (0 or more bits)
 //continuity - Sequence number of payload packets, Incremented only when a payload is present (i.e., payload value is true) (4 bits)
 func (tsPacket *TsPacket) Read() {
-  if tsPacket.byteChunk == nil {
-    log.Printf("attempted to read from nil pointer\n")
-    return
-  }
+	if tsPacket.byteChunk == nil {
+		log.Printf("attempted to read from nil pointer\n")
+		return
+	}
 
-  var flags uint = 0
+	var flags uint = 0
 
-  reader := data.NewReader(tsPacket.byteChunk)
+	reader := data.NewReader(tsPacket.byteChunk)
 
-  tsPacket.sync = reader.Read(1)
+	tsPacket.sync = reader.Read(1)
 
-  if tsPacket.sync != 0x47 {
-    log.Printf("sync byte not 'G'\n")
-    return
-  }
-  // asserted tsPacket.sync == 'G'
+	if tsPacket.sync != 0x47 {
+		log.Printf("sync byte not 'G'\n")
+		return
+	}
+	// asserted tsPacket.sync == 'G'
 
-  flags = reader.Read(2)
+	flags = reader.Read(2)
 
-  tsPacket.transportError = flags&0x8000 > 0
-  tsPacket.unitStart = flags&0x4000 > 0
-  tsPacket.priority = flags&0x2000 > 0
-  tsPacket.pid = flags & 0x1fff
-  fmt.Println("pid", tsPacket.pid)
+	tsPacket.transportError = flags&0x8000 > 0
+	tsPacket.unitStart = flags&0x4000 > 0
+	tsPacket.priority = flags&0x2000 > 0
+	tsPacket.pid = flags & 0x1fff
+	fmt.Println("pid", tsPacket.pid)
 
-  flags = reader.Read(1)
+	flags = reader.Read(1)
 
-  tsPacket.scramble = flags & 0xc0 >> 6
-  tsPacket.hasAdaptation = flags&0x20 > 0
-  tsPacket.hasPayload = flags&0x10 > 0
-  tsPacket.continuity = flags & 0x0f
+	tsPacket.scramble = flags & 0xc0 >> 6
+	tsPacket.hasAdaptation = flags&0x20 > 0
+	tsPacket.hasPayload = flags&0x10 > 0
+	tsPacket.continuity = flags & 0x0f
 
-  tsPacket.Print()
+	tsPacket.Print()
 
-  if tsPacket.hasAdaptation {
-    tsPacket.adaptation.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
-    tsPacket.adaptation.Read()
-  }
+	if tsPacket.hasAdaptation {
+		tsPacket.adaptation.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
+		tsPacket.adaptation.Read()
+	}
 
-  if tsPacket.pid == 0 {
-    pat.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
+	if tsPacket.pid == 0 {
+		pat.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
 
-    pat.unitStart = tsPacket.unitStart
-    pat.Read()
-  }
+		pat.unitStart = tsPacket.unitStart
+		pat.Read()
+	}
 
-  if pmt, ok := pmtConstructors[tsPacket.pid]; ok {
-    pmt.unitStart = tsPacket.unitStart
-    pmt.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
-    pmt.Read()
-  }
+	if pmt, ok := pmtConstructors[tsPacket.pid]; ok {
+		pmt.unitStart = tsPacket.unitStart
+		pmt.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
+		pmt.Read()
+	}
 
-  if elementaryStreamPacket, ok := elementaryConstructors[tsPacket.pid]; ok {
+	if elementaryStreamPacket, ok := elementaryConstructors[tsPacket.pid]; ok {
 
-    elementaryStreamPacket.pid = tsPacket.pid
-    elementaryStreamPacket.unitStart = tsPacket.unitStart
+		elementaryStreamPacket.pid = tsPacket.pid
+		elementaryStreamPacket.unitStart = tsPacket.unitStart
 
-    if tsPacket.hasAdaptation {
-      elementaryStreamPacket.payload = tsPacket.adaptation.payload
-    } else {
-      elementaryStreamPacket.payload = reader.ReadBytes(reader.Size - reader.Cursor)
-    }
+		if tsPacket.hasAdaptation {
+			elementaryStreamPacket.payload = tsPacket.adaptation.payload
+		} else {
+			elementaryStreamPacket.payload = reader.ReadBytes(reader.Size - reader.Cursor)
+		}
 
-    elementaryStreamPacket.Dispatch()
-    elementaryStreamPacket.Print()
-  }
+		elementaryStreamPacket.Dispatch()
+		elementaryStreamPacket.Print()
+	}
 }
 
 func (tsPacket *TsPacket) Print() {
 
-  fmt.Println("\n:::TsRead:::\n")
-  fmt.Println("sync = ", tsPacket.sync)
-  fmt.Println("transportError = ", tsPacket.transportError)
-  fmt.Println("unitStart = ", tsPacket.unitStart)
-  fmt.Println("priority = ", tsPacket.priority)
-  fmt.Println("pid = ", tsPacket.pid)
-  fmt.Println("scramble = ", tsPacket.scramble)
-  fmt.Println("hasAdaptation = ", tsPacket.hasAdaptation)
-  fmt.Println("hasPayload = ", tsPacket.hasPayload)
-  fmt.Println("continuity = ", tsPacket.continuity)
+	fmt.Println("\n:::TsRead:::\n")
+	fmt.Println("sync = ", tsPacket.sync)
+	fmt.Println("transportError = ", tsPacket.transportError)
+	fmt.Println("unitStart = ", tsPacket.unitStart)
+	fmt.Println("priority = ", tsPacket.priority)
+	fmt.Println("pid = ", tsPacket.pid)
+	fmt.Println("scramble = ", tsPacket.scramble)
+	fmt.Println("hasAdaptation = ", tsPacket.hasAdaptation)
+	fmt.Println("hasPayload = ", tsPacket.hasPayload)
+	fmt.Println("continuity = ", tsPacket.continuity)
 }

@@ -1,32 +1,32 @@
 package main
 
 import (
-  "fmt"
-  "log"
-  "regifted/data"
+	"fmt"
+	"log"
+	"regifted/data"
 )
 
 type Pat struct {
-  SKIP_BYTES int
-  CRC_SIZE   int
+	SKIP_BYTES int
+	CRC_SIZE   int
 
-  byteChunk []byte
+	byteChunk []byte
 
-  unitStart bool
+	unitStart bool
 
-  pointerField           bool
-  tableId                uint
-  flags                  uint
-  sectionSyntaxIndicator bool
-  sectionLength          uint
-  transportStreamId      uint
-  versionNumber          uint
-  currentNext            uint
-  sectionNumber          uint
-  lastSectionNumber      uint
-  count                  uint
+	pointerField           bool
+	tableId                uint
+	flags                  uint
+	sectionSyntaxIndicator bool
+	sectionLength          uint
+	transportStreamId      uint
+	versionNumber          uint
+	currentNext            uint
+	sectionNumber          uint
+	lastSectionNumber      uint
+	count                  uint
 
-  programs []Program
+	programs []Program
 }
 
 //Pat Read
@@ -58,74 +58,74 @@ type Pat struct {
 //lastSectionNumber – This 8-bit field specifies the number of the last section (that is, the section with the highest
 //section_number) of the complete Program Association Table.
 func (pat *Pat) Read() {
-  if pat.byteChunk == nil {
-    log.Printf("attempted to read from nil pointer: byteChunk\n")
-    return
-  }
+	if pat.byteChunk == nil {
+		log.Printf("attempted to read from nil pointer: byteChunk\n")
+		return
+	}
 
-  var SKIP_BYTES uint = 5
-  var CRC_SIZE uint = 4
-  var PROGRAM_SIZE uint = 4
-  var flags uint = 0
+	var SKIP_BYTES uint = 5
+	var CRC_SIZE uint = 4
+	var PROGRAM_SIZE uint = 4
+	var flags uint = 0
 
-  var flag bool = false
+	var flag bool = false
 
-  reader := data.NewReader(pat.byteChunk)
+	reader := data.NewReader(pat.byteChunk)
 
-  if reader.Read(1) == 1 {
-    flag = true
-  }
+	if reader.Read(1) == 1 {
+		flag = true
+	}
 
-  pat.pointerField = (pat.unitStart && flag) || false
+	pat.pointerField = (pat.unitStart && flag) || false
 
-  pat.tableId = reader.Read(1)
+	pat.tableId = reader.Read(1)
 
-  flags = reader.Read(2)
+	flags = reader.Read(2)
 
-  pat.sectionSyntaxIndicator = flags&0x8000 > 0
+	pat.sectionSyntaxIndicator = flags&0x8000 > 0
 
-  pat.sectionLength = flags & 0x3ff
+	pat.sectionLength = flags & 0x3ff
 
-  pat.transportStreamId = reader.Read(2)
+	pat.transportStreamId = reader.Read(2)
 
-  flags = reader.Read(1)
+	flags = reader.Read(1)
 
-  pat.versionNumber = flags & 0x3ffe
-  pat.currentNext = flags & 0x0001
+	pat.versionNumber = flags & 0x3ffe
+	pat.currentNext = flags & 0x0001
 
-  pat.sectionNumber = reader.Read(1)
+	pat.sectionNumber = reader.Read(1)
 
-  pat.lastSectionNumber = reader.Read(1)
+	pat.lastSectionNumber = reader.Read(1)
 
-  pat.count = pat.sectionLength - SKIP_BYTES
+	pat.count = pat.sectionLength - SKIP_BYTES
 
-  pat.Print()
+	pat.Print()
 
-  for pat.count > CRC_SIZE {
-    program := Program{}
-    pmt := Pmt{}
+	for pat.count > CRC_SIZE {
+		program := Program{}
+		pmt := Pmt{}
 
-    program.Read(reader)
+		program.Read(reader)
 
-    pat.programs = append(pat.programs, program)
-    pmtConstructors[program.pid] = pmt
+		pat.programs = append(pat.programs, program)
+		pmtConstructors[program.pid] = pmt
 
-    pat.count = pat.count - PROGRAM_SIZE
-  }
+		pat.count = pat.count - PROGRAM_SIZE
+	}
 
 }
 
 func (pat *Pat) Print() {
-  fmt.Println("\n:::Pat:::\n")
-  fmt.Println("tableId = ", pat.tableId)
-  fmt.Println("pointerField = ", pat.pointerField)
-  fmt.Println("sectionSyntaxIndicator = ", pat.sectionSyntaxIndicator)
-  fmt.Println("sectionLength = ", pat.sectionLength)
-  fmt.Println("transportStreamId = ", pat.transportStreamId)
-  fmt.Println("versionNumber = ", pat.versionNumber)
-  fmt.Println("currentNext = ", pat.currentNext)
-  fmt.Println("sectionNumber = ", pat.sectionNumber)
-  fmt.Println("lastSectionNumber = ", pat.lastSectionNumber)
-  fmt.Println("count = ", pat.count)
+	fmt.Println("\n:::Pat:::\n")
+	fmt.Println("tableId = ", pat.tableId)
+	fmt.Println("pointerField = ", pat.pointerField)
+	fmt.Println("sectionSyntaxIndicator = ", pat.sectionSyntaxIndicator)
+	fmt.Println("sectionLength = ", pat.sectionLength)
+	fmt.Println("transportStreamId = ", pat.transportStreamId)
+	fmt.Println("versionNumber = ", pat.versionNumber)
+	fmt.Println("currentNext = ", pat.currentNext)
+	fmt.Println("sectionNumber = ", pat.sectionNumber)
+	fmt.Println("lastSectionNumber = ", pat.lastSectionNumber)
+	fmt.Println("count = ", pat.count)
 
 }

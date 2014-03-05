@@ -1,18 +1,17 @@
 package main
 
 import (
-  "fmt"
+	"fmt"
 )
 
-
 type ElementaryStreamPacket struct {
-  byteChunk []byte
-  payload   []byte
+	byteChunk []byte
+	payload   []byte
 
-  unitStart bool
+	unitStart bool
 
-  pid           uint
-  hasAdaptation bool
+	pid           uint
+	hasAdaptation bool
 }
 
 //ElementaryStreamPacket Dispatch
@@ -20,33 +19,31 @@ type ElementaryStreamPacket struct {
 //else append the es payload
 func (elementaryStreamPacket *ElementaryStreamPacket) Dispatch() {
 
-  var pesData Pes
+	var pesData Pes
 
-  pesData = pesCollector[elementaryStreamPacket.pid]
+	pesData = pesCollector[elementaryStreamPacket.pid]
 
-  if elementaryStreamPacket.unitStart {
+	if elementaryStreamPacket.unitStart {
 
-    if pesData, ok := pesCollector[elementaryStreamPacket.pid]; ok {
+		if pesData, ok := pesCollector[elementaryStreamPacket.pid]; ok {
 
-      pesData.pid = elementaryStreamPacket.pid
-      pesData.streamType = types[elementaryStreamPacket.pid]
-      pesData.Read()
-      pesData.Print()
+			pesData.pid = elementaryStreamPacket.pid
+			pesData.streamType = types[elementaryStreamPacket.pid]
+			pesData.Read()
+			pesData.Print()
 
-    }
-    pesData = Pes{}
+		}
+		pesData = Pes{}
 
-  }
+	}
 
-  pesData.byteChunk = append(pesData.byteChunk, elementaryStreamPacket.payload...)
+	pesData.byteChunk = append(pesData.byteChunk, elementaryStreamPacket.payload...)
 
-  pesCollector[elementaryStreamPacket.pid] = pesData
+	pesCollector[elementaryStreamPacket.pid] = pesData
 
 }
-
 
 func (elementaryStreamPacket *ElementaryStreamPacket) Print() {
-  fmt.Println("\n:::ES:::\n")
-  fmt.Println("payload = ", elementaryStreamPacket.payload)
+	fmt.Println("\n:::ES:::\n")
+	fmt.Println("payload = ", elementaryStreamPacket.payload)
 }
-

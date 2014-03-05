@@ -5,8 +5,8 @@ import (
 	//"io/ioutil"
 	"log"
 	//"os"
-	"testing"
 	"regifted/util"
+	"testing"
 )
 
 func awfulStateSetup() {

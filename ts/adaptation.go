@@ -1,29 +1,29 @@
 package main
 
 import (
-  "fmt"
-  "log"
-  "regifted/data"
+	"fmt"
+	"log"
+	"regifted/data"
 )
 
 type Adaptation struct {
-  payload   []byte
-  byteChunk []byte
+	payload   []byte
+	byteChunk []byte
 
-  size     uint
-  pcr      Pcr
-  opcr     Pcr
-  splice   uint
-  stuffing int
+	size     uint
+	pcr      Pcr
+	opcr     Pcr
+	splice   uint
+	stuffing int
 
-  discontinuity bool
-  random        bool
-  priority      bool
-  hasPCR        bool
-  hasOPCR       bool
-  hasSplice     bool
-  hasPrivate    bool
-  hasExtension  bool
+	discontinuity bool
+	random        bool
+	priority      bool
+	hasPCR        bool
+	hasOPCR       bool
+	hasSplice     bool
+	hasPrivate    bool
+	hasExtension  bool
 }
 
 //Adaptation Read
@@ -45,86 +45,86 @@ type Adaptation struct {
 //
 //hasExtension - 1 means presence of adaptation field extension
 func (adaptation *Adaptation) Read() {
-  if adaptation.byteChunk == nil {
-    log.Printf("attempted to read from nil pointer: byteChunk\n")
-    return
-  }
+	if adaptation.byteChunk == nil {
+		log.Printf("attempted to read from nil pointer: byteChunk\n")
+		return
+	}
 
-  var flags uint = 0
-  var spliceFlag int = 0
-  var pcrFlag int = 0
-  var opcrFlag int = 0
+	var flags uint = 0
+	var spliceFlag int = 0
+	var pcrFlag int = 0
+	var opcrFlag int = 0
 
-  reader := data.NewReader(adaptation.byteChunk)
+	reader := data.NewReader(adaptation.byteChunk)
 
-  adaptation.size = reader.Read(1)
+	adaptation.size = reader.Read(1)
 
-  flags = reader.Read(1)
+	flags = reader.Read(1)
 
-  adaptation.discontinuity = flags&0x80 > 0
-  adaptation.random = flags&0x40 > 0
-  adaptation.priority = flags&0x20 > 0
-  adaptation.hasPCR = flags&0x10 > 0
+	adaptation.discontinuity = flags&0x80 > 0
+	adaptation.random = flags&0x40 > 0
+	adaptation.priority = flags&0x20 > 0
+	adaptation.hasPCR = flags&0x10 > 0
 
-  adaptation.hasOPCR = flags&0x08 > 0
+	adaptation.hasOPCR = flags&0x08 > 0
 
-  adaptation.hasSplice = flags&0x04 > 0
+	adaptation.hasSplice = flags&0x04 > 0
 
-  adaptation.hasPrivate = flags&0x02 > 0
-  adaptation.hasExtension = flags&0x01 > 1
+	adaptation.hasPrivate = flags&0x02 > 0
+	adaptation.hasExtension = flags&0x01 > 1
 
-  if adaptation.hasPCR {
+	if adaptation.hasPCR {
 
-    pcrFlag = 6
+		pcrFlag = 6
 
-    adaptation.pcr.byteChunk = reader.ReadBytes(6)
+		adaptation.pcr.byteChunk = reader.ReadBytes(6)
 
-    adaptation.pcr.Read()
-  }
+		adaptation.pcr.Read()
+	}
 
-  if adaptation.hasOPCR {
+	if adaptation.hasOPCR {
 
-    opcrFlag = 6
+		opcrFlag = 6
 
-    adaptation.pcr.byteChunk = reader.ReadBytes(6)
-    adaptation.opcr.Read()
+		adaptation.pcr.byteChunk = reader.ReadBytes(6)
+		adaptation.opcr.Read()
 
-  }
+	}
 
-  if adaptation.hasSplice {
+	if adaptation.hasSplice {
 
-    spliceFlag = 1
-    adaptation.splice = reader.Read(1)
+		spliceFlag = 1
+		adaptation.splice = reader.Read(1)
 
-  }
+	}
 
-  adaptation.stuffing = int(int(adaptation.size) - 1 - pcrFlag - opcrFlag - spliceFlag)
+	adaptation.stuffing = int(int(adaptation.size) - 1 - pcrFlag - opcrFlag - spliceFlag)
 
-  reader.Cursor += uint64(int(adaptation.size) - 1 - pcrFlag - opcrFlag - spliceFlag)
+	reader.Cursor += uint64(int(adaptation.size) - 1 - pcrFlag - opcrFlag - spliceFlag)
 
-  payload := reader.ReadBytes(reader.Size - reader.Cursor)
+	payload := reader.ReadBytes(reader.Size - reader.Cursor)
 
-  adaptation.payload = payload
+	adaptation.payload = payload
 
-  adaptation.Print()
+	adaptation.Print()
 
 }
 
 func (adaptation *Adaptation) Print() {
 
-  fmt.Println("\n:::Adaptation:::\n")
-  fmt.Println("size = ", adaptation.size)
-  fmt.Println("discontinuity = ", adaptation.discontinuity)
-  fmt.Println("random = ", adaptation.random)
-  fmt.Println("priority = ", adaptation.priority)
-  fmt.Println("hasPCR = ", adaptation.hasPCR)
-  fmt.Println("hasOPCR = ", adaptation.hasOPCR)
-  fmt.Println("hasSplice = ", adaptation.hasSplice)
-  fmt.Println("hasPrivate = ", adaptation.hasPrivate)
-  fmt.Println("hasExtension = ", adaptation.hasExtension)
+	fmt.Println("\n:::Adaptation:::\n")
+	fmt.Println("size = ", adaptation.size)
+	fmt.Println("discontinuity = ", adaptation.discontinuity)
+	fmt.Println("random = ", adaptation.random)
+	fmt.Println("priority = ", adaptation.priority)
+	fmt.Println("hasPCR = ", adaptation.hasPCR)
+	fmt.Println("hasOPCR = ", adaptation.hasOPCR)
+	fmt.Println("hasSplice = ", adaptation.hasSplice)
+	fmt.Println("hasPrivate = ", adaptation.hasPrivate)
+	fmt.Println("hasExtension = ", adaptation.hasExtension)
 
-  fmt.Println("stuffing = ", adaptation.stuffing)
+	fmt.Println("stuffing = ", adaptation.stuffing)
 
-  fmt.Println("payload = ", adaptation.payload)
+	fmt.Println("payload = ", adaptation.payload)
 
 }

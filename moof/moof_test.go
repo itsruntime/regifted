@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"regifted/data"
 	"testing"
-	"fmt"
 )
 
 //Tests setting of Mfhd struct fields by Mfhd.Reader(reader Reader)
@@ -11,7 +11,7 @@ import (
 func TestReadMfhdBoxFields(t *testing.T) {
 	testData := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	reader := data.NewReader(testData)
-	m := new (Mfhd)
+	m := new(Mfhd)
 	m.Read(reader)
 	fmt.Printf("Size = %d\n", m.size)
 	if m.size != 16909060 {
@@ -30,7 +30,7 @@ func TestReadMfhdBoxFields(t *testing.T) {
 		t.Fail()
 	}
 	fmt.Printf("Sequence = %d\n", m.sequence)
-	if m.sequence != 219025168{
+	if m.sequence != 219025168 {
 		t.Fail()
 	}
 }
@@ -60,7 +60,7 @@ func TestReadTfhdBoxFields(t *testing.T) {
 		// defaultsampleflags
 		0x44, 0x44, 0x44, 0x44}
 	reader := data.NewReader(testData)
-	x := new (Tfhd)
+	x := new(Tfhd)
 	x.Read(reader)
 	fmt.Printf("Size = %d\n", x.size)
 	if x.size != 1122867 {
@@ -83,7 +83,6 @@ func TestReadTfhdBoxFields(t *testing.T) {
 		t.Fail()
 	}
 }
-
 
 //Simple test that flags are set to TRUE in Tfhd.Read(reader Reader)
 
@@ -110,7 +109,7 @@ func TestReadTfhdFlagsTrue(t *testing.T) {
 		// defaultsampleflags
 		0x44, 0x44, 0x44, 0x44}
 	reader := data.NewReader(testData)
-	x := new (Tfhd)
+	x := new(Tfhd)
 	x.Read(reader)
 	fmt.Printf("Flags = %d\n", x.flags)
 	if x.flags != 65595 {
@@ -167,7 +166,7 @@ func TestReadTfhdFlagsFalse(t *testing.T) {
 		// defaultsampleflags
 		0x44, 0x44, 0x44, 0x44}
 	reader := data.NewReader(testData)
-	x := new (Tfhd)
+	x := new(Tfhd)
 	x.Read(reader)
 	fmt.Printf("baseDataOffsetPresent = %d\n", x.baseDataOffsetPresent)
 	if x.baseDataOffsetPresent != 0 {
@@ -217,7 +216,7 @@ func TestReadTfhdFlagFieldsSetTrue(t *testing.T) {
 		// defaultsampleflags
 		0x44, 0x44, 0x44, 0x44}
 	reader := data.NewReader(testData)
-	x := new (Tfhd)
+	x := new(Tfhd)
 	x.Read(reader)
 	fmt.Printf("baseDataOffset = %d\n", x.baseDataOffset)
 	if x.baseDataOffset != 72340172838076673 {
@@ -267,7 +266,7 @@ func TestReadTfhdFlagFieldsSetFalse(t *testing.T) {
 		// defaultsampleflags
 		0x44, 0x44, 0x44, 0x44}
 	reader := data.NewReader(testData)
-	x := new (Tfhd)
+	x := new(Tfhd)
 	x.Read(reader)
 	fmt.Printf("baseDataOffset = %d\n", x.baseDataOffset)
 	if x.baseDataOffset != 0 {
@@ -290,7 +289,6 @@ func TestReadTfhdFlagFieldsSetFalse(t *testing.T) {
 		t.Fail()
 	}
 }
-
 
 //Tests for SampleInformation when the flags are false
 func TestSampleInformationFlagsFalse(t *testing.T) {
@@ -332,7 +330,7 @@ func TestSampleInformationFlagsFalse(t *testing.T) {
 
 //Tests for SampleInformation when the flags are true
 func TestSampleInformationFlagsTrue(t *testing.T) {
-	testData := []byte {
+	testData := []byte{
 		// duration
 		0x00, 0x11, 0x22, 0x33,
 		// size
@@ -428,7 +426,7 @@ func TestReadTrunFlagsTrue(t *testing.T) {
 		// firstsampleflags
 		0x11, 0x11, 0x11, 0x11}
 	reader := data.NewReader(testData)
-	x := new (Trun)
+	x := new(Trun)
 	x.Read(reader)
 	fmt.Printf("Flags = %d\n", x.flags)
 	if x.flags != 3845 {
@@ -459,6 +457,7 @@ func TestReadTrunFlagsTrue(t *testing.T) {
 		t.Fail()
 	}
 }
+
 //Simple test that flags are set to FALSE in Trun.Read(reader Reader)
 func TestReadTrunFlagsFalse(t *testing.T) {
 	testData := []byte{
@@ -477,7 +476,7 @@ func TestReadTrunFlagsFalse(t *testing.T) {
 		// firstsampleflags
 		0x11, 0x11, 0x11, 0x11}
 	reader := data.NewReader(testData)
-	x := new (Trun)
+	x := new(Trun)
 	fmt.Printf("Flags = %d\n", x.flags)
 	x.Read(reader)
 	if x.flags != 0 {
@@ -528,7 +527,7 @@ func TestReadTrunFlagFieldsSetTrue(t *testing.T) {
 		// firstsampleflags
 		0x11, 0x11, 0x11, 0x11}
 	reader := data.NewReader(testData)
-	x := new (Trun)
+	x := new(Trun)
 	x.Read(reader)
 	fmt.Printf("Flags = %d\n", x.flags)
 	if x.flags != 3845 {
@@ -543,6 +542,7 @@ func TestReadTrunFlagFieldsSetTrue(t *testing.T) {
 		t.Fail()
 	}
 }
+
 //Simple test of setting flagged fields in Trun.Read(reader Reader)
 //when all flags FALSE
 func TestReadTrunFlagFieldsSetFalse(t *testing.T) {
@@ -563,7 +563,7 @@ func TestReadTrunFlagFieldsSetFalse(t *testing.T) {
 		// firstsampleflags
 		0x11, 0x11, 0x11, 0x11}
 	reader := data.NewReader(testData)
-	x := new (Trun)
+	x := new(Trun)
 	x.Read(reader)
 	fmt.Printf("Flags = %d\n", x.flags)
 	if x.flags != 0 {
@@ -598,7 +598,7 @@ func TestReadTrunFlagFieldsDataOffsetTrue(t *testing.T) {
 		// firstsampleflags
 		0x11, 0x11, 0x11, 0x11}
 	reader := data.NewReader(testData)
-	x := new (Trun)
+	x := new(Trun)
 	x.Read(reader)
 	fmt.Printf("Flags = %d\n", x.flags)
 	if x.flags != 1 {
@@ -611,6 +611,7 @@ func TestReadTrunFlagFieldsDataOffsetTrue(t *testing.T) {
 		t.Fail()
 	}
 }
+
 //Tests for Traf.Read in assigning values to the
 //fields inherited from Box and the []Box <-- NEED GOOD TEST!
 //Tests for Box.Read in assigning values to the Box fields and
@@ -620,7 +621,7 @@ func TestReadTrunFlagFieldsDataOffsetTrue(t *testing.T) {
 //[]BYTE THAT HAS ALL NECESSARY INFORMATION TO DO BOTH BOX.READ
 //AND THE SUBSEQUENT SUBTYPE_BOX.READ
 func TestReadTrafBoxFields(t *testing.T) {
-	testData := []byte {
+	testData := []byte{
 		// size of traf
 		0x00, 0x00, 0x00, 0x28,
 		// traf boxtype
@@ -662,16 +663,17 @@ func TestReadTrafBoxFields(t *testing.T) {
 	fmt.Println(x.boxes[0])
 	fmt.Println(x.boxes[1])
 	/*
-	if x.boxes[0].boxtype != 1952868452 {
-		t.Fail()
-	}
-	if x.boxes[1].boxtype != 1953658222 {
-		t.Fail()
-	}*/
+		if x.boxes[0].boxtype != 1952868452 {
+			t.Fail()
+		}
+		if x.boxes[1].boxtype != 1953658222 {
+			t.Fail()
+		}*/
 }
+
 //Tests for Moof box fields
 func TestReadMoofBoxFields(t *testing.T) {
-	testData := []byte {
+	testData := []byte{
 		// size of moof
 		0x00, 0x00, 0x00, 0x20,
 		// moof boxtype
@@ -704,21 +706,21 @@ func TestReadMoofBoxFields(t *testing.T) {
 	if len(x.boxes) != 2 {
 		t.Fail()
 	}
-	fmt.Println( x.boxes[0])
-	fmt.Println( x.boxes[1])
+	fmt.Println(x.boxes[0])
+	fmt.Println(x.boxes[1])
 	/*
-	if x.boxes[0].boxtype != 1835427940 {
-		t.Fail()
-	}
-	if x.boxes[1].boxtype != 1953653094 {
-		t.Fail()
-	}*/
+		if x.boxes[0].boxtype != 1835427940 {
+			t.Fail()
+		}
+		if x.boxes[1].boxtype != 1953653094 {
+			t.Fail()
+		}*/
 }
 
 //Tests for Mdat.Read in assigning values to size, boxtype, and
 //[]bytes, WHERE SIZE != 1
 func TestReadMdatAllFields(t *testing.T) {
-	testData := []byte {
+	testData := []byte{
 		// size of mdat
 		0x00, 0x00, 0x00, 0x08,
 		// mdat boxtype
