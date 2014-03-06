@@ -1,15 +1,17 @@
 package data
 
 import (
-	// "fmt"
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	// "encoding/hex"
+	// "io/ioutil"
 	// "os"
 	"testing"
 )
 
 func TestReader(t *testing.T) {
+	fmt.Println("")
 	// todo( mathew guest ) I'm unsure if go has a way to do death tests. Slices
 	// still allow you to runtime panic if you access out of bounds. We need a
 	// way to recover from failure aka death tests. I don't see anything obvious
@@ -76,7 +78,7 @@ func TestReaderRead(t *testing.T) {
 	// not sure.... The other function works.
 
 	// big endian - we are at processor level and the registers have already
-	// been converted for us
+	// been converted for us... I think...
 
 	var reader *Reader
 	var uint_ uint
@@ -103,6 +105,54 @@ func TestReaderRead(t *testing.T) {
 		t.Errorf("Read(4): got %d; want %d", uint_, arr_int)
 	}
 
+}
+
+func TestReaderReadBytes(t *testing.T) {
+	batman := []byte{'a', 'a', 't', 'm', 'a', 'n'}
+	var expect []byte
+	var bytes_ []byte
+	var reader *Reader
+
+	reader = NewReader(batman)
+	bytes_ = reader.ReadBytes(0)
+	// empty read
+	expect = batman[0:0]
+	if !bytes.Equal(bytes_, expect) {
+		t.Errorf("ReadBytes(0): got %s; want %s", bytes_, expect)
+	}
+
+	// one byte at a time
+	n := len(batman)
+	for idx := 0; idx < n; idx++ {
+		bytes_ = reader.ReadBytes(1)
+		expect = batman[idx : idx+1]
+		if !bytes.Equal(bytes_, expect) {
+			t.Errorf("ReadBytes(1): got %s; want %s", bytes_, expect)
+		}
+	}
+
+	// read past end
+	bytes_ = reader.ReadBytes(1)
+	expect = []byte{}
+	if !bytes.Equal(bytes_, expect) {
+		t.Errorf("ReadBytes(1): got %s; want %s", bytes_, expect)
+	}
+
+	// read full slice at once
+	reader = NewReader(batman)
+	bytes_ = reader.ReadBytes(uint64(len(batman)))
+	expect = batman
+	if !bytes.Equal(bytes_, expect) {
+		t.Errorf("ReadBytes(6): got %s; want %s", bytes_, expect)
+	}
+
+	// read more than full slice at once
+	reader = NewReader(batman)
+	bytes_ = reader.ReadBytes(uint64(len(batman)) + 1)
+	expect = batman
+	if !bytes.Equal(bytes_, expect) {
+		t.Errorf("ReadBytes(6): got %s; want %s", bytes_, expect)
+	}
 }
 
 // struct for Reader
