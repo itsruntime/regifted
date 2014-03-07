@@ -2,10 +2,11 @@ package main
 
 import (
 	// "fmt"
-  "io/ioutil"
-  "log"
-  "os"
-  "testing"
+	//"io/ioutil"
+	"log"
+	//"os"
+	"regifted/util"
+	"testing"
 )
 
 func awfulStateSetup() {
@@ -13,32 +14,32 @@ func awfulStateSetup() {
 	Init()
 }
 
-const TESTFP = "test1.ts"
+// const TESTFP = "test1.ts"
 
-func TestReader(t *testing.T) {
-	// compare file size from os and then counted from buffer
-	fp, err := os.Open(TESTFP)
-	if err != nil {
-		t.Fatalf("did not open test file\n")
-	}
-	fi, err := fp.Stat()
-	if err != nil {
-		// Could not obtain stat, handle error
-	}
-	fileSizeOS := fi.Size()
-	fp.Close()
+// func TestReader(t *testing.T) {
+// 	// compare file size from os and then counted from buffer
+// 	fp, err := os.Open(TESTFP)
+// 	if err != nil {
+// 		t.Fatalf("did not open test file\n")
+// 	}
+// 	fi, err := fp.Stat()
+// 	if err != nil {
+// 		// Could not obtain stat, handle error
+// 	}
+// 	fileSizeOS := fi.Size()
+// 	fp.Close()
 
-	bytes, err := ioutil.ReadFile(TESTFP)
-	if err != nil {
-		t.Fatalf("did not open test file\n")
-	}
-	fileSizeBuff := len(bytes)
-	if uint64(fileSizeOS) != uint64(fileSizeBuff) {
-		t.Error("file size calculated from buffer does not match size returned from OS\n")
-	}
+// 	bytes, err := ioutil.ReadFile(TESTFP)
+// 	if err != nil {
+// 		t.Fatalf("did not open test file\n")
+// 	}
+// 	fileSizeBuff := len(bytes)
+// 	if uint64(fileSizeOS) != uint64(fileSizeBuff) {
+// 		t.Error("file size calculated from buffer does not match size returned from OS\n")
+// 	}
 
-	// t.Error( "print" )
-}
+// 	// t.Error( "print" )
+// }
 
 func TestTransportPacketRead(t *testing.T) {
 	// ts header
@@ -95,7 +96,7 @@ func TestTransportPacketRead(t *testing.T) {
 		0F 23 CB 70 21 DE AE 70 1D A0 F1 22 E1 10 79 1C
 		58 EA D4 4F 50 07 D1 3E D8 77 E4 63 65 2C E6 D0
 		9A 11 82 26 CC 62 D6 2E 00 1F DA C3`
-	err = generateBytesFromString(&packetBytes, &packetString)
+	err = util.GenerateBytesFromString(&packetBytes, &packetString)
 	if err != nil {
 		log.Printf("EE problem in test suite")
 	}
@@ -152,7 +153,7 @@ func TestTransportPacketRead(t *testing.T) {
    0F 23 CB 70 21 DE AE 70 1D A0 F1 22 E1 10 79 1C
    58 EA D4 4F 50 07 D1 3E D8 77 E4 63 65 2C E6 D0
    9A 11 82 26 CC 62 D6 2E 00 1F DA C3`
-	err = generateBytesFromString(&packetBytes, &packetString)
+	err = util.GenerateBytesFromString(&packetBytes, &packetString)
 	if err != nil {
 		log.Printf("EE problem in test suite")
 	}
@@ -210,7 +211,7 @@ func TestTransportPacketRead(t *testing.T) {
   ffff ffff ffff ffff ffff ffff ffff ffff
   ffff ffff ffff ffff ffff ffff ffff ffff
   ffff ffff ffff ffff ffff ffff`
-	err = generateBytesFromString(&packetBytes, &packetString)
+	err = util.GenerateBytesFromString(&packetBytes, &packetString)
 	if err != nil {
 		log.Printf("EE problem in test suite")
 	}
@@ -267,7 +268,7 @@ func TestTransportPacketRead(t *testing.T) {
   ffff ffff ffff ffff ffff ffff ffff ffff
   ffff ffff ffff ffff ffff ffff ffff ffff
   ffff ffff ffff ffff ffff ffff`
-	err = generateBytesFromString(&packetBytes, &packetString)
+	err = util.GenerateBytesFromString(&packetBytes, &packetString)
 	if err != nil {
 		log.Printf("EE problem in test suite")
 	}
@@ -310,9 +311,9 @@ func TestTransportPacketRead(t *testing.T) {
 			"continuity incorrectly.")
 	}
 
-  // empty packet
-  packet = TsPacket{}
-  packet.Read()
+	// empty packet
+	packet = TsPacket{}
+	packet.Read()
 }
 
 func TestInit(t *testing.T) {

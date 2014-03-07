@@ -1,27 +1,25 @@
 package main
 
-import(
-		"fmt"
-		"regifted/moof"
-		"regifted/data"
-		"os"
-		"io/ioutil"
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"regifted/data"
 )
 
-func main(){
-	args:=os.Args
+func main() {
+	args := os.Args
 	fullFile, err := ioutil.ReadFile(args[1])
-	if err!=nil{
+	if err != nil {
 		fmt.Println("Error reading file")
-	}else{
+	} else {
 		reader := data.NewReader(fullFile)
-		moof := new(moof.Moof)
+		moof := new(Moof)
 		fmt.Println()
 		fmt.Println()
 		fmt.Println()
 		moof.Read(reader)
 		fmt.Println(moof)
 	}
-	
-	
+
 }

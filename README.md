@@ -21,23 +21,24 @@ Build Process
 
 #### Options for building and running the program using 'go install', 'go run', and the resultant binaries.
 ##### 6.  Move to the regifted folder using the CMD or Terminal. Type both:
-					i.  go install regifted/moof_main.go
-					ii. go install regifted/ts.go
+					i.  go install regifted/moof
+					ii. go install regifted/ts
 ##### 7.  You can run the file from this location.
 					i.  go run ts.go [ts file location]
-					ii. go run moof_main.go [mp4 fragment file location]
+					ii. go run moof.go [mp4 fragment file location]
 ##### 8. In step 6 you built binaries for moof_main.go and ts.go. These can be found in $GOPATH/bin.
 					i. From the $GOPATH/bin directory you can type:
-						a. ts [ts file location]
-						b. moof_main [mp4 fragment file location]
+						a. ./ts [ts file location]
+						b. ./moof [mp4 fragment file location]
 
 Test Process  
 ============  
 #### Running the unit tests
 ##### 1. Visit http://golang.org/cmd/go/#hdr-Test_packages for more on the GO testing suite.
 ##### 2. From the regifted folder you make these calls:
-					i.  go test -v regifted/moof
-					ii. go test ts_test.go
+					i.   go test -v regifted/ts
+					ii.  go test -v regifted/moof
+					iii. go test -v regifted/data
 
 
 Implementation Documentation  

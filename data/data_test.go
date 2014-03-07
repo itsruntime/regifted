@@ -1,52 +1,156 @@
-/*
-Test of the function and methods in data.go
-*/
 package data
 
 import (
-	"testing"
+	"bytes"
+	"encoding/binary"
 	"fmt"
+	// "encoding/hex"
+	// "io/ioutil"
+	// "os"
+	"testing"
 )
 
-func TestRead(t *testing.T) {
-	testData := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
-	reader := NewReader(testData)
-	one := reader.Read(1)
-	if one != 1 {
-		t.Fail()
+func TestReader(t *testing.T) {
+	fmt.Println("")
+	// todo( mathew guest ) I'm unsure if go has a way to do death tests. Slices
+	// still allow you to runtime panic if you access out of bounds. We need a
+	// way to recover from failure aka death tests. I don't see anything obvious
+	// in the go testing library but maybe with panic or something unknown.
+	var s []byte
+	baseline := []byte{'b', 'a', 't', 'm', 'a', 'n'}
+
+	// null slice - the best I can currently do is that they don't segfault
+	s = make([]byte, 6, 6)
+	copy(s, baseline)
+	reader := NewReader(s)
+	_ = reader
+	reader.Read(100)
+	reader.ReadBytes(100)
+
+	s = make([]byte, 6, 6)
+	copy(s, baseline)
+	reader = NewReader(s)
+	reader.ReadBytes(100)
+	reader.Read(100)
+
+	// read past end
+	s = make([]byte, 6, 6)
+	copy(s, baseline)
+	reader = NewReader(s)
+	reader.Read(100000000)
+
+	// read after cursor is too far
+	_ = reader.Read(0)
+	_ = reader.Read(1)
+	_ = reader.Read(10)
+
+	s = []byte{'b', 'a', 't', 'm', 'a', 'n'}
+	reader = NewReader(s)
+	reader.Read(0)
+	reader.Read(0)
+
+	s = make([]byte, 5, 5)
+	reader = NewReader(s)
+	reader.Read(5)
+}
+
+func TestReaderConstructor(t *testing.T) {
+	empty := []byte{}
+	batman := []byte{'a', 'a', 't', 'm', 'a', 'n'}
+	var reader *Reader
+
+	reader = NewReader(empty)
+	if !bytes.Equal(empty, reader.data) {
+		t.Error("constructor failed")
 	}
-	two := reader.Read(2)
-	fmt.Printf("Two equals %d", two)
-	if two != 515 {
-		t.Fail()
+
+	reader = NewReader(batman)
+	if !bytes.Equal(batman, reader.data) {
+		t.Error("constructor failed")
 	}
 }
-// struct for Reader
 
+func TestReaderRead(t *testing.T) {
+	// arr := []byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x04}
+	arr := []byte{0x00, 0x00, 0x00, 0x0a}
+	arr_int := binary.BigEndian.Uint32(arr)
+	// binary.UVarint only reads one byte for me unless the first bytes are 0xff
+	// not sure.... The other function works.
 
-// struct for Writer
+	// big endian - we are at processor level and the registers have already
+	// been converted for us... I think...
 
+	var reader *Reader
+	var uint_ uint
 
-// def read(self, size)
+	// one byte at a time
+	reader = NewReader(arr)
+	for _, v := range arr {
+		x := reader.Read(1)
+		if byte(x) != v {
+			t.Error("Reader.Read() failed")
+		}
+	}
 
-// def readBytes(self, size)
+	// 4 bytes
+	reader = NewReader(arr)
+	uint_ = reader.Read(4)
+	bytes_ := make([]byte, 4)
+	binary.BigEndian.PutUint32(bytes_, uint32(uint_))
 
-// def readString(self)
+	if !bytes.Equal(arr, bytes_) {
+		t.Errorf("Read(4): got %s; want %s", bytes_, arr)
+	}
+	if uint32(uint_) != arr_int {
+		t.Errorf("Read(4): got %d; want %d", uint_, arr_int)
+	}
 
-// def readAll(self)
+}
 
-// def hasBytes(self)
+func TestReaderReadBytes(t *testing.T) {
+	batman := []byte{'a', 'a', 't', 'm', 'a', 'n'}
+	var expect []byte
+	var bytes_ []byte
+	var reader *Reader
 
-// def __str__(self)
+	reader = NewReader(batman)
+	bytes_ = reader.ReadBytes(0)
+	// empty read
+	expect = batman[0:0]
+	if !bytes.Equal(bytes_, expect) {
+		t.Errorf("ReadBytes(0): got %s; want %s", bytes_, expect)
+	}
 
-// def write(self, size, value
+	// one byte at a time
+	n := len(batman)
+	for idx := 0; idx < n; idx++ {
+		bytes_ = reader.ReadBytes(1)
+		expect = batman[idx : idx+1]
+		if !bytes.Equal(bytes_, expect) {
+			t.Errorf("ReadBytes(1): got %s; want %s", bytes_, expect)
+		}
+	}
 
-// def writeBytes(self, bytes)
+	// read past end
+	bytes_ = reader.ReadBytes(1)
+	expect = []byte{}
+	if !bytes.Equal(bytes_, expect) {
+		t.Errorf("ReadBytes(1): got %s; want %s", bytes_, expect)
+	}
 
-// def writeString(self, s)
+	// read full slice at once
+	reader = NewReader(batman)
+	bytes_ = reader.ReadBytes(uint64(len(batman)))
+	expect = batman
+	if !bytes.Equal(bytes_, expect) {
+		t.Errorf("ReadBytes(6): got %s; want %s", bytes_, expect)
+	}
 
-// def getBytes(self)
-
-// def getSize(self)
-
-// def __str__(self)
+	// read more than full slice at once
+	reader = NewReader(batman)
+	bytes_ = reader.ReadBytes(uint64(len(batman)) + 1)
+	expect = batman
+	if !bytes.Equal(bytes_, expect) {
+		t.Errorf("ReadBytes(6): got %s; want %s", bytes_, expect)
+	}
+}

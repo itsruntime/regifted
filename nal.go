@@ -5,10 +5,8 @@ package main
 //import bufio
 
 type Nal struct {
-
-	streamType		uint32
-	units			[]byte
-	
+	streamType uint32
+	units      []byte
 }
 
 func (n *Nal) read(bytes []byte) {
@@ -18,9 +16,9 @@ func (n *Nal) read(bytes []byte) {
 	if n.streamType == 0x1b {
 		n.readVideo(bytes)
 	} else {
-	    n.readAudio(bytes)
+		n.readAudio(bytes)
 	}
-	
+
 }
 
 func (n *Nal) readVideo(byteArr []byte) {
@@ -28,16 +26,15 @@ func (n *Nal) readVideo(byteArr []byte) {
 	var i int = 0
 	//var ba []byte
 
-
 	//items := byteArr //bytes.Split(byteArr, "0\0\0\1", 0)	//*** ??? ***
 
-	for ; i < len(byteArr) ; i++ {
+	for ; i < len(byteArr); i++ {
 		value := byteArr[i]
-			
-			ba := []byte{value}
 
-			n.units = append(n.units, ba...)
-		
+		ba := []byte{value}
+
+		n.units = append(n.units, ba...)
+
 	}
 
 }
@@ -45,5 +42,5 @@ func (n *Nal) readVideo(byteArr []byte) {
 func (n *Nal) readAudio(bytes []byte) {
 
 	n.units = append(n.units, bytes...)
-	
+
 }
