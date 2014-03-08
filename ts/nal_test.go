@@ -2,7 +2,7 @@ package main
 
 import (
 	"testing"
-	//"regifted/Nal"
+	"regifted"
 
 )
 

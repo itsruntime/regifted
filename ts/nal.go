@@ -1,5 +1,5 @@
 
-package main
+package nal
 
 import "bytes"
 
