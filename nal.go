@@ -35,7 +35,7 @@ func (n *Nal) readVideo(byteArr []byte) {
 			//get each byte from item and append it to units
 			for i := 0; i <= len(item) ; i++ {
 				n.units = append(n.units, item[i])
-			}//end if
+			}//end for
 			
 		}//end if
 	}//end for
