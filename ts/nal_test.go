@@ -2,8 +2,7 @@ package main
 
 import (
 	"testing"
-	"regifted"
-
+	"regifted/ts"
 )
 
 
