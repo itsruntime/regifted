@@ -8,3 +8,14 @@ type Trak struct {
 	size 		uint32 //derived from the sum of all box sizes contained in this box + 4 + 4
 	boxtype		uint32
 }
+
+func NewTrak (s uint32, box uint32) *Trak {
+	newTrak := new(Trak)
+	newTrak.size = s
+	newTrak.boxtype = box
+	return newTrak
+}
+
+func (trak *Trak)SetSize (s uint32) {
+	trak.size = s
+}

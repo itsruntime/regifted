@@ -34,3 +34,29 @@ type Mvhd struct {
 	//largest in use; if all 1's, search for unused ID
 	next_track_ID		uint32 	
 }
+
+// Creates a new Mvhd box. If the size of Mvhd and the flags are not known set them to 0
+func NewMvhd (s uint32, box uint32, ver uint8, flag uint, creationTime uint32, 
+	modificationTime uint32, timeScale uint32, dur uint32, preDefined [6]uint32, 
+	nextTrackID uint32) *Mvhd{
+	newMvhd := new(Mvhd)
+	newMvhd.size = s
+	newMvhd.boxtype = box
+	newMvhd.version = ver
+	newMvhd.flags = flag
+	newMvhd.creation_time = creationTime
+	newMvhd.modification_time = modificationTime
+	newMvhd.timescale = timeScale
+	newMvhd.duration = dur
+	newMvhd.pre_defined = preDefined
+	newMvhd.next_track_ID = nextTrackID
+	return newMvhd
+}
+
+func (mvhd *Mvhd) SetSize (s uint32){
+	mvhd.size = s
+}
+
+func (mvhd *Mvhd) SetFlags (flag uint){
+	mvhd.flags = flag
+}
