@@ -7,26 +7,22 @@ type mdat struct{
 	data []byte
 }
 
-func NewMdat (s uint32, payload []byte) *mdat{
+func NewMdat (s uint64, payload []byte) *mdat{
 	newMdat:=new(mdat)
-	newMdat.size=s
-	newMdat.data = payload
-	return newMdat
-}
-
-func NewMdatLargeSize (s uint64, payload []byte) *mdat{
-	newMdat:=new(mdat)
-	newMdat.size=1
-	newMdat.largeSize = s
+	newMdat.SetSize(s)
 	newMdat.data = payload
 	return newMdat
 }
 
 func (m *mdat) SetSize (s uint64){
-	if s>4294967295 {
-		m.size = uint32(s)
-	}else{
-		m.size = 1
-		m.largeSize = s
+	if s==0{
+		m.size=0
+	} else {
+		if s>4294967295 {
+			m.size = uint32(s)
+		}else{
+			m.size = 1
+			m.largeSize = s
+		}
 	}
 }
