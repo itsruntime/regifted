@@ -1,6 +1,11 @@
 package moov
 
 type Mdhd struct {
+	//extends FullBox
+	size				uint32
+	largeSize			uint64	//size if size==1
+	boxtype				uint32 	// 'mdhd'
+	flags				uint32	//bit(24), no notes in spec on flags
 	version				uint8	//either 0 or 1
 	//creation time since jan 14, 1904 UTC
 	creation_time		uint32  //uint64 if version == 1
