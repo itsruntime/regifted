@@ -1,4 +1,4 @@
-package moov
+package mpeg4file
 
 type Moov struct {
 	//extends Box
@@ -7,26 +7,23 @@ type Moov struct {
 	boxtype		uint32
 }
 
-func NewMoov (s uint32, box uint32) *Moov{
+func NewMoov (s uint64, box uint32) *Moov{
 	newMoov:=new(Moov)
-	newMoov.size = s
+	newMoov.SetSize(s)
 	newMoov.boxtype = box
 	return newMoov
 }
 
-func NewMoovWithLargeSize (s uint64, box uint32) *Moov{
-	newMoov:=new(Moov)
-	newMoov.size = 1
-	newMoov.largeSize = s
-	newMoov.boxtype = box
-	return newMoov
+func (m *Moov) SetSize (s uint32){
+	if s==0{
+		m.size=0
+	} else {
+		if s>4294967295 {
+			m.size = uint32(s)
+		}else{
+			m.size = 1
+			m.largeSize = s
+		}
+	}
 }
-
-func (moov *Moov) SetSize (s uint32){
-	moov.size = s
-}
-
-func (moov *Moov) SetLargeSize (s uint64){
-	moov.size = 1
-	moov.largeSize = s
 }
