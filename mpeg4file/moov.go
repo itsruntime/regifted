@@ -1,5 +1,7 @@
 package mpeg4file
 
+import "strconv"
+
 type Moov struct {
 	//extends Box
 	size		uint32
@@ -25,5 +27,8 @@ func (m *Moov) SetSize (s uint32){
 			m.largeSize = s
 		}
 	}
-}
+}	
+
+func (m *Moov) String() string {
+	return return strconv.FormatUint(uint64(m.size),10)
 }

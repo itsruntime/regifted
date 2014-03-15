@@ -29,10 +29,10 @@ func (f *Ftyp) SetSize(s uint64){
 		f.size=0
 	} else {
 		if s>4294967295 {
-			f.size = uint32(s)
-		}else{
 			f.size = 1
 			f.largeSize = s
+		}else{
+			f.size = uint32(s)
 		}
 	}
 }
