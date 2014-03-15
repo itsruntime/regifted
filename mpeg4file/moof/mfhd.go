@@ -29,7 +29,7 @@ func (m* mfhd) SetSize(s uint64){
 		m.size = 1
 		m.largeSize = s
 	} else {
-		m.size = s
+		m.size = uint32(s)
 	}
 }
 
