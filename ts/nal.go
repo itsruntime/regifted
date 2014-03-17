@@ -1,4 +1,4 @@
-package nal
+package main
 
 import "bytes"
 //import "fmt"

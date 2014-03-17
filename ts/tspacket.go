@@ -64,7 +64,6 @@ func (tsPacket *TsPacket) Read() (int, *data.Reader) {
 	tsPacket.priority = flags&0x2000 > 0
 	pid = flags & 0x1fff
 	tsPacket.pid = pid
-	fmt.Println("pid", pid)
 
 	flags = reader.Read(1)
 
