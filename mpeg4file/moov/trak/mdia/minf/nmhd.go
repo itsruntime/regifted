@@ -1,15 +1,10 @@
 package moov
 
-//There is a different media information header for each //track type (corresponding to the media handler-type); 
-//the matching header shall be present, which may be one //of those defined here, or one defined in a derived 
-//specification.
+//There are four track types: video, sound, hint, and null. 
+//Each type has its own media header. Each header corresponds
+//to one media handler type.
 
-//One type of mediaheader must be present
-//'vmhd', 'smhd', 'hmhd', 'nmhd'
-
-//Streams other than visual and audio (e.g., timed
-//metadata streams) may use a null Media Header Box, as 
-//defined here
+//For streams other than visual and audio.
 
 type Smhd struct {
 	//extends FullBox

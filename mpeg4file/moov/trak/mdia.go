@@ -1,6 +1,7 @@
 package moov
-//The media declaration container contains all the objects that //declare information about the media data within a 
-//track. 
+
+//Contains all the boxes that have information about
+//a track's media data.
 
 type Mdia struct {
 	//extends Box

@@ -1,15 +1,13 @@
 package moov
 
-//There is a different media information header for each //track type (corresponding to the media handler-type); 
-//the matching header shall be present, which may be one //of those defined here, or one defined in a derived 
-//specification.
+//There are four track types: video, sound, hint, and null. 
+//Each type has its own media header. Each header corresponds
+//to one media handler type.
 
-//One type of mediaheader must be present
-//'vmhd', 'smhd', 'hmhd', 'nmhd'
+//The hint media header contains general information
+//for hint tracks.
 
-//The hint media header contains general information,
-//independent of the protocol, for hint tracks. (A PDU
-//is a Protocol Data Unit.) 
+//PDU = protocol data unit
 
 type Smhd struct {
 	//extends FullBox
