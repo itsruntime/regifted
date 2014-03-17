@@ -62,6 +62,7 @@ func (pat *Pat) Read() {
 		log.Printf("attempted to read from nil pointer: byteChunk\n")
 		return
 	}
+	
 
 	var SKIP_BYTES uint = 5
 	var CRC_SIZE uint = 4
