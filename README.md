@@ -46,6 +46,5 @@ Implementation Documentation
 ##### 1. Steps to generate godocs. From the regifted folder:
 					i.  godoc regifted/moof
 					ii. godoc regifted/ts
-##### 2. You can find a link to a prezi-based diagrams demonstrating the activity of ts.go here:
+##### 2. You can find a link to diagrams demonstrating the activity of ts.go and moof.go here:
 ##### https://github.com/itsruntime/regifted/wiki/Design-Documentation
-(A similar diagram for moof.go is forthcoming.)
