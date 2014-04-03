@@ -29,3 +29,9 @@ func (t *traf) SetSize(s uint64){
 func (t *traf) String() string{
 	return strconv.FormatUint(uint64(t.size),10)
 }
+
+func (m *traf) Write(f *File) {
+	// Size
+	// BoxType
+	// Contained boxes write
+}

@@ -29,3 +29,11 @@ func (t *trun) SetSize(s uint64) {
 func (t *trun) String() string{
 	return strconv.FormatUint(uint64(t.size),10)
 }
+
+func (t *trun) Write(f *File) {
+	// Size
+	// BoxType
+	// Contained samples write
+}
+
+// Make struct for Sample information

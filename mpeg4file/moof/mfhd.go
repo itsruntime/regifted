@@ -36,3 +36,9 @@ func (m* mfhd) SetSize(s uint64){
 func (m *mfhd) String() string{
 	return strconv.FormatUint(uint64(m.size),10)
 }
+
+func (m *mfhd) Write(f *File) {
+	// Size
+	// BoxType
+	// Contained boxes write
+}

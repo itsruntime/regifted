@@ -1,6 +1,9 @@
 package mpeg4file
 
-import "strconv"
+import (
+		"strconv"
+		"os"
+		)
 
 type moof struct{
 	size uint32
@@ -28,4 +31,10 @@ func (m *moof) SetSize(s uint64){
 
 func (m *moof) String() string{
 	return strconv.FormatUint(uint64(m.size),10)
+}
+
+func (m *moof) Write(f *File) {
+	// Size
+	// BoxType
+	// Contained boxes write
 }
