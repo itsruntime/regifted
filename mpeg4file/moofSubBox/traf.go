@@ -1,6 +1,9 @@
 package moof
 
-import "strconv"
+import (
+		"strconv"
+		"os"
+		)
 
 type traf struct{
 	size uint32
@@ -30,7 +33,7 @@ func (t *traf) String() string{
 	return strconv.FormatUint(uint64(t.size),10)
 }
 
-func (m *traf) Write(f *File) {
+func (m *traf) Write(f *os.File) {
 	// Size
 	// BoxType
 	// Contained boxes write

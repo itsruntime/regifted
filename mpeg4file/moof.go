@@ -3,12 +3,14 @@ package mpeg4file
 import (
 		"strconv"
 		"os"
+		"regifted/mpeg4file/moofSubBox"
 		)
 
 type moof struct{
 	size uint32
 	largeSize uint64
 	boxType uint32
+	containedBoxes moofSubBox.MoofLevel2 
 }
 
 func NewMoof(s uint64, box uint32) *moof{
@@ -33,7 +35,7 @@ func (m *moof) String() string{
 	return strconv.FormatUint(uint64(m.size),10)
 }
 
-func (m *moof) Write(f *File) {
+func (m *moof) Write(f *os.File) {
 	// Size
 	// BoxType
 	// Contained boxes write
