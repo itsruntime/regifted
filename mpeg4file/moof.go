@@ -1,27 +1,27 @@
 package mpeg4file
 
 import (
-		"strconv"
-		"os"
-		)
+	"strconv"
+)
 
-type moof struct{
-	size uint32
+type moof struct {
+	size      uint32
 	largeSize uint64
-	boxType uint32
+	boxType   uint32
 }
 
-func NewMoof(s uint64, box uint32) *moof{
-	newMoof:=new(moof)
+func NewMoof(s uint64, box uint32) *moof {
+	newMoof := new(moof)
 	newMoof.SetSize(s)
+	//newMoof.boxtype = box
 	newMoof.boxType = box
 	return newMoof
 }
 
-func (m *moof) SetSize(s uint64){
-	if s==0 {
+func (m *moof) SetSize(s uint64) {
+	if s == 0 {
 		m.size = 0
-	}else if s>4294967295 {
+	} else if s > 4294967295 {
 		m.size = 1
 		m.largeSize = s
 	} else {
@@ -29,12 +29,12 @@ func (m *moof) SetSize(s uint64){
 	}
 }
 
-func (m *moof) String() string{
-	return strconv.FormatUint(uint64(m.size),10)
+func (m *moof) String() string {
+	return strconv.FormatUint(uint64(m.size), 10)
 }
 
-func (m *moof) Write(f *File) {
-	// Size
-	// BoxType
-	// Contained boxes write
-}
+//func (m *moof) Write(f *File) {
+// Size
+// BoxType
+// Contained boxes write
+//}
