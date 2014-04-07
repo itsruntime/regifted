@@ -2,7 +2,6 @@ package mpeg4file
 
 import (
 		"strconv"
-		"os"
 		"regifted/mpeg4file/moofSubBox"
 		)
 
@@ -35,8 +34,15 @@ func (m *moof) String() string{
 	return strconv.FormatUint(uint64(m.size),10)
 }
 
-func (m *moof) Write(f *os.File) {
+func (m *moof) Write() []byte{
+	var data []byte
 	// Size
+	if m.size!=1{
+		data = strconv.AppendUint(data, uint64(m.size), 2)	
+	} else {
+		data = strconv.AppendUint(data, m.largeSize, 2)
+	}	
 	// BoxType
 	// Contained boxes write
+	return data
 }
