@@ -1,6 +1,8 @@
-package moof
+package moofSubBox
 
-import "strconv"
+import (
+		"strconv"
+		)
 
 type MoofLevel2 interface{
 	String() string
@@ -16,7 +18,7 @@ type mfhd struct{
 
 func NewMfhd(s uint64, box uint32, ver uint8, flag [3]byte){
 	newMfhd:=new(mfhd)
-	newMfhd.SetSize()
+	newMfhd.SetSize(s)
 	newMfhd.boxType=box
 	newMfhd.version=ver
 	newMfhd.flags=flag
@@ -37,8 +39,15 @@ func (m *mfhd) String() string{
 	return strconv.FormatUint(uint64(m.size),10)
 }
 
-func (m *mfhd) Write(f *File) {
+func (m *mfhd) Write() []byte{
+	var data []byte
 	// Size
+	if m.size!=1{
+		data = strconv.AppendUint(data, uint64(m.size), 2)	
+	} else {
+		data = strconv.AppendUint(data, m.largeSize, 2)
+	}	
 	// BoxType
 	// Contained boxes write
+	return data
 }

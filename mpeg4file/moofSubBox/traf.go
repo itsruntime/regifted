@@ -1,6 +1,8 @@
-package moof
+package moofSubBox
 
-import "strconv"
+import (
+		"strconv"
+		)
 
 type traf struct{
 	size uint32
@@ -30,8 +32,15 @@ func (t *traf) String() string{
 	return strconv.FormatUint(uint64(t.size),10)
 }
 
-func (m *traf) Write(f *File) {
+func (m *traf) Write() []byte{
+	var data []byte
 	// Size
+	if m.size!=1{
+		data = strconv.AppendUint(data, uint64(m.size), 2)	
+	} else {
+		data = strconv.AppendUint(data, m.largeSize, 2)
+	}	
 	// BoxType
 	// Contained boxes write
+	return data
 }
