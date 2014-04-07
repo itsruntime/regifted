@@ -2,14 +2,12 @@ package mpeg4file
 
 import (
 		"strconv"
-		"regifted/mpeg4file/moofSubBox"
 		)
 
 type moof struct{
 	size uint32
 	largeSize uint64
 	boxType uint32
-	containedBoxes moofSubBox.MoofLevel2 
 }
 
 func NewMoof(s uint64, box uint32) *moof{

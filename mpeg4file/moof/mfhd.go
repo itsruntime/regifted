@@ -1,4 +1,4 @@
-package moofSubBox
+package moof
 
 import (
 		"strconv"
