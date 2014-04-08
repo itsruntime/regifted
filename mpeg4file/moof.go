@@ -45,7 +45,6 @@ func (m *moof) Write() []byte{
 	}
 	// BoxType
 	err = binary.Write(buf,binary.BigEndian,m.boxType)
-	// Contained boxes write
 	if err!=nil{
 		fmt.Println("binary.Write failed:", err)
 	}
