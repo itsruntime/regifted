@@ -4,7 +4,6 @@ import (
 	"regifted/data"
 
 	"fmt"
-	"log"
 )
 
 type Pat struct {
@@ -59,10 +58,13 @@ type Pat struct {
 //lastSectionNumber – This 8-bit field specifies the number of the last section (that is, the section with the highest
 //section_number) of the complete Program Association Table.
 func (pat *Pat) Read() {
+	logger.Debug("Pat.Read() - attempting to process PAT data that's already loaded")
 	if pat.byteChunk == nil {
-		log.Printf("attempted to read from nil pointer: byteChunk\n")
+		logger.Error("Pat.Read() was called with a nil payload")
 		return
 	}
+
+	logger.Trace("Pat.Read() - payload: %s", sprintfHex(pat.byteChunk))
 
 	var SKIP_BYTES uint = 5
 	var CRC_SIZE uint = 4

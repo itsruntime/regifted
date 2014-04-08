@@ -4,12 +4,14 @@ import (
 	"regifted/data"
 	"regifted/util/mylog"
 
+	"bytes"
+	"fmt"
 	"log"
 	"os"
 )
 
 const LOGGER_NAME = "ts"
-const LOGGER_SEVERITY_LEVEL = mylog.SEV_DEBUG
+const LOGGER_SEVERITY_LEVEL = mylog.SEV_TRACE
 
 const TS_PACKET_SIZE = 188
 
@@ -238,7 +240,33 @@ func getPacketTypeName(id int) string {
 		return "PACKET_TYPE_PROGRAM"
 	case id == PACKET_TYPE_TS:
 		return "PACKET_TYPE_TS"
-
 	}
 	return "UNKNOWN - broken id or method at getPacketTypeName"
+}
+
+func sprintfHex(slice []byte) string {
+	const N_COLS = 16
+
+	var buff bytes.Buffer
+	buff.WriteRune('\n')
+	s := fmt.Sprintf("%x", slice)
+	i := 0
+	cols := 0
+	for _, ch := range s {
+		if cols == 8 {
+			buff.WriteRune(' ')
+		}
+		if cols >= N_COLS {
+			buff.WriteRune('\n')
+			cols = 0
+		}
+		buff.WriteRune(ch)
+		i++
+		if i >= 2 {
+			buff.WriteRune(' ')
+			i = 0
+			cols++
+		}
+	}
+	return buff.String()
 }

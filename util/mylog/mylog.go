@@ -27,9 +27,10 @@ const (
 )
 
 var severityStrings = [...]string{"emergency", "alert", "critical", "error",
-	"warning", "notice", "info", "debug"}
+	"warning", "notice", "info", "debug", "trace"}
 
 type Logger interface {
+	IsWithinSeverity(severity int) bool
 	SetSeverityThresh(severity int)
 	Emergency(format string, a ...interface{})
 	Alert(format string, a ...interface{})
@@ -61,8 +62,8 @@ type simple struct {
 }
 
 func (l *simple) log(severity int, format string, a ...interface{}) {
-	if severity > l.severityThresh {
-		return // don't process this message
+	if l.IsWithinSeverity(severity) == false {
+		return
 	}
 	s := fmt.Sprintf(format, a...)
 	severityString := getSeverityString(severity)
@@ -73,6 +74,13 @@ func (l *simple) log(severity int, format string, a ...interface{}) {
 
 func (l *simple) SetSeverityThresh(severity int) {
 	l.severityThresh = severity
+}
+
+func (l *simple) IsWithinSeverity(severity int) bool {
+	if severity > l.severityThresh {
+		return false
+	}
+	return true
 }
 
 func (l *simple) SetName(name string) {
