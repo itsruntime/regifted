@@ -2,10 +2,9 @@ package ts
 
 import (
 	"regifted/data"
+	"regifted/util"
 	"regifted/util/mylog"
 
-	"bytes"
-	"fmt"
 	"log"
 	"os"
 )
@@ -114,7 +113,7 @@ func (state *TSState) readPacket() int {
 	}
 
 	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
-		logger.Trace("readPacket() - full ts packet payload: %s", sprintfHex(byteChunk))
+		logger.Trace("readPacket() - full ts packet payload: %s", util.SprintfHex(byteChunk))
 	}
 
 	tsPacket := TsPacket{}
@@ -255,35 +254,4 @@ func getPacketTypeName(id int) string {
 		return "PACKET_TYPE_TS"
 	}
 	return "UNKNOWN - broken id or method at getPacketTypeName"
-}
-
-func sprintfHex(slice []byte) string {
-	const N_COLS = 16
-
-	var buff bytes.Buffer
-	buff.WriteRune('\n')
-	s := fmt.Sprintf("%x", slice)
-	i := 0
-	cols := 0
-	for _, ch := range s {
-		if cols == 8 && i == 0 {
-			buff.WriteRune(' ')
-		}
-		if cols >= N_COLS {
-			buff.WriteRune('\n')
-			cols = 0
-		}
-		if cols == 0 && i == 0 {
-			buff.WriteRune('\t')
-			buff.WriteRune('\t')
-		}
-		buff.WriteRune(ch)
-		i++
-		if i >= 2 {
-			buff.WriteRune(' ')
-			i = 0
-			cols++
-		}
-	}
-	return buff.String()
 }

@@ -2,6 +2,7 @@ package ts
 
 import (
 	"regifted/data"
+	"regifted/util"
 	"regifted/util/mylog"
 
 	"fmt"
@@ -52,7 +53,7 @@ func (adaptation *Adaptation) Read() {
 	}
 	logger.Debug("Adaptation.Read() - attempting to process Adaptation data that's already loaded")
 	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
-		logger.Trace("Adaptation.Read() - Adaptation payload: %s", sprintfHex(adaptation.byteChunk))
+		logger.Trace("Adaptation.Read() - Adaptation payload: %s", util.SprintfHex(adaptation.byteChunk))
 	}
 
 	var flags uint = 0

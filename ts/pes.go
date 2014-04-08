@@ -2,6 +2,7 @@ package ts
 
 import (
 	"regifted/data"
+	"regifted/util"
 	"regifted/util/mylog"
 
 	"fmt"
@@ -35,7 +36,7 @@ func (pes *Pes) Read() {
 	}
 	logger.Debug("PES.Read() - attempting to process PES data that's already loaded")
 	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
-		logger.Trace("PES.Read() - PES payload: %s", sprintfHex(pes.byteChunk))
+		logger.Trace("PES.Read() - PES payload: %s", util.SprintfHex(pes.byteChunk))
 	}
 
 	reader := data.NewReader(pes.byteChunk)

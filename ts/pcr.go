@@ -2,6 +2,7 @@ package ts
 
 import (
 	"regifted/data"
+	"regifted/util"
 	"regifted/util/mylog"
 
 	"fmt"
@@ -32,7 +33,7 @@ func (pcr *Pcr) Read() {
 	}
 	logger.Debug("PCR.Read() - attempting to process PCR data that's already loaded")
 	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
-		logger.Trace("PCR.Read() - PCR payload: %s", sprintfHex(pcr.byteChunk))
+		logger.Trace("PCR.Read() - PCR payload: %s", util.SprintfHex(pcr.byteChunk))
 	}
 
 	reader := data.NewReader(pcr.byteChunk)

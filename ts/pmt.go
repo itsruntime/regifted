@@ -2,6 +2,7 @@ package ts
 
 import (
 	"regifted/data"
+	"regifted/util"
 	"regifted/util/mylog"
 
 	"fmt"
@@ -76,7 +77,7 @@ func (pmt *Pmt) Read() {
 	}
 	logger.Debug("PMT.Read() - attempting to process PMT data that's already loaded")
 	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
-		logger.Trace("PMT.Read() - PMT payload: %s", sprintfHex(pmt.byteChunk))
+		logger.Trace("PMT.Read() - PMT payload: %s", util.SprintfHex(pmt.byteChunk))
 	}
 
 	var CRC_SIZE uint = 4

@@ -1,8 +1,6 @@
 package data
 
 import (
-	"regifted/util/mylog"
-
 	"log"
 	"os"
 	"unsafe"
@@ -31,9 +29,7 @@ func NewReader(da []byte) *Reader {
 }
 
 func NewReaderFromStream(fh *os.File) *Reader {
-	// todo( mathew guest ) find a place for logger instantiation
-	logger = mylog.CreateLogger(LOGGER_NAME)
-	logger.SetSeverityThresh(LOGGER_SEVERITY_LEVEL)
+	InitLogger()
 
 	// read the entire file at once
 	stat, err := fh.Stat()

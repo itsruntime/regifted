@@ -2,6 +2,7 @@ package ts
 
 import (
 	"regifted/data"
+	"regifted/util"
 	"regifted/util/mylog"
 
 	"fmt"
@@ -65,7 +66,7 @@ func (pat *Pat) Read() {
 	}
 	logger.Debug("Pat.Read() - attempting to process PAT data that's already loaded")
 	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
-		logger.Trace("Pat.Read() - PAT payload: %s", sprintfHex(pat.byteChunk))
+		logger.Trace("Pat.Read() - PAT payload: %s", util.SprintfHex(pat.byteChunk))
 	}
 
 	var SKIP_BYTES uint = 5
