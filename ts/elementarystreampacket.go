@@ -41,7 +41,7 @@ func (elementaryStreamPacket *ElementaryStreamPacket) Dispatch() *Pes {
 
 	state.pesCollector[elementaryStreamPacket.pid] = pesData
 
-	if(isCompletePes){
+	if isCompletePes {
 		return &pesData
 	}
 	return nil

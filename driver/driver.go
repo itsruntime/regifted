@@ -28,7 +28,6 @@ func main() {
 	ts := ts.Load(bytes)
 	_ = ts
 
-
 }
 
 // todo( mathew guest ) I think golang wants to use error as return codes but

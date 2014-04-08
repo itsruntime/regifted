@@ -95,8 +95,6 @@ func (pat *Pat) Read() {
 		pat.programs = append(pat.programs, program)
 		pat.count = pat.count - PROGRAM_SIZE
 	}
-
-	state.loadPAT(pat)
 }
 
 // loads a PAT into a TS State object

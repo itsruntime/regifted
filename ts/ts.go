@@ -29,10 +29,9 @@ type TSState struct {
 	types                  map[uint]uint
 	pat                    Pat
 
-	bytes []byte
+	bytes  []byte
 	reader *data.Reader
-	pcr uint
-
+	pcr    uint
 
 	// pes.streamtype -> pes[]
 	pesMap map[uint][]Pes
@@ -42,7 +41,7 @@ type TSState struct {
 var state TSState
 
 func Load(bytes []byte) *TSState {
-	fmt.Println( "load()" )
+	fmt.Println("load()")
 
 	state = TSState{}
 	var state2 *TSState
@@ -82,8 +81,8 @@ func (state *TSState) main() {
 		case packetType == PACKET_TYPE_ES:
 			pesData = readES(&tsPacket, packetReader)
 
-			if pesData != nil{
-				if state.pesMap[pesData.streamType] != nil{
+			if pesData != nil {
+				if state.pesMap[pesData.streamType] != nil {
 					state.pesMap[pesData.streamType] = make([]Pes, 1, 1)
 
 				}
@@ -118,6 +117,8 @@ func readPat(tsPacket *TsPacket, reader *data.Reader) {
 	state.pat.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
 	state.pat.unitStart = tsPacket.unitStart
 	state.pat.Read()
+
+	state.loadPAT(&state.pat)
 }
 
 func readPMT(tsPacket *TsPacket, reader *data.Reader) {
