@@ -1,6 +1,5 @@
 package main
 
-
 import (
 	"flag"
 	"fmt"
@@ -14,7 +13,7 @@ import (
 func main() {
 	filename, rv := getFilepath()
 	if rv != 0 {
-		os.Exit( rv  )
+		os.Exit(rv)
 	}
 	fmt.Printf("Attempting to read file, Run 7 " + filename + "\n")
 

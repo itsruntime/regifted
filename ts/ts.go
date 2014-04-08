@@ -32,6 +32,10 @@ type TSState struct {
 	bytes []byte
 	reader *data.Reader
 	pcr uint
+
+
+	// pes.streamtype -> pes[]
+	pesMap map[uint][]Pes
 }
 
 // this is still global state - it's a temporary step in-between
@@ -84,6 +88,7 @@ func (state *TSState) main() {
 	s := uint64(len(bytes))
 
 	for reader.Cursor < s {
+		var pesData *Pes
 		byteChunk := reader.ReadBytes(TS_PACKET_SIZE)
 		tsPacket := TsPacket{}
 		tsPacket.byteChunk = byteChunk
@@ -97,14 +102,28 @@ func (state *TSState) main() {
 			readPMT(&tsPacket, packetReader)
 
 		case packetType == PACKET_TYPE_ES:
-			readES(&tsPacket, packetReader)
+			pesData = readES(&tsPacket, packetReader)
+
+			if pesData != nil{
+				if state.pesMap[pesData.streamType] != nil{
+					state.pesMap[pesData.streamType] = make([]Pes, 1, 1)
+
+				}
+
+				state.pesMap[pesData.streamType] = append(state.pesMap[pesData.streamType], *pesData)
+
+			}
+		}
+
+		if tsPacket.hasAdaptation && tsPacket.adaptation.hasPCR {
+			state.pcr = tsPacket.adaptation.pcr.pcr
 		}
 	}
 
 	for key := range state.pesCollector {
 		state.CreateAndDispensePes(key, state.types[key])
-
 	}
+
 }
 
 //CreateAndDispensePes
@@ -130,7 +149,8 @@ func readPMT(tsPacket *TsPacket, reader *data.Reader) {
 	pmt.Read()
 }
 
-func readES(tsPacket *TsPacket, reader *data.Reader) {
+func readES(tsPacket *TsPacket, reader *data.Reader) *Pes {
+	var pesData *Pes
 	elementaryStreamPacket, _ := state.elementaryConstructors[tsPacket.pid]
 	elementaryStreamPacket.pid = tsPacket.pid
 	elementaryStreamPacket.unitStart = tsPacket.unitStart
@@ -141,8 +161,9 @@ func readES(tsPacket *TsPacket, reader *data.Reader) {
 		elementaryStreamPacket.payload = reader.ReadBytes(reader.Size - reader.Cursor)
 	}
 
-	elementaryStreamPacket.Dispatch()
+	pesData = elementaryStreamPacket.Dispatch()
 	elementaryStreamPacket.Print()
+	return pesData
 }
 
 // todo( mathew guest ) I think golang wants to use error as return codes but

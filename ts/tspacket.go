@@ -97,7 +97,6 @@ func (tsPacket *TsPacket) Read() (int, *data.Reader) {
 }
 
 func (tsPacket *TsPacket) Print() {
-
 	fmt.Println("\n:::TsRead:::\n")
 	fmt.Println("sync = ", tsPacket.sync)
 	fmt.Println("transportError = ", tsPacket.transportError)
