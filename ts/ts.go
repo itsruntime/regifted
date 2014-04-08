@@ -2,7 +2,6 @@ package ts
 
 import (
 	"fmt"
-	// "io/ioutil"
 	"log"
 	"os"
 	"regifted/data"
@@ -36,8 +35,21 @@ type TSState struct {
 	pesMap map[uint][]Pes
 }
 
-func Load(bytes []byte) *TSState {
+func Load(fh *os.File) *TSState {
 	fmt.Println("load()")
+
+	stat, err := fh.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+	size := stat.Size()
+	bytes := make([]byte, size)
+	// todo( mathew guest ) check allocation?
+	n, err := fh.Read(bytes)
+	_ = n
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	var state *TSState
 	state = &TSState{}

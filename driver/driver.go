@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	// "regifted/data"
@@ -17,15 +16,13 @@ func main() {
 	}
 	fmt.Printf("Attempting to read file, Run 7 " + filename + "\n")
 
-	bytes, err := ioutil.ReadFile(filename)
+	file, err := os.OpenFile(filename, os.O_RDONLY, 0)
 	if err != nil {
-		log.Printf("did not open file\n")
+		log.Fatal(err)
 		// os.Exit(66)
-		// seems like panic is better?
 		panic(err)
 	}
-
-	ts := ts.Load(bytes)
+	ts := ts.Load(file)
 	_ = ts
 
 }
