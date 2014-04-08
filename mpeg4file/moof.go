@@ -2,6 +2,9 @@ package mpeg4file
 
 import (
 		"strconv"
+		"encoding/binary"
+		"fmt"
+		"bytes"
 		)
 
 type moof struct{
@@ -13,7 +16,7 @@ type moof struct{
 func NewMoof(s uint64, box uint32) *moof{
 	newMoof:=new(moof)
 	newMoof.SetSize(s)
-	newMoof.boxType = box
+	newMoof.boxType = 0x6d6f6f66
 	return newMoof
 }
 
@@ -33,14 +36,18 @@ func (m *moof) String() string{
 }
 
 func (m *moof) Write() []byte{
-	var data []byte
+	buf := new(bytes.Buffer)
+	var err error
 	// Size
-	if m.size!=1{
-		data = strconv.AppendUint(data, uint64(m.size), 2)	
-	} else {
-		data = strconv.AppendUint(data, m.largeSize, 2)
-	}	
+	err=binary.Write(buf, binary.BigEndian, m.size)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
 	// BoxType
+	err = binary.Write(buf,binary.BigEndian,m.boxType)
 	// Contained boxes write
-	return data
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	return buf.Bytes()
 }
