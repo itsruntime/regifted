@@ -38,7 +38,7 @@ type TsPacket struct {
 //hasAdaptation - If adaption field exist value is true (0 or more bits)
 //hasPayload -  If contains payload value is true (0 or more bits)
 //continuity - Sequence number of payload packets, Incremented only when a payload is present (i.e., payload value is true) (4 bits)
-func (tsPacket *TsPacket) Read() (int, *data.Reader) {
+func (state *TSState) ReadTSPacket(tsPacket *TsPacket) (int, *data.Reader) {
 	if tsPacket.byteChunk == nil {
 		log.Printf("attempted to read from nil pointer\n")
 		return PACKET_TYPE_ERROR, nil

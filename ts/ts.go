@@ -37,28 +37,15 @@ type TSState struct {
 	pesMap map[uint][]Pes
 }
 
-// this is still global state - it's a temporary step in-between
-var state TSState
-
 func Load(bytes []byte) *TSState {
 	fmt.Println("load()")
 
-	state = TSState{}
-	var state2 *TSState
-	state2 = &state
-	state2.bytes = bytes
-	state2.reader = data.NewReader(bytes)
-	state2.main()
-	return state2
-
-	// var state = TSState{}
-
-	// var state2 *TSState
-	// state2 = &TSState{}
-	// state2.bytes = bytes
-	// state2.reader = data.NewReader(bytes)
-	// state2.main()
-	// return state2
+	var state *TSState
+	state = &TSState{}
+	state.bytes = bytes
+	state.reader = data.NewReader(bytes)
+	state.main()
+	return state
 }
 
 func (state *TSState) main() {
@@ -78,7 +65,7 @@ func (state *TSState) main() {
 		byteChunk := reader.ReadBytes(TS_PACKET_SIZE)
 		tsPacket := TsPacket{}
 		tsPacket.byteChunk = byteChunk
-		packetType, packetReader := tsPacket.Read()
+		packetType, packetReader := state.ReadTSPacket(&tsPacket)
 
 		switch {
 		case packetType == PACKET_TYPE_PAT:
