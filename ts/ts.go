@@ -1,9 +1,9 @@
-package main
+package ts
 
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	// "io/ioutil"
 	"log"
 	"os"
 	"regifted/data"
@@ -28,41 +28,61 @@ type TSState struct {
 	elementaryConstructors map[uint]ElementaryStreamPacket
 	types                  map[uint]uint
 	pat                    Pat
+
+	bytes []byte
+	reader *data.Reader
+	pcr uint
 }
 
 // this is still global state - it's a temporary step in-between
 var state TSState
 
-func main() {
+// func main() {
+// 	state = TSState{}
+// 	state.main()
+// }
+
+func Load(bytes []byte) int {
+	fmt.Println( "load()" )
 	state = TSState{}
+	state.bytes = bytes
+	state.reader = data.NewReader(bytes)
+	// state.reader = bytes
 	state.main()
+	return 1
 }
 
 func (state *TSState) main() {
-	fileName, rv := getFilepath()
-	if rv != 0 {
-		os.Exit(rv)
-	}
-	fmt.Printf("Attempting to read file, Run 7 " + fileName + "\n")
+	reader := state.reader
+	bytes := state.bytes
 
-	bytes, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		log.Printf("did not open file\n")
-		// os.Exit(66)
-		// seems like panic is better?
-		panic(err)
-	}
-	reader := data.NewReader(bytes)
-	_ = reader
+	// fileName, rv := getFilepath()
+	// if rv != 0 {
+	// 	os.Exit(rv)
+	// }
+	// fmt.Printf("Attempting to read file, Run 7 " + fileName + "\n")
+
+	// bytes, err := ioutil.ReadFile(fileName)
+	// if err != nil {
+	// 	log.Printf("did not open file\n")
+	// 	// os.Exit(66)
+	// 	// seems like panic is better?
+	// 	panic(err)
+	// }
+	// reader := data.NewReader(bytes)
+	// _ = reader
+
+	// reader = :=
 
 	rc := Init()
 	if rc != true {
 		log.Printf("could not initialize global state\n")
 		os.Exit(71)
 	}
-	fmt.Println("Size: ", len(bytes))
+	// fmt.Println("Size: ", len(bytes))
 
 	s := uint64(len(bytes))
+
 	for reader.Cursor < s {
 		byteChunk := reader.ReadBytes(TS_PACKET_SIZE)
 		tsPacket := TsPacket{}
