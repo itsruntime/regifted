@@ -57,7 +57,7 @@ func (state *TSState) main() {
 	reader := state.reader
 	bytes := state.bytes
 
-	rc := Init()
+	rc := state.Init()
 	if rc != true {
 		log.Printf("could not initialize global state\n")
 		os.Exit(71)
@@ -163,7 +163,7 @@ func getFilepath() (string, int) {
 
 //Init
 //Initialize the constructors
-func Init() bool {
+func (state *TSState) Init() bool {
 	if state.globals_initialized == true {
 		log.Printf("EE attempted to initialize globals twice\n")
 		return false
@@ -185,7 +185,7 @@ func DeleteState() {
 		return
 	}
 	state.globals_initialized = false
-	Init()
+	state.Init()
 	state.globals_initialized = false
 }
 
