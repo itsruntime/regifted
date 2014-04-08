@@ -180,7 +180,7 @@ func (state *TSState) Init() bool {
 	return true
 }
 
-func DeleteState() {
+func (state *TSState) DeleteState() {
 	if state.globals_initialized == false {
 		return
 	}

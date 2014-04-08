@@ -12,8 +12,8 @@ import (
 func awfulStateSetup() {
 	state := Load(nil)
 	_ = state
-	DeleteState()
-	// ts.Init()
+	state.DeleteState()
+	state.Init()
 }
 
 // const TESTFP = "test1.ts"
@@ -322,7 +322,7 @@ func TestInit(t *testing.T) {
 	var rc bool
 	state := Load(nil)
 
-	DeleteState()
+	state.DeleteState()
 	// todo( mathew guest ) assert objects empty
 	rc = state.Init()
 	if rc == false {
