@@ -7,9 +7,16 @@ import (
 	"os"
 	// "regifted/data"
 	"regifted/ts"
+	"regifted/util/mylog"
 )
 
+const LOGGER_NAME = "driver"
+const LOGGER_SEVERITY_LEVEL = mylog.SEV_DEBUG
+
 func main() {
+	logger := mylog.CreateLogger(LOGGER_NAME)
+	logger.SetSeverityThresh(LOGGER_SEVERITY_LEVEL)
+
 	filename, rv := getFilepath()
 	if rv != 0 {
 		os.Exit(rv)
