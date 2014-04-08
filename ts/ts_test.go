@@ -10,8 +10,10 @@ import (
 )
 
 func awfulStateSetup() {
+	state := Load(nil)
+	_ = state
 	DeleteState()
-	Init()
+	// ts.Init()
 }
 
 // const TESTFP = "test1.ts"
@@ -318,13 +320,15 @@ func TestTransportPacketRead(t *testing.T) {
 
 func TestInit(t *testing.T) {
 	var rc bool
+	state := Load(nil)
+
 	DeleteState()
 	// todo( mathew guest ) assert objects empty
-	rc = Init()
+	rc = state.Init()
 	if rc == false {
 		t.Error("initial Init() failed")
 	}
-	rc = Init()
+	rc = state.Init()
 	// todo( mathew guest ) assert objects unchanged
 	if rc == true {
 		t.Error("secondary Init() returned success when it should have failed")
