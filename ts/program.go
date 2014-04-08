@@ -1,8 +1,9 @@
 package ts
 
 import (
-	"fmt"
 	"regifted/data"
+
+	"fmt"
 )
 
 type Program struct {

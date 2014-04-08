@@ -26,9 +26,9 @@ type Writer struct {
 
 type BufferedReader struct {
 	buffReader *bufio.Reader
-	buff       []byte
-	Cursor     int64
-	Size       int64
+	buff []byte
+	Cursor int64
+	Size int64
 }
 
 // Creates a new Reader for reading the data from the byte array.
@@ -81,21 +81,17 @@ func (reader *BufferedReader) ReadBytes(size uint) []byte {
 
 	returnBuffer := make([]byte, size)
 	n, err := reader.buffReader.Read(returnBuffer)
-	if err != nil && err != io.EOF {
-		panic(err)
-	}
-	if n == 0 {
-		fmt.Println("n==0")
-	}
+	if err != nil && err != io.EOF { panic(err) }
+	if n == 0 { fmt.Println ("n==0") }
 	reader.Cursor += int64(size)
 
-	fmt.Println("READ:")
-	fmt.Println(returnBuffer)
+	fmt.Println( "READ:" )
+	fmt.Println( returnBuffer )fi
 	return returnBuffer
 }
 
 func (reader *BufferedReader) Read(size uint) uint {
-	fmt.Printf("BufferedReader.Read(%u)", size)
+	fmt.Printf( "BufferedReader.Read(%u)", size )
 	// buff := make([]byte, size)
 	data := reader.ReadBytes(size)
 	var idx uint = uint(reader.Cursor) + size

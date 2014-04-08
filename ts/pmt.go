@@ -1,9 +1,10 @@
 package ts
 
 import (
+	"regifted/data"
+
 	"fmt"
 	"log"
-	"regifted/data"
 )
 
 type Pmt struct {
