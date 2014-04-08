@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+
+import errno
+import os
+import struct
+import sys
+
+MAX = 65536
+NEVER_OVERWRITE_EXISTING_FILE = False
+FORMAT = '<H' # '<H' = little endian, unsigned short
+
+def write_binary_counter( stream, format ):
+    """
+    writes 1, 2, 3..., n-1, n to stream in format
+    """
+    for i in range( MAX ):
+      payload = struct.pack( format, i )
+      stream.write( payload )
+
+if __name__ == "__main__":
+    argc = len( sys.argv )
+    if argc < 2:
+        print( "usage: %s [output file]" % (sys.argv[0]), file = sys.stderr )
+        sys.exit( errno.EINVAL )
+    filename = sys.argv[1]
+
+    if NEVER_OVERWRITE_EXISTING_FILE and os.path.isfile( filename ):
+        # well-known race condition
+        print( "refusing to overrwrite existing file: %s" % (filename),
+                file = sys.stderr )
+        sys.exit( errno.EEXIST )
+
+    try:
+        fh = open( filename, "wb" )
+    except PermissionError as ex:
+        print( "failed opening file (%s): invalid permissions" % (filename),
+                file = sys.stderr )
+        sys.exit( errno.EACCES )
+    except IsADirectoryError as ex:
+        print( "failed opening file (%s): file appears to be a directory" % (filename),
+                file = sys.stderr )
+        sys.exit( errno.EISDIR )
+    except IOError as ex:
+        print( "failed opening file (%s): %s" % (filename, ex),
+                file = sys.stderr )
+        sys.exit( errno.ENOENT )
+
+    write_binary_counter( fh, FORMAT )
+    sys.exit( 0 )
