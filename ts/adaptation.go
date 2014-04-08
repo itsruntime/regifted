@@ -2,9 +2,9 @@ package ts
 
 import (
 	"regifted/data"
+	"regifted/util/mylog"
 
 	"fmt"
-	"log"
 )
 
 type Adaptation struct {
@@ -47,8 +47,12 @@ type Adaptation struct {
 //hasExtension - 1 means presence of adaptation field extension
 func (adaptation *Adaptation) Read() {
 	if adaptation.byteChunk == nil {
-		log.Printf("attempted to read from nil pointer: byteChunk\n")
+		logger.Error("Adaptation.Read() was called with a nil payload")
 		return
+	}
+	logger.Debug("Adaptation.Read() - attempting to process Adaptation data that's already loaded")
+	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
+		logger.Trace("Adaptation.Read() - Adaptation payload: %s", sprintfHex(adaptation.byteChunk))
 	}
 
 	var flags uint = 0

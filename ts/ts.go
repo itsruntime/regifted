@@ -104,6 +104,10 @@ func (state *TSState) readPacket() int {
 
 	var pesData *Pes
 	byteChunk := state.reader.ReadBytes(TS_PACKET_SIZE)
+	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
+		logger.Trace("readPacket() - full ts packet payload: %s", sprintfHex(byteChunk))
+	}
+
 	tsPacket := TsPacket{}
 	tsPacket.byteChunk = byteChunk
 	packetType, packetReader := state.ReadTSPacket(&tsPacket)
@@ -253,12 +257,16 @@ func sprintfHex(slice []byte) string {
 	i := 0
 	cols := 0
 	for _, ch := range s {
-		if cols == 8 {
+		if cols == 8 && i == 0 {
 			buff.WriteRune(' ')
 		}
 		if cols >= N_COLS {
 			buff.WriteRune('\n')
 			cols = 0
+		}
+		if cols == 0 && i == 0 {
+			buff.WriteRune('\t')
+			buff.WriteRune('\t')
 		}
 		buff.WriteRune(ch)
 		i++

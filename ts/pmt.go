@@ -2,9 +2,9 @@ package ts
 
 import (
 	"regifted/data"
+	"regifted/util/mylog"
 
 	"fmt"
-	"log"
 )
 
 type Pmt struct {
@@ -71,8 +71,12 @@ type PmtEntry struct {
 //number of bytes of the descriptors immediately following the program_info_length field.
 func (pmt *Pmt) Read() {
 	if pmt.byteChunk == nil {
-		log.Printf("attempted to read from nil pointer: byteChunk\n")
+		logger.Error("PMT.Read() was called with a nil payload")
 		return
+	}
+	logger.Debug("PMT.Read() - attempting to process PMT data that's already loaded")
+	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
+		logger.Trace("PMT.Read() - PMT payload: %s", sprintfHex(pmt.byteChunk))
 	}
 
 	var CRC_SIZE uint = 4

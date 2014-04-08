@@ -2,6 +2,7 @@ package ts
 
 import (
 	"regifted/data"
+	"regifted/util/mylog"
 
 	"fmt"
 )
@@ -58,13 +59,14 @@ type Pat struct {
 //lastSectionNumber – This 8-bit field specifies the number of the last section (that is, the section with the highest
 //section_number) of the complete Program Association Table.
 func (pat *Pat) Read() {
-	logger.Debug("Pat.Read() - attempting to process PAT data that's already loaded")
 	if pat.byteChunk == nil {
 		logger.Error("Pat.Read() was called with a nil payload")
 		return
 	}
-
-	logger.Trace("Pat.Read() - payload: %s", sprintfHex(pat.byteChunk))
+	logger.Debug("Pat.Read() - attempting to process PAT data that's already loaded")
+	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
+		logger.Trace("Pat.Read() - PAT payload: %s", sprintfHex(pat.byteChunk))
+	}
 
 	var SKIP_BYTES uint = 5
 	var CRC_SIZE uint = 4
@@ -102,6 +104,8 @@ func (pat *Pat) Read() {
 
 // loads a PAT into a TS State object
 func (state *TSState) loadPAT(pat *Pat) {
+	logger.Debug("ts.loadPat() - saving PAT information state")
+
 	for idx, program := range pat.programs {
 		_ = idx
 		state.pmtConstructors[program.pid] = Pmt{}
