@@ -1,7 +1,6 @@
 package ts
 
 import (
-	"flag"
 	"fmt"
 	// "io/ioutil"
 	"log"
@@ -141,23 +140,6 @@ func (state *TSState) readES(tsPacket *TsPacket, reader *data.Reader) *Pes {
 	pesData = state.dispatch(&elementaryStreamPacket)
 	elementaryStreamPacket.Print()
 	return pesData
-}
-
-// todo( mathew guest ) I think golang wants to use error as return codes but
-// it's a little slow so I'm cheating
-func getFilepath() (string, int) {
-	flag.Parse()
-	argc := flag.NArg()
-	if argc < 1 {
-		log.Printf("Usage: " + os.Args[0] + " [input ts file]\n")
-		return "", 66
-	}
-	if argc > 1 {
-		log.Printf("Ignoring all but first argument.\n")
-		os.Exit(1)
-	}
-	fileName := os.Args[1]
-	return fileName, 0
 }
 
 //Init
