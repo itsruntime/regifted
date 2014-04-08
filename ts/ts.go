@@ -50,6 +50,15 @@ func Load(bytes []byte) *TSState {
 	state2.reader = data.NewReader(bytes)
 	state2.main()
 	return state2
+
+	// var state = TSState{}
+
+	// var state2 *TSState
+	// state2 = &TSState{}
+	// state2.bytes = bytes
+	// state2.reader = data.NewReader(bytes)
+	// state2.main()
+	// return state2
 }
 
 func (state *TSState) main() {
@@ -73,13 +82,13 @@ func (state *TSState) main() {
 
 		switch {
 		case packetType == PACKET_TYPE_PAT:
-			readPat(&tsPacket, packetReader)
+			state.readPat(&tsPacket, packetReader)
 
 		case packetType == PACKET_TYPE_PMT:
-			readPMT(&tsPacket, packetReader)
+			state.readPMT(&tsPacket, packetReader)
 
 		case packetType == PACKET_TYPE_ES:
-			pesData = readES(&tsPacket, packetReader)
+			pesData = state.readES(&tsPacket, packetReader)
 
 			if pesData != nil {
 				if state.pesMap[pesData.streamType] != nil {
@@ -113,7 +122,7 @@ func (state *TSState) CreateAndDispensePes(pid uint, streamType uint) {
 	pes.Print()
 }
 
-func readPat(tsPacket *TsPacket, reader *data.Reader) {
+func (state *TSState) readPat(tsPacket *TsPacket, reader *data.Reader) {
 	state.pat.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
 	state.pat.unitStart = tsPacket.unitStart
 	state.pat.Read()
@@ -121,7 +130,7 @@ func readPat(tsPacket *TsPacket, reader *data.Reader) {
 	state.loadPAT(&state.pat)
 }
 
-func readPMT(tsPacket *TsPacket, reader *data.Reader) {
+func (state *TSState) readPMT(tsPacket *TsPacket, reader *data.Reader) {
 	pmt, _ := state.pmtConstructors[tsPacket.pid]
 	pmt.unitStart = tsPacket.unitStart
 	pmt.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
@@ -130,7 +139,7 @@ func readPMT(tsPacket *TsPacket, reader *data.Reader) {
 	state.loadPMT(&pmt)
 }
 
-func readES(tsPacket *TsPacket, reader *data.Reader) *Pes {
+func (state *TSState) readES(tsPacket *TsPacket, reader *data.Reader) *Pes {
 	var pesData *Pes
 	elementaryStreamPacket, _ := state.elementaryConstructors[tsPacket.pid]
 	elementaryStreamPacket.pid = tsPacket.pid
