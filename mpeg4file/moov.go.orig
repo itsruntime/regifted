@@ -1,0 +1,45 @@
+package mpeg4file
+
+import "strconv"
+
+type Moov struct {
+	//extends Box
+	size      uint32
+	largeSize uint64
+	boxtype   uint32
+}
+
+func NewMoov(s uint64, box uint32) *Moov {
+	newMoov := new(Moov)
+	newMoov.SetSize(s)
+	newMoov.boxtype = box
+	return newMoov
+}
+
+<<<<<<< HEAD
+func (m *Moov) SetSize(s uint64) {
+	if s == 0 {
+		m.size = 0
+=======
+func (m *Moov) SetSize (s uint64){
+	if s==0{
+		m.size=0
+>>>>>>> e19b5ee37a8806f66b77531d80c5c47b0fe72f05
+	} else {
+		if s > 4294967295 {
+			m.size = uint32(s)
+		} else {
+			m.size = 1
+			m.largeSize = s
+		}
+	}
+}
+
+func (m *Moov) String() string {
+<<<<<<< HEAD
+	return strconv.FormatUint(uint64(m.size), 10)
+}
+=======
+	return strconv.FormatUint(uint64(m.size),10)
+}
+>>>>>>> e19b5ee37a8806f66b77531d80c5c47b0fe72f05

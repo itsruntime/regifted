@@ -1,9 +1,10 @@
-package main
+package ts
 
 import (
+	"regifted/data"
+
 	"fmt"
 	"log"
-	"regifted/data"
 )
 
 type Pcr struct {

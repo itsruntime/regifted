@@ -1,9 +1,10 @@
-package main
+package ts
 
 import (
+	"regifted/data"
+
 	"fmt"
 	"log"
-	"regifted/data"
 )
 
 type Pat struct {
@@ -62,58 +63,47 @@ func (pat *Pat) Read() {
 		log.Printf("attempted to read from nil pointer: byteChunk\n")
 		return
 	}
-	
 
 	var SKIP_BYTES uint = 5
 	var CRC_SIZE uint = 4
 	var PROGRAM_SIZE uint = 4
 	var flags uint = 0
-
 	var flag bool = false
 
 	reader := data.NewReader(pat.byteChunk)
-
 	if reader.Read(1) == 1 {
 		flag = true
 	}
 
 	pat.pointerField = (pat.unitStart && flag) || false
-
 	pat.tableId = reader.Read(1)
-
 	flags = reader.Read(2)
-
 	pat.sectionSyntaxIndicator = flags&0x8000 > 0
-
 	pat.sectionLength = flags & 0x3ff
-
 	pat.transportStreamId = reader.Read(2)
-
 	flags = reader.Read(1)
-
 	pat.versionNumber = flags & 0x3ffe
 	pat.currentNext = flags & 0x0001
-
 	pat.sectionNumber = reader.Read(1)
-
 	pat.lastSectionNumber = reader.Read(1)
-
 	pat.count = pat.sectionLength - SKIP_BYTES
 
 	pat.Print()
 
 	for pat.count > CRC_SIZE {
 		program := Program{}
-		pmt := Pmt{}
-
 		program.Read(reader)
-
 		pat.programs = append(pat.programs, program)
-		state.pmtConstructors[program.pid] = pmt
-
 		pat.count = pat.count - PROGRAM_SIZE
 	}
+}
 
+// loads a PAT into a TS State object
+func (state *TSState) loadPAT(pat *Pat) {
+	for idx, program := range pat.programs {
+		_ = idx
+		state.pmtConstructors[program.pid] = Pmt{}
+	}
 }
 
 func (pat *Pat) Print() {

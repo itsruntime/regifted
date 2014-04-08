@@ -1,14 +1,34 @@
 package traf
 
-import "strconv"
+import (
+		"strconv"
+		"encoding/binary"
+		"fmt"
+		"bytes"
+		)
 
 type trun struct{
 	size uint32
 	largeSize uint64
 	boxType uint32
+	version uint8
+	flags [3]byte
+	sampleCount uint32
+	//optional fields
+	dataOffset int32
+	firstSampleFlag uint32
+	samples []sample
 }
 
-func NewTrun(s uint64){
+type sample struct{
+	sampleDuration uint32
+	sampleSize uint32
+	sampleFlags uint32
+    sampleCompositionTimeOffset uint32 //when version is 0
+    sampleCompositionTimeOffsetNormal int32 // when version is 1
+}
+
+func NewTrun(s uint64) *trun{
 	newTrun := new(trun)
 	newTrun.SetSize(s)
 	newTrun.boxType = 0x7472756E
@@ -30,10 +50,86 @@ func (t *trun) String() string{
 	return strconv.FormatUint(uint64(t.size),10)
 }
 
-func (t *trun) Write(f *File) {
+func (m *trun) Write() []byte{
+	buf := new(bytes.Buffer)
+	var err error
 	// Size
+	err=binary.Write(buf, binary.BigEndian, m.size)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
 	// BoxType
-	// Contained samples write
+	err = binary.Write(buf,binary.BigEndian,m.boxType)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	//version
+	err = binary.Write(buf,binary.BigEndian,m.version)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	//flags
+	err = binary.Write(buf,binary.BigEndian,m.flags)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	//sample count
+	err = binary.Write(buf,binary.BigEndian,m.sampleCount)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	// data offset
+	if m.dataOffset != 0 {
+		err = binary.Write(buf,binary.BigEndian,m.dataOffset)
+		if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+		}
+	}
+	// first sample flags
+	if m.firstSampleFlag != 0 {
+		err = binary.Write(buf,binary.BigEndian,m.firstSampleFlag)
+		if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+		}
+	}
+	for i:=0;i<len(m.samples)-1;i++ {
+		if m.samples[i].sampleDuration != 0 {
+			err = binary.Write(buf,binary.BigEndian,m.samples[i].sampleDuration)
+			if err!=nil{
+			fmt.Println("binary.Write failed:", err)
+			}
+		}
+		if m.samples[i].sampleSize != 0 {
+			err = binary.Write(buf,binary.BigEndian,m.samples[i].sampleSize)
+			if err!=nil{
+			fmt.Println("binary.Write failed:", err)
+			}
+		}
+		if m.samples[i].sampleFlags!= 0 {
+			err = binary.Write(buf,binary.BigEndian,m.samples[i].sampleFlags)
+			if err!=nil{
+			fmt.Println("binary.Write failed:", err)
+			}
+		}
+		if m.version == 0{
+			if m.samples[i].sampleDuration != 0 {
+				err = binary.Write(buf,binary.BigEndian,m.samples[i].sampleCompositionTimeOffset)
+				if err!=nil{
+				fmt.Println("binary.Write failed:", err)
+				}
+			}
+		} else {
+			if m.samples[i].sampleDuration != 0 {
+				err = binary.Write(buf,binary.BigEndian,m.samples[i].sampleCompositionTimeOffsetNormal)
+				if err!=nil{
+				fmt.Println("binary.Write failed:", err)
+				}
+			}
+		}
+	}
+	return buf.Bytes()
 }
 
-// Make struct for Sample information
+
+
+

@@ -1,6 +1,11 @@
  package traf
 
-import "strconv"
+import (
+		"strconv"
+		"encoding/binary"
+		"fmt"
+		"bytes"
+		)
 
 type TfhdLevel3 interface{
 	String() string
@@ -26,6 +31,7 @@ func NewTfhd(s uint64,
 				trackNum uint32) *tfhd{
 	newTfhd := new(tfhd)
 	newTfhd.SetSize(s)
+	newTfhd.boxType = 0x74666864
 	newTfhd.flags = flag
 	newTfhd.trackID = trackNum
 	return newTfhd
@@ -46,8 +52,80 @@ func (t *tfhd) String() string{
 	return strconv.FormatUint(uint64(t.size),10)
 }
 
-func (t *tfhd) Write(f *File) {
+func (m *tfhd) Write() []byte{
+	buf := new(bytes.Buffer)
+	var err error
 	// Size
+	err=binary.Write(buf, binary.BigEndian, m.size)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
 	// BoxType
-	// Contained boxes write
+	err = binary.Write(buf,binary.BigEndian,m.boxType)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	//version
+	err = binary.Write(buf,binary.BigEndian,m.version)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	//flags
+	err = binary.Write(buf,binary.BigEndian,m.flags)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	//sequnce
+	err = binary.Write(buf,binary.BigEndian,m.trackID)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	if m.baseDataOffset != 0{
+		err = binary.Write(buf,binary.BigEndian,m.baseDataOffset)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	}
+	if m.sampleDescriptionIndex!= 0{
+		err = binary.Write(buf,binary.BigEndian,m.sampleDescriptionIndex)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	}
+	if m.defaultSampleDuration!= 0{
+		err = binary.Write(buf,binary.BigEndian,m.defaultSampleDuration)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	}
+	if m.defaultSampleSize!= 0{
+		err = binary.Write(buf,binary.BigEndian,m.defaultSampleSize)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	}
+	if m.defaultSampleFlags!= 0{
+		err = binary.Write(buf,binary.BigEndian,m.defaultSampleFlags)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	}
+	return buf.Bytes()
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

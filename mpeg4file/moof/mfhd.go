@@ -2,6 +2,9 @@ package moof
 
 import (
 		"strconv"
+		"encoding/binary"
+		"fmt"
+		"bytes"
 		)
 
 type MoofLevel2 interface{
@@ -19,7 +22,7 @@ type mfhd struct{
 func NewMfhd(s uint64, box uint32, ver uint8, flag [3]byte){
 	newMfhd:=new(mfhd)
 	newMfhd.SetSize(s)
-	newMfhd.boxType=box
+	newMfhd.boxType=0x6d666864
 	newMfhd.version=ver
 	newMfhd.flags=flag
 }
@@ -40,14 +43,27 @@ func (m *mfhd) String() string{
 }
 
 func (m *mfhd) Write() []byte{
-	var data []byte
+	buf := new(bytes.Buffer)
+	var err error
 	// Size
-	if m.size!=1{
-		data = strconv.AppendUint(data, uint64(m.size), 2)	
-	} else {
-		data = strconv.AppendUint(data, m.largeSize, 2)
-	}	
+	err=binary.Write(buf, binary.BigEndian, m.size)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
 	// BoxType
-	// Contained boxes write
-	return data
+	err = binary.Write(buf,binary.BigEndian,m.boxType)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	//version
+	err = binary.Write(buf,binary.BigEndian,m.version)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	//flags
+	err = binary.Write(buf,binary.BigEndian,m.flags)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	return buf.Bytes()
 }

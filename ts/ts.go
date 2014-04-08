@@ -1,12 +1,11 @@
-package main
+package ts
 
 import (
-	"flag"
+	"regifted/data"
+
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
-	"regifted/data"
 )
 
 const TS_PACKET_SIZE = 188
@@ -28,63 +27,73 @@ type TSState struct {
 	elementaryConstructors map[uint]ElementaryStreamPacket
 	types                  map[uint]uint
 	pat                    Pat
+
+	bytes  []byte
+	reader *data.Reader
+	// reader *data.BufferedReader
+	pcr uint
+
+	// pes.streamtype -> pes[]
+	pesMap map[uint][]Pes
 }
 
-// this is still global state - it's a temporary step in-between
-var state TSState
+func Load(fh *os.File) *TSState {
+	fmt.Println("load()")
 
-func main() {
-	state = TSState{}
+	var state *TSState
+	state = &TSState{}
+	state.reader = data.NewReaderFromStream(fh)
+	// state.reader = data.NewBufferedReaderFromStream(fh)
 	state.main()
+	return state
 }
 
 func (state *TSState) main() {
-	fileName, rv := getFilepath()
-	if rv != 0 {
-		os.Exit(rv)
-	}
-	fmt.Printf("Attempting to read file, Run 7 " + fileName + "\n")
+	reader := state.reader
 
-	bytes, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		log.Printf("did not open file\n")
-		// os.Exit(66)
-		// seems like panic is better?
-		panic(err)
-	}
-	reader := data.NewReader(bytes)
-	_ = reader
-
-	rc := Init()
+	rc := state.Init()
 	if rc != true {
-		log.Printf("could not initialize global state\n")
+		log.Printf("could not initialize state\n")
 		os.Exit(71)
 	}
-	fmt.Println("Size: ", len(bytes))
 
-	s := uint64(len(bytes))
-	for reader.Cursor < s {
+	for reader.Cursor < reader.Size {
+		var pesData *Pes
 		byteChunk := reader.ReadBytes(TS_PACKET_SIZE)
 		tsPacket := TsPacket{}
 		tsPacket.byteChunk = byteChunk
-		packetType, packetReader := tsPacket.Read()
+		packetType, packetReader := state.ReadTSPacket(&tsPacket)
 
 		switch {
 		case packetType == PACKET_TYPE_PAT:
-			readPat(&tsPacket, packetReader)
+			state.readPat(&tsPacket, packetReader)
 
 		case packetType == PACKET_TYPE_PMT:
-			readPMT(&tsPacket, packetReader)
+			state.readPMT(&tsPacket, packetReader)
 
 		case packetType == PACKET_TYPE_ES:
-			readES(&tsPacket, packetReader)
+			pesData = state.readES(&tsPacket, packetReader)
+
+			if pesData != nil {
+				if state.pesMap[pesData.streamType] != nil {
+					state.pesMap[pesData.streamType] = make([]Pes, 1, 1)
+
+				}
+
+				state.pesMap[pesData.streamType] = append(state.pesMap[pesData.streamType], *pesData)
+
+			}
+		}
+
+		if tsPacket.hasAdaptation && tsPacket.adaptation.hasPCR {
+			state.pcr = tsPacket.adaptation.pcr.pcr
 		}
 	}
 
 	for key := range state.pesCollector {
 		state.CreateAndDispensePes(key, state.types[key])
-
 	}
+
 }
 
 //CreateAndDispensePes
@@ -97,20 +106,25 @@ func (state *TSState) CreateAndDispensePes(pid uint, streamType uint) {
 	pes.Print()
 }
 
-func readPat(tsPacket *TsPacket, reader *data.Reader) {
+func (state *TSState) readPat(tsPacket *TsPacket, reader *data.Reader) {
 	state.pat.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
 	state.pat.unitStart = tsPacket.unitStart
 	state.pat.Read()
+
+	state.loadPAT(&state.pat)
 }
 
-func readPMT(tsPacket *TsPacket, reader *data.Reader) {
+func (state *TSState) readPMT(tsPacket *TsPacket, reader *data.Reader) {
 	pmt, _ := state.pmtConstructors[tsPacket.pid]
 	pmt.unitStart = tsPacket.unitStart
 	pmt.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
 	pmt.Read()
+
+	state.loadPMT(&pmt)
 }
 
-func readES(tsPacket *TsPacket, reader *data.Reader) {
+func (state *TSState) readES(tsPacket *TsPacket, reader *data.Reader) *Pes {
+	var pesData *Pes
 	elementaryStreamPacket, _ := state.elementaryConstructors[tsPacket.pid]
 	elementaryStreamPacket.pid = tsPacket.pid
 	elementaryStreamPacket.unitStart = tsPacket.unitStart
@@ -121,30 +135,14 @@ func readES(tsPacket *TsPacket, reader *data.Reader) {
 		elementaryStreamPacket.payload = reader.ReadBytes(reader.Size - reader.Cursor)
 	}
 
-	elementaryStreamPacket.Dispatch()
+	pesData = state.dispatch(&elementaryStreamPacket)
 	elementaryStreamPacket.Print()
-}
-
-// todo( mathew guest ) I think golang wants to use error as return codes but
-// it's a little slow so I'm cheating
-func getFilepath() (string, int) {
-	flag.Parse()
-	argc := flag.NArg()
-	if argc < 1 {
-		log.Printf("Usage: " + os.Args[0] + " [input ts file]\n")
-		return "", 66
-	}
-	if argc > 1 {
-		log.Printf("Ignoring all but first argument.\n")
-		os.Exit(1)
-	}
-	fileName := os.Args[1]
-	return fileName, 0
+	return pesData
 }
 
 //Init
 //Initialize the constructors
-func Init() bool {
+func (state *TSState) Init() bool {
 	if state.globals_initialized == true {
 		log.Printf("EE attempted to initialize globals twice\n")
 		return false
@@ -156,16 +154,17 @@ func Init() bool {
 	state.elementaryConstructors = make(map[uint]ElementaryStreamPacket)
 	state.pat = Pat{}
 	state.pat.tableId = 0
+	state.pesMap = make(map[uint][]Pes)
 	state.globals_initialized = true
 	return true
 }
 
-func DeleteState() {
+func (state *TSState) DeleteState() {
 	if state.globals_initialized == false {
 		return
 	}
 	state.globals_initialized = false
-	Init()
+	state.Init()
 	state.globals_initialized = false
 }
 

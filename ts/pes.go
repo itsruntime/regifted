@@ -1,9 +1,10 @@
-package main
+package ts
 
 import (
+	"regifted/data"
+
 	"fmt"
 	"log"
-	"regifted/data"
 )
 
 type Pes struct {
@@ -69,7 +70,6 @@ func (pes *Pes) Read() {
 }
 
 func (pes *Pes) Print() {
-
 	fmt.Println("\n:::PES:::\n")
 	fmt.Println("////////////////////////////////")
 	fmt.Println("//pid = ", pes.pid)

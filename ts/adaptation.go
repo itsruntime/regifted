@@ -1,9 +1,10 @@
-package main
+package ts
 
 import (
+	"regifted/data"
+
 	"fmt"
 	"log"
-	"regifted/data"
 )
 
 type Adaptation struct {
@@ -111,7 +112,6 @@ func (adaptation *Adaptation) Read() {
 }
 
 func (adaptation *Adaptation) Print() {
-
 	fmt.Println("\n:::Adaptation:::\n")
 	fmt.Println("size = ", adaptation.size)
 	fmt.Println("discontinuity = ", adaptation.discontinuity)
@@ -126,5 +126,4 @@ func (adaptation *Adaptation) Print() {
 	fmt.Println("stuffing = ", adaptation.stuffing)
 
 	fmt.Println("payload = ", adaptation.payload)
-
 }

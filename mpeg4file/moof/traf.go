@@ -2,6 +2,9 @@ package moof
 
 import (
 		"strconv"
+		"encoding/binary"
+		"fmt"
+		"bytes"
 		)
 
 type traf struct{
@@ -33,14 +36,17 @@ func (t *traf) String() string{
 }
 
 func (m *traf) Write() []byte{
-	var data []byte
+	buf := new(bytes.Buffer)
+	var err error
 	// Size
-	if m.size!=1{
-		data = strconv.AppendUint(data, uint64(m.size), 2)	
-	} else {
-		data = strconv.AppendUint(data, m.largeSize, 2)
-	}	
+	err=binary.Write(buf, binary.BigEndian, m.size)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
 	// BoxType
-	// Contained boxes write
-	return data
+	err = binary.Write(buf,binary.BigEndian,m.boxType)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	return buf.Bytes()
 }
