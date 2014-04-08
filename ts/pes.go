@@ -2,9 +2,9 @@ package ts
 
 import (
 	"regifted/data"
+	"regifted/util/mylog"
 
 	"fmt"
-	"log"
 )
 
 type Pes struct {
@@ -30,33 +30,28 @@ type Pes struct {
 //packetLength – The PES_packet_length is a 16-bit field indicating the total number of bytes in the program_stream_directory immediately following this field
 func (pes *Pes) Read() {
 	if pes.byteChunk == nil {
-		log.Printf("attempted to read from nil pointer: byteChunk\n")
+		logger.Error("PES.Read() was called with a nil payload")
 		return
 	}
+	logger.Debug("PES.Read() - attempting to process PES data that's already loaded")
+	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
+		logger.Trace("PES.Read() - PES payload: %s", sprintfHex(pes.byteChunk))
+	}
+
 	reader := data.NewReader(pes.byteChunk)
 
 	var prefix uint
-
 	var headerLength uint
-
 	var headerData []byte
-
 	var flags uint
 
 	prefix = reader.Read(3)
-
 	if prefix == uint(0x000001) {
-
 		pes.streamId = reader.Read(1)
-
 		pes.packetLength = reader.Read(2)
-
 		flags = reader.Read(2)
-
 		headerLength = reader.Read(1)
-
 		headerData = reader.ReadBytes(uint64(headerLength))
-
 		if (flags & 0x0080) == 1 {
 			pes.pts = ReadHeaderData(headerData)
 		}
@@ -64,9 +59,7 @@ func (pes *Pes) Read() {
 			pes.dts = ReadHeaderData(headerData)
 		}
 		pes.payload = reader.ReadBytes(reader.Size - reader.Cursor)
-
 	}
-
 }
 
 func (pes *Pes) Print() {

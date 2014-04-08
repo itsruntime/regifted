@@ -79,40 +79,28 @@ func (adaptation *Adaptation) Read() {
 	adaptation.hasExtension = flags&0x01 > 1
 
 	if adaptation.hasPCR {
-
 		pcrFlag = 6
-
 		adaptation.pcr.byteChunk = reader.ReadBytes(6)
-
 		adaptation.pcr.Read()
 	}
 
 	if adaptation.hasOPCR {
-
 		opcrFlag = 6
-
 		adaptation.pcr.byteChunk = reader.ReadBytes(6)
 		adaptation.opcr.Read()
 
 	}
 
 	if adaptation.hasSplice {
-
 		spliceFlag = 1
 		adaptation.splice = reader.Read(1)
 
 	}
-
 	adaptation.stuffing = int(int(adaptation.size) - 1 - pcrFlag - opcrFlag - spliceFlag)
-
 	reader.Cursor += uint64(int(adaptation.size) - 1 - pcrFlag - opcrFlag - spliceFlag)
-
 	payload := reader.ReadBytes(reader.Size - reader.Cursor)
-
 	adaptation.payload = payload
-
 	adaptation.Print()
-
 }
 
 func (adaptation *Adaptation) Print() {

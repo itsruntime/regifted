@@ -26,8 +26,8 @@ const (
 	SEV_TRACE         = 8
 )
 
-var severityStrings = [...]string{"emergency", "alert", "critical", "error",
-	"warning", "notice", "info", "debug", "trace"}
+var severityStrings = [...]string{"EMERGENCY", "ALERT", "CRITICAL", "ERROR",
+	"WARNING", "NOTICE", "INFO", "DEBUG", "TRACE"}
 
 type Logger interface {
 	IsWithinSeverity(severity int) bool

@@ -24,19 +24,14 @@ type Program struct {
 //program_number shall have more than one program_map_PID assignment. The value of the program_map_PID is
 //defined by the user, but shall only take values
 func (program *Program) Read(reader *data.Reader) {
-
+	logger.Debug("ts - Program.Read()")
 	program.number = reader.Read(2)
-
 	program.pid = reader.Read(2) & 0x1fff
-
 	program.Print()
-
 }
 
 func (program *Program) Print() {
-
 	fmt.Println("\n:::Program:::\n")
 	fmt.Println("pid = ", program.pid)
 	fmt.Println("number = ", program.number)
-
 }
