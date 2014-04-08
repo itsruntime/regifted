@@ -1,6 +1,8 @@
 package data
 
 import (
+	"regifted/util/mylog"
+
 	"bufio"
 	"fmt"
 	"io"
@@ -8,6 +10,11 @@ import (
 	"os"
 	"unsafe"
 )
+
+const LOGGER_NAME = "reader"
+const LOGGER_SEVERITY_LEVEL = mylog.SEV_TRACE
+
+var logger mylog.Logger
 
 // const DEBUG_SIZE int = 100
 
@@ -41,6 +48,10 @@ func NewReader(da []byte) *Reader {
 }
 
 func NewReaderFromStream(fh *os.File) *Reader {
+	// todo( mathew guest ) find a place for logger instantiation
+	logger = mylog.CreateLogger(LOGGER_NAME)
+	logger.SetSeverityThresh(LOGGER_SEVERITY_LEVEL)
+
 	// read the entire file at once
 	stat, err := fh.Stat()
 	if err != nil {
@@ -58,7 +69,10 @@ func NewReaderFromStream(fh *os.File) *Reader {
 }
 
 func NewBufferedReaderFromStream(fh *os.File) *BufferedReader {
-	// read the entire file at once
+	// todo( mathew guest ) find a place for logger instantiation
+	logger = mylog.CreateLogger(LOGGER_NAME)
+	logger.SetSeverityThresh(LOGGER_SEVERITY_LEVEL)
+
 	stat, err := fh.Stat()
 	if err != nil {
 		log.Fatal(err)
@@ -75,6 +89,7 @@ func NewBufferedReaderFromStream(fh *os.File) *BufferedReader {
 }
 
 func (reader *BufferedReader) ReadBytes(size uint) []byte {
+	logger.Trace("reader.ReadBytes(%u)", size)
 	// n, err := reader.buffReader.Read(reader.buff)
 	// if err != nil && err != io.EOF { panic(err) }
 	// if n == 0 { fmt.Println ("n==0") }
@@ -86,16 +101,40 @@ func (reader *BufferedReader) ReadBytes(size uint) []byte {
 	}
 	if n == 0 {
 		fmt.Println("n==0")
+		return nil
 	}
+	if n != int(size) {
+		buff := make([]byte, n, n)
+		copy(buff, returnBuffer)
+		returnBuffer = buff
+		logger.Critical("%v", len(returnBuffer))
+
+		diff := int(size) - n
+		buff2 := make([]byte, diff)
+		n, err := reader.buffReader.Read(buff2)
+		if err != nil && err != io.EOF {
+			panic(err)
+		}
+		if n == 0 {
+			fmt.Println("n==0")
+			return nil
+		}
+		concat := append(returnBuffer, buff2...)
+
+		logger.Critical("%v", concat)
+		return concat
+	}
+	logger.Trace("num bytes read: %i", n)
+
 	reader.Cursor += int64(size)
 
-	fmt.Println("READ:")
-	fmt.Println(returnBuffer)
+	// fmt.Println("READ:")
+	// fmt.Println(returnBuffer)
 	return returnBuffer
 }
 
 func (reader *BufferedReader) Read(size uint) uint {
-	fmt.Printf("BufferedReader.Read(%u)", size)
+	logger.Trace("reader.Read(%u)", size)
 	// buff := make([]byte, size)
 	data := reader.ReadBytes(size)
 	var idx uint = uint(reader.Cursor) + size
@@ -123,6 +162,7 @@ func (reader *BufferedReader) Read(size uint) uint {
 // the Reader struct. It then concatinates the bytes and returns them as a
 // unsigned integer.
 func (r *Reader) Read(size uint) uint {
+	logger.Trace("reader.Read(%u)", size)
 	const N_MAX_BYTES = uint(unsafe.Sizeof(size)) // nothing to do with size
 	// i'm just borrowing the var
 	if size > N_MAX_BYTES {
@@ -163,6 +203,7 @@ func (r *Reader) Read(size uint) uint {
 // struct. It returns a byte array from the cursors current position to the cursor
 // plus the size.
 func (r *Reader) ReadBytes(size uint64) []byte {
+	logger.Trace("reader.ReadBytes(%u)", size)
 	if r.data == nil {
 		log.Printf("attempted to read from null buffer in data.Read()\n")
 		return nil

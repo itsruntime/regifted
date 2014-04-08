@@ -38,10 +38,10 @@ type TSState struct {
 	types                  map[uint]uint
 	pat                    Pat
 
-	bytes  []byte
-	reader *data.Reader
-	// reader *data.BufferedReader
-	pcr uint
+	bytes []byte
+	// reader *data.Reader
+	reader *data.BufferedReader
+	pcr    uint
 
 	// pes.streamtype -> pes[]
 	pesMap map[uint][]Pes
@@ -64,8 +64,8 @@ func Load(fh *os.File) *TSState {
 		// return 71
 		return nil
 	}
-	state.reader = data.NewReaderFromStream(fh)
-	// state.reader = data.NewBufferedReaderFromStream(fh)
+	// state.reader = data.NewReaderFromStream(fh)
+	state.reader = data.NewBufferedReaderFromStream(fh)
 	// state.attemptToFillBuffers()
 
 	state.main()
@@ -89,7 +89,11 @@ func getStreamName(fh *os.File) string {
 
 func (state *TSState) main() {
 	for state.reader.Cursor < state.reader.Size {
-		state.readPacket()
+		logger.Trace("%u < %u", state.reader.Cursor, state.reader.Size)
+		packetType := state.readPacket()
+		if packetType == -1 {
+			break
+		}
 	}
 
 	// last remaining pes
@@ -104,6 +108,11 @@ func (state *TSState) readPacket() int {
 
 	var pesData *Pes
 	byteChunk := state.reader.ReadBytes(TS_PACKET_SIZE)
+	if byteChunk == nil {
+		logger.Debug("EOF read")
+		return -1
+	}
+
 	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
 		logger.Trace("readPacket() - full ts packet payload: %s", sprintfHex(byteChunk))
 	}
