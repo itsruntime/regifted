@@ -1,9 +1,15 @@
 package mpeg4file
 
+import (
+		"encoding/binary"
+		"fmt"
+		"bytes"
+		)
+
 type mdat struct{
 	size uint32
 	largeSize uint64
-	boxtype uint32
+	boxType uint32
 	data []byte
 }
 
@@ -25,4 +31,21 @@ func (m *mdat) SetSize (s uint64){
 			m.largeSize = s
 		}
 	}
+}
+
+func (m *mdat) Write() []byte{
+	buf := new(bytes.Buffer)
+	var err error
+	// Size
+	err=binary.Write(buf, binary.BigEndian, m.size)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	// BoxType
+	err = binary.Write(buf,binary.BigEndian,m.boxType)
+	if err!=nil{
+		fmt.Println("binary.Write failed:", err)
+	}
+	buf.Write(m.data)
+	return buf.Bytes()
 }

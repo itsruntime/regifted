@@ -1,6 +1,11 @@
  package traf
 
-import "strconv"
+import (
+		"strconv"
+		"encoding/binary"
+		"fmt"
+		"bytes"
+		)
 
 type TfhdLevel3 interface{
 	String() string

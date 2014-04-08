@@ -16,7 +16,7 @@ func NewMoov (s uint64, box uint32) *Moov{
 	return newMoov
 }
 
-func (m *Moov) SetSize (s uint32){
+func (m *Moov) SetSize (s uint64){
 	if s==0{
 		m.size=0
 	} else {
@@ -30,5 +30,5 @@ func (m *Moov) SetSize (s uint32){
 }	
 
 func (m *Moov) String() string {
-	return return strconv.FormatUint(uint64(m.size),10)
+	return strconv.FormatUint(uint64(m.size),10)
 }

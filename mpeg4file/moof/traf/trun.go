@@ -1,6 +1,11 @@
 package traf
 
-import "strconv"
+import (
+		"strconv"
+		"encoding/binary"
+		"fmt"
+		"bytes"
+		)
 
 type trun struct{
 	size uint32
@@ -23,7 +28,7 @@ type sample struct{
     sampleCompositionTimeOffsetNormal int32 // when version is 1
 }
 
-func NewTrun(s uint64){
+func NewTrun(s uint64) *trun{
 	newTrun := new(trun)
 	newTrun.SetSize(s)
 	newTrun.boxType = 0x7472756E
@@ -88,34 +93,34 @@ func (m *trun) Write() []byte{
 		}
 	}
 	for i:=0;i<len(m.samples)-1;i++ {
-		if m.sample[i].sampleDuration != 0 {
-			err = binary.Write(buf,binary.BigEndian,m.sample[i].sampleDuration)
+		if m.samples[i].sampleDuration != 0 {
+			err = binary.Write(buf,binary.BigEndian,m.samples[i].sampleDuration)
 			if err!=nil{
 			fmt.Println("binary.Write failed:", err)
 			}
 		}
-		if m.sample[i].sampleSize != 0 {
-			err = binary.Write(buf,binary.BigEndian,m.sample[i].sampleSize)
+		if m.samples[i].sampleSize != 0 {
+			err = binary.Write(buf,binary.BigEndian,m.samples[i].sampleSize)
 			if err!=nil{
 			fmt.Println("binary.Write failed:", err)
 			}
 		}
-		if m.sample[i].sampleFlags!= 0 {
-			err = binary.Write(buf,binary.BigEndian,m.sample[i].sampleFlags)
+		if m.samples[i].sampleFlags!= 0 {
+			err = binary.Write(buf,binary.BigEndian,m.samples[i].sampleFlags)
 			if err!=nil{
 			fmt.Println("binary.Write failed:", err)
 			}
 		}
-		if version == 0{
-			if m.sample[i].sampleDuration != 0 {
-				err = binary.Write(buf,binary.BigEndian,m.sample[i].sampleCompositionTimeOffset)
+		if m.version == 0{
+			if m.samples[i].sampleDuration != 0 {
+				err = binary.Write(buf,binary.BigEndian,m.samples[i].sampleCompositionTimeOffset)
 				if err!=nil{
 				fmt.Println("binary.Write failed:", err)
 				}
 			}
 		} else {
-			f m.sample[i].sampleDuration != 0 {
-				err = binary.Write(buf,binary.BigEndian,m.sample[i].sampleCompositionTimeOffsetNormal)
+			if m.samples[i].sampleDuration != 0 {
+				err = binary.Write(buf,binary.BigEndian,m.samples[i].sampleCompositionTimeOffsetNormal)
 				if err!=nil{
 				fmt.Println("binary.Write failed:", err)
 				}

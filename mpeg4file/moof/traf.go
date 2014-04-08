@@ -2,6 +2,9 @@ package moof
 
 import (
 		"strconv"
+		"encoding/binary"
+		"fmt"
+		"bytes"
 		)
 
 type traf struct{

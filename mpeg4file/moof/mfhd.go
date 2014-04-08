@@ -65,10 +65,5 @@ func (m *mfhd) Write() []byte{
 	if err!=nil{
 		fmt.Println("binary.Write failed:", err)
 	}
-	//sequnce
-	err = binary.Write(buf,binary.BigEndian,m.sequnce)
-	if err!=nil{
-		fmt.Println("binary.Write failed:", err)
-	}
 	return buf.Bytes()
 }
