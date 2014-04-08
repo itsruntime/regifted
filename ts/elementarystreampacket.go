@@ -5,19 +5,17 @@ import (
 )
 
 type ElementaryStreamPacket struct {
-	byteChunk []byte
-	payload   []byte
-
-	unitStart bool
-
+	byteChunk     []byte
+	payload       []byte
+	unitStart     bool
 	pid           uint
 	hasAdaptation bool
 }
 
-//ElementaryStreamPacket Dispatch
-//if unitstart, dump current PES and construct a new one,
-//else append the es payload
-func (elementaryStreamPacket *ElementaryStreamPacket) Dispatch() *Pes {
+// //ElementaryStreamPacket Dispatch
+// //if unitstart, dump current PES and construct a new one,
+// //else append the es payload
+func (state *TSState) dispatch(elementaryStreamPacket *ElementaryStreamPacket) *Pes {
 	var pesData Pes
 	var isCompletePes bool = false
 

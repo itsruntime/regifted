@@ -58,7 +58,7 @@ func (state *TSState) main() {
 
 	rc := state.Init()
 	if rc != true {
-		log.Printf("could not initialize global state\n")
+		log.Printf("could not initialize state\n")
 		os.Exit(71)
 	}
 	fmt.Println("Size: ", len(bytes))
@@ -142,7 +142,7 @@ func readES(tsPacket *TsPacket, reader *data.Reader) *Pes {
 		elementaryStreamPacket.payload = reader.ReadBytes(reader.Size - reader.Cursor)
 	}
 
-	pesData = elementaryStreamPacket.Dispatch()
+	pesData = state.dispatch(&elementaryStreamPacket)
 	elementaryStreamPacket.Print()
 	return pesData
 }
