@@ -9,14 +9,17 @@ import (
 )
 
 const TS_PACKET_SIZE = 188
-const PACKET_TYPE_ERROR = 0
-const PACKET_TYPE_PAT = 2
-const PACKET_TYPE_PCR = 3
-const PACKET_TYPE_PES = 4
-const PACKET_TYPE_ES = 1
-const PACKET_TYPE_PMT = 5
-const PACKET_TYPE_PROGRAM = 6
-const PACKET_TYPE_TS = 7
+
+const (
+	PACKET_TYPE_ERROR   = 0
+	PACKET_TYPE_PAT     = 2
+	PACKET_TYPE_PCR     = 3
+	PACKET_TYPE_PES     = 4
+	PACKET_TYPE_ES      = 1
+	PACKET_TYPE_PMT     = 5
+	PACKET_TYPE_PROGRAM = 6
+	PACKET_TYPE_TS      = 7
+)
 
 type TSState struct {
 	globals_initialized bool
@@ -37,11 +40,18 @@ type TSState struct {
 	pesMap map[uint][]Pes
 }
 
+// todo( mathew guest ) add error return
 func Load(fh *os.File) *TSState {
 	fmt.Println("load()")
 
 	var state *TSState
 	state = &TSState{}
+	rc := state.init()
+	if rc != true {
+		log.Printf("could not initialize state\n")
+		// return 71
+		return nil
+	}
 	state.reader = data.NewReaderFromStream(fh)
 	// state.reader = data.NewBufferedReaderFromStream(fh)
 	state.main()
@@ -50,12 +60,6 @@ func Load(fh *os.File) *TSState {
 
 func (state *TSState) main() {
 	reader := state.reader
-
-	rc := state.Init()
-	if rc != true {
-		log.Printf("could not initialize state\n")
-		os.Exit(71)
-	}
 
 	for reader.Cursor < reader.Size {
 		var pesData *Pes
@@ -142,7 +146,7 @@ func (state *TSState) readES(tsPacket *TsPacket, reader *data.Reader) *Pes {
 
 //Init
 //Initialize the constructors
-func (state *TSState) Init() bool {
+func (state *TSState) init() bool {
 	if state.globals_initialized == true {
 		log.Printf("EE attempted to initialize globals twice\n")
 		return false
@@ -164,7 +168,7 @@ func (state *TSState) DeleteState() {
 		return
 	}
 	state.globals_initialized = false
-	state.Init()
+	state.init()
 	state.globals_initialized = false
 }
 
