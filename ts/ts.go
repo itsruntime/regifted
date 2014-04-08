@@ -126,6 +126,8 @@ func readPMT(tsPacket *TsPacket, reader *data.Reader) {
 	pmt.unitStart = tsPacket.unitStart
 	pmt.byteChunk = reader.ReadBytes(reader.Size - reader.Cursor)
 	pmt.Read()
+
+	state.loadPMT(&pmt)
 }
 
 func readES(tsPacket *TsPacket, reader *data.Reader) *Pes {

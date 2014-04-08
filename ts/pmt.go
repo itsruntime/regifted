@@ -81,52 +81,43 @@ func (pmt *Pmt) Read() {
 	var flag bool = false
 
 	reader := data.NewReader(pmt.byteChunk)
-
 	if reader.Read(1) == 1 {
 		flag = true
 	}
 
 	pmt.pointerField = (pmt.unitStart && flag) || false
-
 	pmt.tableId = reader.Read(1)
-
 	flags = reader.Read(2)
-
 	pmt.sectionSyntaxIndicator = flags&0x8000 > 0
 	pmt.sectionLength = flags & 0x3ff
-
 	pmt.programNumber = reader.Read(2)
-
 	pmt.versionNumber = reader.Read(1)
-
 	pmt.sectionNumber = reader.Read(1)
-
 	pmt.lastSectionNumber = reader.Read(1)
-
 	pmt.pcrPid = reader.Read(2) & 0x1fff
-
 	pmt.programInfoLength = reader.Read(2) & 0x3ff
-
 	pmt.descriptor = reader.ReadBytes(uint64(pmt.programInfoLength))
-
 	pmt.count = pmt.sectionLength - SKIP_BYTES - pmt.programInfoLength
 
 	pmt.Print()
 
 	for pmt.count > CRC_SIZE {
-
 		pmtEntry := PmtEntry{}
-
 		pmtEntry.Read(reader)
-
 		pmt.entries = append(pmt.entries, pmtEntry)
-		state.types[pmtEntry.pid] = pmtEntry.streamType
-		state.elementaryConstructors[pmtEntry.pid] = ElementaryStreamPacket{}
-
 		pmt.count -= (5 + pmtEntry.infoLength)
-
 	}
+}
 
+// loads a PMT into a TS State object
+func (state *TSState) loadPMT(pmt *Pmt) {
+	for idx, entry := range pmt.entries {
+		_ = idx
+
+		pid := entry.pid
+		state.types[pid] = entry.streamType
+		state.elementaryConstructors[pid] = ElementaryStreamPacket{}
+	}
 }
 
 //PmtEntry Read
@@ -139,21 +130,15 @@ func (pmt *Pmt) Read() {
 //infoLength – This is a 12-bit field, the first two bits of which shall be '00'. The remaining 10 bits specify the number
 //of bytes of the descriptors of the associated program element immediately following the ES_info_length field.
 func (pmtEntry *PmtEntry) Read(reader *data.Reader) {
-
 	pmtEntry.streamType = reader.Read(1)
-
 	pmtEntry.pid = reader.Read(2) & 0x1fff
-
 	pmtEntry.infoLength = reader.Read(2) & 0x3ff
-
 	pmtEntry.descriptor = reader.ReadBytes(uint64(pmtEntry.infoLength))
 
 	pmtEntry.Print()
-
 }
 
 func (pmt *Pmt) Print() {
-
 	fmt.Println("\n:::Pmt65435:::\n")
 	fmt.Println("tableId = ", pmt.tableId)
 	fmt.Println("pointerField = ", pmt.pointerField)
@@ -168,7 +153,6 @@ func (pmt *Pmt) Print() {
 	fmt.Println("count = ", pmt.count)
 
 	fmt.Println("descriptor = ", pmt.descriptor)
-
 }
 
 func (pmtEntry *PmtEntry) Print() {
@@ -177,5 +161,4 @@ func (pmtEntry *PmtEntry) Print() {
 	fmt.Println("streamType = ", pmtEntry.streamType)
 	fmt.Println("infoLength = ", pmtEntry.infoLength)
 	fmt.Println("descriptor = ", pmtEntry.descriptor)
-
 }
