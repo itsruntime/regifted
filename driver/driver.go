@@ -1,13 +1,13 @@
 package main
 
 import (
+	"regifted/ts"
+	"regifted/util/mylog"
+
 	"flag"
 	"fmt"
 	"log"
 	"os"
-	// "regifted/data"
-	"regifted/ts"
-	"regifted/util/mylog"
 )
 
 const LOGGER_NAME = "driver"
@@ -23,13 +23,18 @@ func main() {
 	}
 	fmt.Printf("Attempting to read file, Run 7 " + filename + "\n")
 
-	file, err := os.OpenFile(filename, os.O_RDONLY, 0)
+	fh, err := os.OpenFile(filename, os.O_RDONLY, 0)
 	if err != nil {
-		log.Fatal(err)
-		// os.Exit(66)
+		// log.Fatal(err)
 		panic(err)
 	}
-	ts := ts.Load(file)
+	defer func() {
+		if err := fh.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	ts := ts.Load(fh)
 	_ = ts
 
 }

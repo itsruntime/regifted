@@ -1,10 +1,11 @@
 package ts
 
 import (
+	"regifted/data"
+
 	"fmt"
 	"log"
 	"os"
-	"regifted/data"
 )
 
 const TS_PACKET_SIZE = 188
@@ -38,40 +39,23 @@ type TSState struct {
 func Load(fh *os.File) *TSState {
 	fmt.Println("load()")
 
-	stat, err := fh.Stat()
-	if err != nil {
-		log.Fatal(err)
-	}
-	size := stat.Size()
-	bytes := make([]byte, size)
-	// todo( mathew guest ) check allocation?
-	n, err := fh.Read(bytes)
-	_ = n
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	var state *TSState
 	state = &TSState{}
-	state.bytes = bytes
-	state.reader = data.NewReader(bytes)
+	state.reader = data.NewReaderFromStream(fh)
 	state.main()
 	return state
 }
 
 func (state *TSState) main() {
 	reader := state.reader
-	bytes := state.bytes
 
 	rc := state.Init()
 	if rc != true {
 		log.Printf("could not initialize state\n")
 		os.Exit(71)
 	}
-	fmt.Println("Size: ", len(bytes))
-	s := uint64(len(bytes))
 
-	for reader.Cursor < s {
+	for reader.Cursor < reader.Size {
 		var pesData *Pes
 		byteChunk := reader.ReadBytes(TS_PACKET_SIZE)
 		tsPacket := TsPacket{}

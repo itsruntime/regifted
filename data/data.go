@@ -2,6 +2,7 @@ package data
 
 import (
 	"log"
+	"os"
 	"unsafe"
 )
 
@@ -25,6 +26,28 @@ func NewReader(da []byte) *Reader {
 	r.Cursor = 0
 	r.Size = uint64(len(da))
 	return r
+}
+
+func NewReaderFromStream(fh *os.File) *Reader {
+	// read the entire file at once
+	stat, err := fh.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+	size := stat.Size()
+	bytes := make([]byte, size)
+	// todo( mathew guest ) check allocation?
+	n, err := fh.Read(bytes)
+	_ = n
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// // buffer the stream
+	// r := bufio.NewReader(fh)
+	// _ = r
+
+	return NewReader(bytes)
 }
 
 // Reads the number of bytes passed in as size from the data byte array in
