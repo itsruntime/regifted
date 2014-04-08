@@ -2,11 +2,14 @@ package ts
 
 import (
 	"regifted/data"
+	"regifted/util/mylog"
 
-	"fmt"
 	"log"
 	"os"
 )
+
+const LOGGER_NAME = "ts"
+const LOGGER_SEVERITY_LEVEL = mylog.SEV_DEBUG
 
 const TS_PACKET_SIZE = 188
 
@@ -20,6 +23,8 @@ const (
 	PACKET_TYPE_PROGRAM = 6
 	PACKET_TYPE_TS      = 7
 )
+
+var logger mylog.Logger
 
 type TSState struct {
 	globals_initialized bool
@@ -42,7 +47,12 @@ type TSState struct {
 
 // todo( mathew guest ) add error return
 func Load(fh *os.File) *TSState {
-	fmt.Println("load()")
+	// todo( mathew guest ) find a place for logger instantiation
+	logger = mylog.CreateLogger(LOGGER_NAME)
+	logger.SetSeverityThresh(LOGGER_SEVERITY_LEVEL)
+
+	streamName := getStreamName(fh)
+	logger.Informational("attempting to load stream (%s)", streamName)
 
 	var state *TSState
 	state = &TSState{}
@@ -54,50 +64,77 @@ func Load(fh *os.File) *TSState {
 	}
 	state.reader = data.NewReaderFromStream(fh)
 	// state.reader = data.NewBufferedReaderFromStream(fh)
+	// state.attemptToFillBuffers()
+
 	state.main()
 	return state
 }
 
+func getStreamName(fh *os.File) string {
+	stat, err := fh.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return stat.Name()
+}
+
+// func (state *TSState) attemptToFillBuffers() {
+// 	for state.reader.Cursor < state.reader.Size {
+
+// 		break
+// 	}
+// }
+
 func (state *TSState) main() {
-	reader := state.reader
-
-	for reader.Cursor < reader.Size {
-		var pesData *Pes
-		byteChunk := reader.ReadBytes(TS_PACKET_SIZE)
-		tsPacket := TsPacket{}
-		tsPacket.byteChunk = byteChunk
-		packetType, packetReader := state.ReadTSPacket(&tsPacket)
-
-		switch {
-		case packetType == PACKET_TYPE_PAT:
-			state.readPat(&tsPacket, packetReader)
-
-		case packetType == PACKET_TYPE_PMT:
-			state.readPMT(&tsPacket, packetReader)
-
-		case packetType == PACKET_TYPE_ES:
-			pesData = state.readES(&tsPacket, packetReader)
-
-			if pesData != nil {
-				if state.pesMap[pesData.streamType] != nil {
-					state.pesMap[pesData.streamType] = make([]Pes, 1, 1)
-
-				}
-
-				state.pesMap[pesData.streamType] = append(state.pesMap[pesData.streamType], *pesData)
-
-			}
-		}
-
-		if tsPacket.hasAdaptation && tsPacket.adaptation.hasPCR {
-			state.pcr = tsPacket.adaptation.pcr.pcr
-		}
+	for state.reader.Cursor < state.reader.Size {
+		state.readPacket()
 	}
 
+	// last remaining pes
 	for key := range state.pesCollector {
 		state.CreateAndDispensePes(key, state.types[key])
 	}
 
+}
+
+func (state *TSState) readPacket() int {
+	logger.Debug("readPacket() - attempting to read next ts packet")
+
+	var pesData *Pes
+	byteChunk := state.reader.ReadBytes(TS_PACKET_SIZE)
+	tsPacket := TsPacket{}
+	tsPacket.byteChunk = byteChunk
+	packetType, packetReader := state.ReadTSPacket(&tsPacket)
+	packetTypeName := getPacketTypeName(packetType)
+	logger.Debug("readPacket() - packet type returned %s", packetTypeName)
+
+	switch {
+	case packetType == PACKET_TYPE_PAT:
+		state.readPat(&tsPacket, packetReader)
+
+	case packetType == PACKET_TYPE_PMT:
+		state.readPMT(&tsPacket, packetReader)
+
+	case packetType == PACKET_TYPE_ES:
+		pesData = state.readES(&tsPacket, packetReader)
+
+		if pesData != nil {
+			if state.pesMap[pesData.streamType] != nil {
+				state.pesMap[pesData.streamType] = make([]Pes, 1, 1)
+
+			}
+
+			state.pesMap[pesData.streamType] = append(state.pesMap[pesData.streamType], *pesData)
+
+		}
+	}
+
+	if tsPacket.hasAdaptation && tsPacket.adaptation.hasPCR {
+		state.pcr = tsPacket.adaptation.pcr.pcr
+	}
+
+	return packetType
+	return -1
 }
 
 //CreateAndDispensePes
@@ -181,4 +218,27 @@ func ReadHeaderData(bytes []byte) uint {
 	var e uint = (reader.Read(1) >> 1) & 0x7f
 	var timestamp uint = (a << 30) | (b << 22) | (c << 15) | (d << 7) | e
 	return timestamp
+}
+
+func getPacketTypeName(id int) string {
+	switch {
+	case id == PACKET_TYPE_ERROR:
+		return "PACKET_TYPE_ERROR"
+	case id == PACKET_TYPE_PAT:
+		return "PACKET_TYPE_PAT"
+	case id == PACKET_TYPE_PCR:
+		return "PACKET_PCR"
+	case id == PACKET_TYPE_PES:
+		return "PACKET_PES"
+	case id == PACKET_TYPE_ES:
+		return "PACKET_ES"
+	case id == PACKET_TYPE_PMT:
+		return "PACKET_PMT"
+	case id == PACKET_TYPE_PROGRAM:
+		return "PACKET_TYPE_PROGRAM"
+	case id == PACKET_TYPE_TS:
+		return "PACKET_TYPE_TS"
+
+	}
+	return "UNKNOWN - broken id or method at getPacketTypeName"
 }
