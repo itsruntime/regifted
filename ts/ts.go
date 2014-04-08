@@ -30,7 +30,8 @@ type TSState struct {
 
 	bytes  []byte
 	reader *data.Reader
-	pcr    uint
+	// reader *data.BufferedReader
+	pcr uint
 
 	// pes.streamtype -> pes[]
 	pesMap map[uint][]Pes
@@ -42,6 +43,7 @@ func Load(fh *os.File) *TSState {
 	var state *TSState
 	state = &TSState{}
 	state.reader = data.NewReaderFromStream(fh)
+	// state.reader = data.NewBufferedReaderFromStream(fh)
 	state.main()
 	return state
 }

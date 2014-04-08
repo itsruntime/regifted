@@ -4,11 +4,29 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"testing"
 	// "encoding/hex"
 	// "io/ioutil"
-	// "os"
-	"testing"
+	"os"
 )
+
+const BYTE_FILE = "/tmp/genned_bytes"
+
+func TestBufferedReader(t *testing.T) {
+	filename := BYTE_FILE
+	fh, err := os.OpenFile(filename, os.O_RDONLY, 0)
+	if err != nil {
+		// log.Fatal(err)
+		panic(err)
+	}
+	defer func() {
+		if err := fh.Close(); err != nil {
+			panic(err)
+		}
+	}()
+	reader := NewBufferedReaderFromStream(fh)
+	_ = reader
+}
 
 func TestReader(t *testing.T) {
 	fmt.Println("")
