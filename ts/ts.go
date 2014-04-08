@@ -43,12 +43,13 @@ var state TSState
 
 func Load(bytes []byte) *TSState {
 	fmt.Println( "load()" )
+
+	state = TSState{}
 	var state2 *TSState
-	state2 = &TSState{}
+	state2 = &state
 	state2.bytes = bytes
 	state2.reader = data.NewReader(bytes)
 	state2.main()
-	state = *state2
 	return state2
 }
 
@@ -174,6 +175,7 @@ func Init() bool {
 	state.elementaryConstructors = make(map[uint]ElementaryStreamPacket)
 	state.pat = Pat{}
 	state.pat.tableId = 0
+	state.pesMap = make(map[uint][]Pes)
 	state.globals_initialized = true
 	return true
 }
