@@ -1,68 +1,56 @@
 package mp4box
 
 import (
-		"strconv"
-		"encoding/binary"
-		"fmt"
-		"bytes"
-		)
+	"bytes"
+	"encoding/binary"
+	"fmt"
+	"strconv"
+)
 
-type MoofLevel2 interface{
-	String() string
+type Mfhd struct {
+	*FullBoxFields
+	SequenceNumber uint32
 }
 
-type mfhd struct{
-	size uint32
-	largeSize uint64
-	boxType uint32
-	version uint8
-	flags [3]byte
+func NewMfhd(s uint32, ver uint8, flag [3]byte, sqn uint32) *Mfhd {
+	newMfhd := &Mfhd{&FullBoxFields{Size: s,
+		BoxType: 0x6d666864,
+		Version: ver,
+		Flags:   flag},
+		SequenceNumber: sqn}
+	return newMfhd
 }
 
-func NewMfhd(s uint64, box uint32, ver uint8, flag [3]byte){
-	newMfhd:=new(mfhd)
-	newMfhd.SetSize(s)
-	newMfhd.boxType=0x6d666864
-	newMfhd.version=ver
-	newMfhd.flags=flag
+func (m *Mfhd) SetSize(s uint32) {
+	m.Size = s
 }
 
-func (m* mfhd) SetSize(s uint64){
-	if s == 0 {
-		m.size = 0
-	} else if s > 4294967295{
-		m.size = 1
-		m.largeSize = s
-	} else {
-		m.size = uint32(s)
-	}
-}
-
-func (m *mfhd) String() string{
-	return strconv.FormatUint(uint64(m.size),10)
-}
-
-func (m *mfhd) Write() []byte{
+func (m *Mfhd) Write() []byte {
 	buf := new(bytes.Buffer)
 	var err error
 	// Size
-	err=binary.Write(buf, binary.BigEndian, m.size)
-	if err!=nil{
+	err = binary.Write(buf, binary.BigEndian, m.Size)
+	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
 	// BoxType
-	err = binary.Write(buf,binary.BigEndian,m.boxType)
-	if err!=nil{
+	err = binary.Write(buf, binary.BigEndian, m.BoxType)
+	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
 	//version
-	err = binary.Write(buf,binary.BigEndian,m.version)
-	if err!=nil{
+	err = binary.Write(buf, binary.BigEndian, m.Version)
+	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
 	//flags
-	err = binary.Write(buf,binary.BigEndian,m.flags)
-	if err!=nil{
+	err = binary.Write(buf, binary.BigEndian, m.Flags)
+	if err != nil {
+		fmt.Println("binary.Write failed:", err)
+	}
+	//sequence number
+	err = binary.Write(buf, binary.BigEndian, m.SequenceNumber)
+	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
 	return buf.Bytes()

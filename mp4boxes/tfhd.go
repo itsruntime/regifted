@@ -1,131 +1,93 @@
- package mp4box
+package mp4box
 
 import (
-		"strconv"
-		"encoding/binary"
-		"fmt"
-		"bytes"
-		)
+	"bytes"
+	"encoding/binary"
+	"fmt"
+	"strconv"
+)
 
-type TfhdLevel3 interface{
-	String() string
-}
-
-type tfhd struct{
-	size uint32
-	largeSize uint64
-	boxType uint32
-	version uint8
-	flags [3]byte
-	trackID uint32
+type Tfhd struct {
+	*FullBoxFields
+	TrackID uint32
 	//optional fields
-	baseDataOffset uint64
+	baseDataOffset         uint64
 	sampleDescriptionIndex uint32
-	defaultSampleDuration uint32
-	defaultSampleSize uint32
-	defaultSampleFlags uint32
+	defaultSampleDuration  uint32
+	defaultSampleSize      uint32
+	defaultSampleFlags     uint32
 }
 
-func NewTfhd(s uint64, 
-				flag [3]byte ,
-				trackNum uint32) *tfhd{
-	newTfhd := new(tfhd)
-	newTfhd.SetSize(s)
-	newTfhd.boxType = 0x74666864
-	newTfhd.flags = flag
-	newTfhd.trackID = trackNum
+func NewTfhd(s uint32, ver uint32, flag [3]byte, trackID uint32) *Tfhd {
+	newTfhd := &Tfhd{&FullBoxFields{Size: s,
+		BoxType: 0x74666864,
+		Version: ver,
+		Flags:   flag},
+		TrackID: trackID}
 	return newTfhd
 }
 
-func (t *tfhd) SetSize(s uint64){
-	if s == 0 {
-		t.size = 0 
-	} else if s > 4294967295 {
-		t.size = 1
-		t.largeSize = s
-	}else {
-		t.size = uint32(s)
-	}
+func (t *Tfhd) SetSize(s uint32) {
+	t.Size = s
 }
 
-func (t *tfhd) String() string{
-	return strconv.FormatUint(uint64(t.size),10)
-}
-
-func (m *tfhd) Write() []byte{
+func (t *Tfhd) Write() []byte {
 	buf := new(bytes.Buffer)
 	var err error
 	// Size
-	err=binary.Write(buf, binary.BigEndian, m.size)
-	if err!=nil{
+	err = binary.Write(buf, binary.BigEndian, t.Size)
+	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
 	// BoxType
-	err = binary.Write(buf,binary.BigEndian,m.boxType)
-	if err!=nil{
+	err = binary.Write(buf, binary.BigEndian, t.BoxType)
+	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
 	//version
-	err = binary.Write(buf,binary.BigEndian,m.version)
-	if err!=nil{
+	err = binary.Write(buf, binary.BigEndian, t.Version)
+	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
 	//flags
-	err = binary.Write(buf,binary.BigEndian,m.flags)
-	if err!=nil{
+	err = binary.Write(buf, binary.BigEndian, t.Flags)
+	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
-	//sequnce
-	err = binary.Write(buf,binary.BigEndian,m.trackID)
-	if err!=nil{
+	//trackID
+	err = binary.Write(buf, binary.BigEndian, t.TrackID)
+	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
-	if m.baseDataOffset != 0{
-		err = binary.Write(buf,binary.BigEndian,m.baseDataOffset)
-	if err!=nil{
-		fmt.Println("binary.Write failed:", err)
+	if m.baseDataOffset != 0 {
+		err = binary.Write(buf, binary.BigEndian, t.baseDataOffset)
+		if err != nil {
+			fmt.Println("binary.Write failed:", err)
+		}
 	}
+	if m.sampleDescriptionIndex != 0 {
+		err = binary.Write(buf, binary.BigEndian, t.sampleDescriptionIndex)
+		if err != nil {
+			fmt.Println("binary.Write failed:", err)
+		}
 	}
-	if m.sampleDescriptionIndex!= 0{
-		err = binary.Write(buf,binary.BigEndian,m.sampleDescriptionIndex)
-	if err!=nil{
-		fmt.Println("binary.Write failed:", err)
+	if m.defaultSampleDuration != 0 {
+		err = binary.Write(buf, binary.BigEndian, t.defaultSampleDuration)
+		if err != nil {
+			fmt.Println("binary.Write failed:", err)
+		}
 	}
+	if m.defaultSampleSize != 0 {
+		err = binary.Write(buf, binary.BigEndian, t.defaultSampleSize)
+		if err != nil {
+			fmt.Println("binary.Write failed:", err)
+		}
 	}
-	if m.defaultSampleDuration!= 0{
-		err = binary.Write(buf,binary.BigEndian,m.defaultSampleDuration)
-	if err!=nil{
-		fmt.Println("binary.Write failed:", err)
-	}
-	}
-	if m.defaultSampleSize!= 0{
-		err = binary.Write(buf,binary.BigEndian,m.defaultSampleSize)
-	if err!=nil{
-		fmt.Println("binary.Write failed:", err)
-	}
-	}
-	if m.defaultSampleFlags!= 0{
-		err = binary.Write(buf,binary.BigEndian,m.defaultSampleFlags)
-	if err!=nil{
-		fmt.Println("binary.Write failed:", err)
-	}
+	if m.defaultSampleFlags != 0 {
+		err = binary.Write(buf, binary.BigEndian, t.defaultSampleFlags)
+		if err != nil {
+			fmt.Println("binary.Write failed:", err)
+		}
 	}
 	return buf.Bytes()
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

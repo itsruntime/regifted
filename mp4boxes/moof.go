@@ -4,28 +4,27 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"regifted/box"
 	//"strconv"
 )
 
-type moof struct {
-	*box.Box
+type Moof struct {
+	*BoxFields
 }
 
-func NewMoof(s uint32) *moof {
+func NewMoof(s uint32) *Moof {
 	//newMoof := &moof{&box.Box{}} // creates and empty struct
 	// to keep this the same, it must get the box data from Box
 	// and assign it to the moof variables struct; then the handling
 	// of common Box fields is outside of the moof box's control
-	newMoof := &moof{&box.Box{Size: s, BoxType: 0x6d6f6f66}}
+	newMoof := &Moof{&BoxFields{Size: s, BoxType: 0x6d6f6f66}}
 	return newMoof
 }
 
-func (m *moof) SetSize(s uint32) {
+func (m *Moof) SetSize(s uint32) {
 	m.Size = s
 }
 
-func (m *moof) Write() []byte {
+func (m *Moof) Write() []byte {
 	buf := new(bytes.Buffer)
 	var err error
 	// Size

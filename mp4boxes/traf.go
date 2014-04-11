@@ -1,51 +1,36 @@
 package mp4box
 
 import (
-		"strconv"
-		"encoding/binary"
-		"fmt"
-		"bytes"
-		)
+	"bytes"
+	"encoding/binary"
+	"fmt"
+	"strconv"
+)
 
-type traf struct{
-	size uint32
-	largeSize uint64
-	boxType uint32
+type traf struct {
+	*BoxFields
 }
 
-func NewTraf(s uint64) *traf{
-	newTraf:=new(traf)
-	newTraf.SetSize(s)
-	newTraf.boxType = 0x74726166 // Hex rep of traf
+func NewTraf(s uint32) *Traf {
+	newTraf := &Traf{&BoxFields{Size: s, BoxType: 0x74726166}}
 	return newTraf
 }
 
-func (t *traf) SetSize(s uint64){
-	if s==0{
-		t.size = 0
-	}else if s > 4294967295 {
-		t.size = 1
-		t.largeSize = s
-	} else {
-		t.size = uint32(s)
-	}
+func (t *Traf) SetSize(s uint32) {
+	t.Size = s
 }
 
-func (t *traf) String() string{
-	return strconv.FormatUint(uint64(t.size),10)
-}
-
-func (m *traf) Write() []byte{
+func (t *Traf) Write() []byte {
 	buf := new(bytes.Buffer)
 	var err error
 	// Size
-	err=binary.Write(buf, binary.BigEndian, m.size)
-	if err!=nil{
+	err = binary.Write(buf, binary.BigEndian, T.Size)
+	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
 	// BoxType
-	err = binary.Write(buf,binary.BigEndian,m.boxType)
-	if err!=nil{
+	err = binary.Write(buf, binary.BigEndian, t.BoxType)
+	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
 	return buf.Bytes()
