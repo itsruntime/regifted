@@ -18,7 +18,7 @@ type Pes struct {
 	flags        uint
 	pts          uint
 	dts          uint
-	payload      []byte
+	Payload      []byte
 }
 
 //Pes Read
@@ -59,7 +59,7 @@ func (pes *Pes) Read() {
 		if (flags & 0x0040) == 1 {
 			pes.dts = ReadHeaderData(headerData)
 		}
-		pes.payload = reader.ReadBytes(reader.Size - reader.Cursor)
+		pes.Payload = reader.ReadBytes(reader.Size - reader.Cursor)
 	}
 }
 
@@ -72,7 +72,7 @@ func (pes *Pes) Print() {
 	fmt.Println("//packetLength = ", pes.packetLength)
 	fmt.Println("//pts = ", pes.pts)
 	fmt.Println("//dts = ", pes.dts)
-	fmt.Println("//payload length= ", len(pes.payload))
+	fmt.Println("//payload length= ", len(pes.Payload))
 	fmt.Println("//nal =  {}") // DELETE
 	fmt.Println("////////////////////////////////")
 

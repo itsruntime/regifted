@@ -43,14 +43,12 @@ type TSState struct {
 	pcr    uint
 
 	// pes.streamtype -> pes[]
-	pesMap map[uint][]Pes
+	PesMap map[uint][]Pes
 }
 
 // todo( mathew guest ) add error return
 func Load(fh *os.File) *TSState {
-	// todo( mathew guest ) find a place for logger instantiation
-	logger = mylog.CreateLogger(LOGGER_NAME)
-	logger.SetSeverityThresh(LOGGER_SEVERITY_LEVEL)
+	InitLogger()
 
 	streamName := getStreamName(fh)
 	logger.Informational("attempting to load stream (%s)", streamName)
@@ -69,6 +67,11 @@ func Load(fh *os.File) *TSState {
 
 	state.main()
 	return state
+}
+
+func InitLogger() {
+	logger = mylog.CreateLogger(LOGGER_NAME)
+	logger.SetSeverityThresh(LOGGER_SEVERITY_LEVEL)
 }
 
 func getStreamName(fh *os.File) string {
@@ -133,12 +136,12 @@ func (state *TSState) readPacket() int {
 		pesData = state.readES(&tsPacket, packetReader)
 
 		if pesData != nil {
-			if state.pesMap[pesData.streamType] != nil {
-				state.pesMap[pesData.streamType] = make([]Pes, 1, 1)
+			if state.PesMap[pesData.streamType] != nil {
+				state.PesMap[pesData.streamType] = make([]Pes, 1, 1)
 
 			}
 
-			state.pesMap[pesData.streamType] = append(state.pesMap[pesData.streamType], *pesData)
+			state.PesMap[pesData.streamType] = append(state.PesMap[pesData.streamType], *pesData)
 
 		}
 	}
@@ -209,7 +212,7 @@ func (state *TSState) init() bool {
 	state.elementaryConstructors = make(map[uint]ElementaryStreamPacket)
 	state.pat = Pat{}
 	state.pat.tableId = 0
-	state.pesMap = make(map[uint][]Pes)
+	state.PesMap = make(map[uint][]Pes)
 	state.globals_initialized = true
 	return true
 }

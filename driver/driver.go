@@ -4,6 +4,8 @@ import (
 	"regifted/ts"
 	"regifted/util/mylog"
 
+	"regifted/giftcollection"
+
 	"flag"
 	"fmt"
 	"log"
@@ -14,6 +16,7 @@ const LOGGER_NAME = "driver"
 const LOGGER_SEVERITY_LEVEL = mylog.SEV_DEBUG
 
 func Main() int {
+
 	logger := mylog.CreateLogger(LOGGER_NAME)
 	logger.SetSeverityThresh(LOGGER_SEVERITY_LEVEL)
 
@@ -34,11 +37,22 @@ func Main() int {
 		}
 	}()
 
-	ts := ts.Load(fh)
-	_ = ts
+	pesBuffer := make([]*ts.TSState, 1)
+
+	for i := 0; i < 30; i++ {
+
+		ts := ts.Load(fh)
+		pesBuffer = append(pesBuffer, ts)
+
+	}
+
+	giftcollection.Regift(pesBuffer)
+
 	return 0
 
 }
+
+
 
 // todo( mathew guest ) I think golang wants to use error as return codes but
 // it's a little slow so I'm cheating
