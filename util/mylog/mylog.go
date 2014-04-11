@@ -3,6 +3,8 @@ package mylog
 // intentionally poorly named to make clear that is an internal logging
 // api
 
+// for development, print to stdout.
+
 import (
 	"fmt"
 	"time"
@@ -21,12 +23,14 @@ const (
 	SEV_NOTICE        = 5
 	SEV_INFORMATIONAL = 6
 	SEV_DEBUG         = 7
+	SEV_TRACE         = 8
 )
 
-var severityStrings = [...]string{"emergency", "alert", "critical", "error",
-	"warning", "notice", "info", "debug"}
+var severityStrings = [...]string{"EMERGENCY", "ALERT", "CRITICAL", "ERROR",
+	"WARNING", "NOTICE", "INFO", "DEBUG", "TRACE"}
 
-type logger interface {
+type Logger interface {
+	IsWithinSeverity(severity int) bool
 	SetSeverityThresh(severity int)
 	Emergency(format string, a ...interface{})
 	Alert(format string, a ...interface{})
@@ -36,6 +40,7 @@ type logger interface {
 	Notice(format string, a ...interface{})
 	Informational(format string, a ...interface{})
 	Debug(format string, a ...interface{})
+	Trace(format string, a ...interface{})
 }
 
 func getSeverityString(severity int) string {
@@ -43,22 +48,22 @@ func getSeverityString(severity int) string {
 }
 
 // always return the same and only implementation
-func CreateLogger(name string) logger {
+func CreateLogger(name string) Logger {
 	l := &simple{}
 	l.SetSeverityThresh(DEFAULT_SEV_THRESH)
 	l.SetName(name)
 	return l
 }
 
-// simple is an implementation of logger interface
+// simple is an implementation of Logger interface
 type simple struct {
 	severityThresh int
 	name           string
 }
 
 func (l *simple) log(severity int, format string, a ...interface{}) {
-	if severity > l.severityThresh {
-		return // don't process this message
+	if l.IsWithinSeverity(severity) == false {
+		return
 	}
 	s := fmt.Sprintf(format, a...)
 	severityString := getSeverityString(severity)
@@ -69,6 +74,13 @@ func (l *simple) log(severity int, format string, a ...interface{}) {
 
 func (l *simple) SetSeverityThresh(severity int) {
 	l.severityThresh = severity
+}
+
+func (l *simple) IsWithinSeverity(severity int) bool {
+	if severity > l.severityThresh {
+		return false
+	}
+	return true
 }
 
 func (l *simple) SetName(name string) {
@@ -100,4 +112,7 @@ func (l *simple) Informational(format string, a ...interface{}) {
 }
 func (l *simple) Debug(format string, a ...interface{}) {
 	l.log(SEV_DEBUG, format, a...)
+}
+func (l *simple) Trace(format string, a ...interface{}) {
+	l.log(SEV_TRACE, format, a...)
 }

@@ -2,9 +2,10 @@ package ts
 
 import (
 	"regifted/data"
+	"regifted/util"
+	"regifted/util/mylog"
 
 	"fmt"
-	"log"
 )
 
 type Adaptation struct {
@@ -47,8 +48,12 @@ type Adaptation struct {
 //hasExtension - 1 means presence of adaptation field extension
 func (adaptation *Adaptation) Read() {
 	if adaptation.byteChunk == nil {
-		log.Printf("attempted to read from nil pointer: byteChunk\n")
+		logger.Error("Adaptation.Read() was called with a nil payload")
 		return
+	}
+	logger.Debug("Adaptation.Read() - attempting to process Adaptation data that's already loaded")
+	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
+		logger.Trace("Adaptation.Read() - Adaptation payload: %s", util.SprintfHex(adaptation.byteChunk))
 	}
 
 	var flags uint = 0
@@ -75,40 +80,28 @@ func (adaptation *Adaptation) Read() {
 	adaptation.hasExtension = flags&0x01 > 1
 
 	if adaptation.hasPCR {
-
 		pcrFlag = 6
-
 		adaptation.pcr.byteChunk = reader.ReadBytes(6)
-
 		adaptation.pcr.Read()
 	}
 
 	if adaptation.hasOPCR {
-
 		opcrFlag = 6
-
 		adaptation.pcr.byteChunk = reader.ReadBytes(6)
 		adaptation.opcr.Read()
 
 	}
 
 	if adaptation.hasSplice {
-
 		spliceFlag = 1
 		adaptation.splice = reader.Read(1)
 
 	}
-
 	adaptation.stuffing = int(int(adaptation.size) - 1 - pcrFlag - opcrFlag - spliceFlag)
-
 	reader.Cursor += uint64(int(adaptation.size) - 1 - pcrFlag - opcrFlag - spliceFlag)
-
 	payload := reader.ReadBytes(reader.Size - reader.Cursor)
-
 	adaptation.payload = payload
-
 	adaptation.Print()
-
 }
 
 func (adaptation *Adaptation) Print() {

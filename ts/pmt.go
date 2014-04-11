@@ -2,9 +2,10 @@ package ts
 
 import (
 	"regifted/data"
+	"regifted/util"
+	"regifted/util/mylog"
 
 	"fmt"
-	"log"
 )
 
 type Pmt struct {
@@ -71,8 +72,12 @@ type PmtEntry struct {
 //number of bytes of the descriptors immediately following the program_info_length field.
 func (pmt *Pmt) Read() {
 	if pmt.byteChunk == nil {
-		log.Printf("attempted to read from nil pointer: byteChunk\n")
+		logger.Error("PMT.Read() was called with a nil payload")
 		return
+	}
+	logger.Debug("PMT.Read() - attempting to process PMT data that's already loaded")
+	if logger.IsWithinSeverity(mylog.SEV_TRACE) {
+		logger.Trace("PMT.Read() - PMT payload: %s", util.SprintfHex(pmt.byteChunk))
 	}
 
 	var CRC_SIZE uint = 4
@@ -107,11 +112,14 @@ func (pmt *Pmt) Read() {
 		pmtEntry.Read(reader)
 		pmt.entries = append(pmt.entries, pmtEntry)
 		pmt.count -= (5 + pmtEntry.infoLength)
+
+		logger.Debug("created PMT entry. streamType = %v, infoLength = %v, descriptor = %v", pmtEntry.streamType, pmtEntry.infoLength, pmtEntry.descriptor)
 	}
 }
 
 // loads a PMT into a TS State object
 func (state *TSState) loadPMT(pmt *Pmt) {
+	logger.Debug("ts state - saving PMT")
 	for idx, entry := range pmt.entries {
 		_ = idx
 
@@ -131,6 +139,7 @@ func (state *TSState) loadPMT(pmt *Pmt) {
 //infoLength – This is a 12-bit field, the first two bits of which shall be '00'. The remaining 10 bits specify the number
 //of bytes of the descriptors of the associated program element immediately following the ES_info_length field.
 func (pmtEntry *PmtEntry) Read(reader *data.Reader) {
+	logger.Debug("PMT - ReaD()")
 	pmtEntry.streamType = reader.Read(1)
 	pmtEntry.pid = reader.Read(2) & 0x1fff
 	pmtEntry.infoLength = reader.Read(2) & 0x3ff
