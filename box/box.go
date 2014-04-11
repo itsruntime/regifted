@@ -15,9 +15,9 @@ type Box struct {
 	Size uint32
 	//LargeSize is rarely used except with mdats and probably
 	//not necessary when using Fragments; if used, Size == 1.
-	LargeSize uint64
+	//LargeSize uint64
 	//Boxtype is the 4-char type of the Box.
-	Boxtype uint32
+	BoxType uint32
 }
 
 //NewBox is a Box factory that can be used to
@@ -25,8 +25,8 @@ type Box struct {
 //package. It is not required to use this since
 //the exported variables are sufficient for outside
 //access.
-func NewBox(size uint32, largeSize uint64, boxtype uint32) Box {
-	return Box{size, largeSize, boxtype}
+func NewBox(size uint32, boxtype uint32) Box {
+	return Box{size, boxtype}
 }
 
 //FullBox variables are all exported;
@@ -45,16 +45,9 @@ type FullBox struct {
 //package. It is not required to use this since
 //the exported variables are sufficient for outside
 //access.
-func NewFullBox(size uint32, largeSize uint64, boxtype uint32,
+func NewFullBox(size uint32, boxtype uint32,
 	version uint8, flags [3]uint8) FullBox {
-	return FullBox{Box: Box{size, largeSize, boxtype},
+	return FullBox{Box: Box{size, boxtype},
 		Version: version,
 		Flags:   flags}
-}
-
-//Converts a string supplied as a boxtype to a uint32 value
-//with the most significant 8 bits being the first letter of
-//the boxtype.
-func BoxTypeFromString(box string) boxType uint32 {
-	return 0
 }

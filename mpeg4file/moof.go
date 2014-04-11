@@ -1,51 +1,41 @@
 package mpeg4file
 
 import (
-		"strconv"
-		"encoding/binary"
-		"fmt"
-		"bytes"
-		)
+	"bytes"
+	"encoding/binary"
+	"fmt"
+	"regifted/box"
+	//"strconv"
+)
 
-type moof struct{
-	size uint32
-	largeSize uint64
-	boxType uint32
+type moof struct {
+	*box.Box
 }
 
-func NewMoof(s uint64, box uint32) *moof{
-	newMoof:=new(moof)
-	newMoof.SetSize(s)
-	newMoof.boxType = 0x6d6f6f66
+func NewMoof(s uint32) *moof {
+	//newMoof := &moof{&box.Box{}} // creates and empty struct
+	// to keep this the same, it must get the box data from Box
+	// and assign it to the moof variables struct; then the handling
+	// of common Box fields is outside of the moof box's control
+	newMoof := &moof{&box.Box{Size: s, BoxType: 0x6d6f6f66}}
 	return newMoof
 }
 
-func (m *moof) SetSize(s uint64){
-	if s==0 {
-		m.size = 0
-	}else if s>4294967295 {
-		m.size = 1
-		m.largeSize = s
-	} else {
-		m.size = uint32(s)
-	}
+func (m *moof) SetSize(s uint32) {
+	m.Size = s
 }
 
-func (m *moof) String() string{
-	return strconv.FormatUint(uint64(m.size),10)
-}
-
-func (m *moof) Write() []byte{
+func (m *moof) Write() []byte {
 	buf := new(bytes.Buffer)
 	var err error
 	// Size
-	err=binary.Write(buf, binary.BigEndian, m.size)
-	if err!=nil{
+	err = binary.Write(buf, binary.BigEndian, m.Size)
+	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
 	// BoxType
-	err = binary.Write(buf,binary.BigEndian,m.boxType)
-	if err!=nil{
+	err = binary.Write(buf, binary.BigEndian, m.BoxType)
+	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
 	return buf.Bytes()
