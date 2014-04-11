@@ -1,4 +1,4 @@
-package mpeg4file
+package mp4box
 
 import (
 	"bytes"

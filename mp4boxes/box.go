@@ -4,7 +4,7 @@
 //inherits from Box, but because of the ubiquity of
 //both boxtypes as parent classes in the spec, they are
 //both presented here.
-package box
+package mp4box
 
 //Box variables are all exported;
 //easier to work with from outside the package.

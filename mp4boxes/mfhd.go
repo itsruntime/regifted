@@ -1,4 +1,4 @@
-package moof
+package mp4box
 
 import (
 		"strconv"
