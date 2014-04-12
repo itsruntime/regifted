@@ -37,17 +37,31 @@ func Main() int {
 		}
 	}()
 
-	pesBuffer := make([]*ts.TSState, 1)
-fmt.Println("TESTING1")
-	for i := 0; i < 30; i++ {
-		fmt.Println( "TESTING i = ", i )
-		ts := ts.Load(fh)
-		fmt.Println( "TESTING after i" )
-		pesBuffer = append(pesBuffer, ts)
+	tsState := ts.Load(fh)
 
+	Buffer := make([]*ts.AccessUnit, 0)
+
+	var n int = 0
+
+	for true {
+		accsessUnit, ok := tsState.GetNextAccessUnit()
+		if ok != 0 {
+			break
+		}
+
+		if n <= 30 {
+
+			Buffer = append(Buffer, accsessUnit)
+			n++
+
+		}else{
+			giftcollection.Regift(Buffer)
+			n= 0
+			Buffer = make([]*ts.AccessUnit, 0)
+		}
 	}
-fmt.Println("TESTING2")
-	giftcollection.Regift(pesBuffer)
+
+
 
 	return 0
 

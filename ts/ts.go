@@ -5,6 +5,7 @@ import (
 	"regifted/util"
 	"regifted/util/mylog"
 
+	"fmt"
 	"log"
 	"os"
 )
@@ -37,13 +38,20 @@ type TSState struct {
 	types                  map[uint]uint
 	pat                    Pat
 
-	bytes []byte
+	bytes  []byte
 	reader *data.Reader
 	// reader *data.BufferedReader
-	pcr    uint
+	pcr uint
 
 	// pes.streamtype -> pes[]
+	CurPesMap     map[uint][]Pes
+	AccessUnits   []AccessUnit
+	AccessUnitIdx int
+}
+
+type AccessUnit struct {
 	PesMap map[uint][]Pes
+	pcr    uint
 }
 
 // todo( mathew guest ) add error return
@@ -105,6 +113,20 @@ func (state *TSState) main() {
 
 }
 
+func (state *TSState) GetNextAccessUnit() (*AccessUnit, int) {
+	var err int = 0
+
+	if state.AccessUnitIdx >= len(state.AccessUnits) {
+		err = 1
+		return nil, err
+	}
+	x := &state.AccessUnits[state.AccessUnitIdx]
+	state.AccessUnitIdx++
+	fmt.Println("ts.GetNextAccessUnit")
+	fmt.Println(x)
+	return x, err
+}
+
 func (state *TSState) readPacket() int {
 	logger.Debug("readPacket() - attempting to read next ts packet")
 
@@ -136,18 +158,30 @@ func (state *TSState) readPacket() int {
 		pesData = state.readES(&tsPacket, packetReader)
 
 		if pesData != nil {
-			if state.PesMap[pesData.streamType] != nil {
-				state.PesMap[pesData.streamType] = make([]Pes, 1, 1)
+			fmt.Println("NOWHERE")
+			fmt.Println(pesData.streamType)
+			if state.CurPesMap[pesData.streamType] != nil {
+				state.CurPesMap[pesData.streamType] = make([]Pes, 1, 1)
 
 			}
 
-			state.PesMap[pesData.streamType] = append(state.PesMap[pesData.streamType], *pesData)
+			state.CurPesMap[pesData.streamType] = append(state.CurPesMap[pesData.streamType], *pesData)
+
+			fmt.Println("asdfasdfafdsfas")
+			fmt.Println(pesData.streamType)
 
 		}
 	}
 
 	if tsPacket.hasAdaptation && tsPacket.adaptation.hasPCR {
+
 		state.pcr = tsPacket.adaptation.pcr.pcr
+		state.AccessUnits = append(state.AccessUnits, AccessUnit{state.CurPesMap, state.pcr})
+		fmt.Println("state.AccessUnits:")
+		fmt.Println(state.AccessUnits)
+
+		fmt.Println("state.CurPesMap:")
+		fmt.Println(state.CurPesMap)
 	}
 
 	return packetType
@@ -195,6 +229,7 @@ func (state *TSState) readES(tsPacket *TsPacket, reader *data.Reader) *Pes {
 
 	pesData = state.dispatch(&elementaryStreamPacket)
 	elementaryStreamPacket.Print()
+
 	return pesData
 }
 
@@ -212,8 +247,10 @@ func (state *TSState) init() bool {
 	state.elementaryConstructors = make(map[uint]ElementaryStreamPacket)
 	state.pat = Pat{}
 	state.pat.tableId = 0
-	state.PesMap = make(map[uint][]Pes)
+	state.CurPesMap = make(map[uint][]Pes)
+	state.AccessUnits = make([]AccessUnit, 0)
 	state.globals_initialized = true
+	state.AccessUnitIdx = 0
 	return true
 }
 

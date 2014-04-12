@@ -1,18 +1,17 @@
 package giftcollection
 
 import (
-    "regifted/ts"
-    "fmt"
-    //"regifted/mpeg4file"
-    //"regifted/mpeg4file/moof"
-    //"regifted/mpeg4file/moof/traf"
+	"fmt"
+	"regifted/ts"
+	//"regifted/mpeg4file"
+	//"regifted/mpeg4file/moof"
+	//"regifted/mpeg4file/moof/traf"
 )
 
-type sample struct{
-
-    size int
-    duration uint32
-    flags uint32
+type sample struct {
+	size     int
+	duration uint32
+	flags    uint32
 }
 
 //Need a byte array to hold the boxes in a byte
@@ -27,84 +26,92 @@ type sample struct{
 //func InitializeFileByte(){}
 
 const (
-AUDIO_STREAM_TYPE = 15
-VIDEO_STREAM_TYPE = 27
-
+	AUDIO_STREAM_TYPE uint = 15
+	VIDEO_STREAM_TYPE uint = 27
 )
-func Regift(tsArray []*ts.TSState) bool{
-    fmt.Println( "Regift()" )
 
-        audioByte := make([]byte, 0)
-        videoByte := make([]byte, 0)
-        audioSamples := make([]sample, 0)
-        videoSamples := make([]sample, 0)
-        // Need a array of boxes to hold the boxes
-        // until they are ready to print
-        // boxes = make([]mpeg4boxes, 0)
-        // IMPORTANT NOTE: To have a array of the boxes they all have to
-        // be in the same interface. I think this means all the box files
-        // will need to be in the same package.
+func Regift(AccessUnits []*ts.AccessUnit) bool {
+	fmt.Println("Regift()")
 
-    var audioSize int = 0
-    var videoSize int = 0
+	fmt.Println("AccessUnits[0]:")
+	fmt.Println(AccessUnits[0])
+	fmt.Println("AccessUnits[0].PesMap:")
+	fmt.Println(AccessUnits[0].PesMap)
 
-    for _, ts := range(tsArray){
+	audioByte := make([]byte, 0)
+	videoByte := make([]byte, 0)
+	audioSamples := make([]sample, 0)
+	videoSamples := make([]sample, 0)
+	// Need a array of boxes to hold the boxes
+	// until they are ready to print
+	// boxes = make([]mpeg4boxes, 0)
+	// IMPORTANT NOTE: To have a array of the boxes they all have to
+	// be in the same interface. I think this means all the box files
+	// will need to be in the same package.
 
-        delta := 0
+	var audioSize int = 0
+	var videoSize int = 0
 
-        for _, pes := range(ts.PesMap[AUDIO_STREAM_TYPE]){
-            audioByte = append(audioByte, pes.Payload...)
-        }
+	for _, AccessUnit := range AccessUnits {
+		// fmt.Println( "for _, AccessUnit := " )
+		// fmt.Println( AccessUnit )
 
-        delta = len(audioByte) - audioSize
+		delta := 0
+		// fmt.Println("VIDEO_STREAM_TYPE = ", AccessUnit.PesMap[VIDEO_STREAM_TYPE])
 
-        audioSize = len(audioByte)
+		fmt.Println("for_, pes := AUDIO_STREAM_TYPE")
+		for _, pes := range AccessUnit.PesMap[AUDIO_STREAM_TYPE] {
+			fmt.Println("audio pes payload= ", pes.Payload)
+			audioByte = append(audioByte, pes.Payload...)
+		}
+		fmt.Println("AFTER for_, pes := AUDIO_STREAM_TYPE")
 
-        audioSamples = append(audioSamples, sample{delta, 0 , 0})
+		delta = len(audioByte) - audioSize
 
-        fmt.Println("audioSamples = ", audioSamples)
+		audioSize = len(audioByte)
 
-        for _, pes := range(ts.PesMap[VIDEO_STREAM_TYPE]){
-            videoByte = append(videoByte, pes.Payload...)
-        }
+		audioSamples = append(audioSamples, sample{delta, 0, 0})
 
+		// fmt.Println("audioSamples = ", audioSamples)
 
-        delta = len(videoByte) - videoSize
+		for _, pes := range AccessUnit.PesMap[VIDEO_STREAM_TYPE] {
+			videoByte = append(videoByte, pes.Payload...)
+		}
 
-        videoSize = len(videoByte)
+		delta = len(videoByte) - videoSize
 
-        videoSamples = append(videoSamples, sample{delta, 0 , 0})
-    }
+		videoSize = len(videoByte)
 
+		videoSamples = append(videoSamples, sample{delta, 0, 0})
+	}
 
-        fmt.Println("videoSamples = ", videoSamples)
+	// fmt.Println("videoSamples = ", videoSamples)
 
-    // Create mdat and add it to boxes array
+	// Create mdat and add it to boxes array
 
+	// Add audio Samples to boxes array. Append to front of boxes array
 
-    // Add audio Samples to boxes array. Append to front of boxes array
+	// Add audio trun to boxes array. Append to front of boxes array
 
-    // Add audio trun to boxes array. Append to front of boxes array
+	// Add tfhd to boxes array. Append to front of boxes array
 
-    // Add tfhd to boxes array. Append to front of boxes array
+	// Add audio traf to boxes array. Append to front of boxes array
 
-    // Add audio traf to boxes array. Append to front of boxes array
+	// Add video samples to boxes array. Append to front of boxes array
 
-    // Add video samples to boxes array. Append to front of boxes array
+	// Add video trun to boxes array. Append to front of boxes array
 
-    // Add video trun to boxes array. Append to front of boxes array
+	// Add tfhd to boxes array. Append to front of boxes array
 
-    // Add tfhd to boxes array. Append to front of boxes array
+	// Add video traf to boxes array. Append to fron of boxes array
 
-    // Add video traf to boxes array. Append to fron of boxes array
+	// Add mfhd to boxes array. Append to front of boxes array
 
-    // Add mfhd to boxes array. Append to front of boxes array
+	// Add moof to boxes array. Append to front of boxes array
 
-    // Add moof to boxes array. Append to front of boxes array
+	// Call the write method for all boxes in boxes array.
+	// And append the values to the end of the FileByte array.
 
-    // Call the write method for all boxes in boxes array.
-    // And append the values to the end of the FileByte array.
-
-     return false
+	return false
 
 }

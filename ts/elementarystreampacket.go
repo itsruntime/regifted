@@ -17,6 +17,7 @@ type ElementaryStreamPacket struct {
 // //else append the es payload
 func (state *TSState) dispatch(elementaryStreamPacket *ElementaryStreamPacket) *Pes {
 	var pesData Pes
+	var tempPes Pes
 	var isCompletePes bool = false
 
 	pesData = state.pesCollector[elementaryStreamPacket.pid]
@@ -29,6 +30,8 @@ func (state *TSState) dispatch(elementaryStreamPacket *ElementaryStreamPacket) *
 			pesData.Read()
 			pesData.Print()
 
+			tempPes = pesData
+
 			isCompletePes = true
 		}
 		pesData = Pes{}
@@ -40,7 +43,7 @@ func (state *TSState) dispatch(elementaryStreamPacket *ElementaryStreamPacket) *
 	state.pesCollector[elementaryStreamPacket.pid] = pesData
 
 	if isCompletePes {
-		return &pesData
+		return &tempPes
 	}
 	return nil
 }
