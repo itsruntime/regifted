@@ -2,6 +2,7 @@ package giftcollection
 
 import (
     "regifted/ts"
+    "fmt"
     //"regifted/mpeg4file"
     //"regifted/mpeg4file/moof"
     //"regifted/mpeg4file/moof/traf"
@@ -20,6 +21,7 @@ VIDEO_STREAM_TYPE = 27
 
 )
 func Regift(tsArray []*ts.TSState) bool{
+    fmt.Println( "Regift()" )
 
         audioByte := make([]byte, 0)
         videoByte := make([]byte, 0)
@@ -43,6 +45,8 @@ func Regift(tsArray []*ts.TSState) bool{
 
         audioSamples = append(audioSamples, sample{delta, 0 , 0})
 
+        fmt.Println("audioSamples = ", audioSamples)
+
         for _, pes := range(ts.PesMap[VIDEO_STREAM_TYPE]){
             videoByte = append(videoByte, pes.Payload...)
         }
@@ -54,12 +58,14 @@ func Regift(tsArray []*ts.TSState) bool{
 
         videoSamples = append(videoSamples, sample{delta, 0 , 0})
 
+        fmt.Println("videoSamples = ", videoSamples)
+
 
 
     }
 
 
 
-     return false
+     return true
 
 }

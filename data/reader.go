@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 	"unsafe"
+
+	"fmt"
 )
 
 // const DEBUG_SIZE int = 100
@@ -34,6 +36,7 @@ func NewReaderFromStream(fh *os.File) *Reader {
 	// read the entire file at once
 	stat, err := fh.Stat()
 	if err != nil {
+		fmt.Println( "reader line 37" )
 		log.Fatal(err)
 	}
 	size := stat.Size()
@@ -42,6 +45,7 @@ func NewReaderFromStream(fh *os.File) *Reader {
 	n, err := fh.Read(bytes)
 	_ = n
 	if err != nil {
+				fmt.Println( "reader line 48" )
 		log.Fatal(err)
 	}
 	return NewReader(bytes)

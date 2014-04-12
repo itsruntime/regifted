@@ -62,6 +62,7 @@ type simple struct {
 }
 
 func (l *simple) log(severity int, format string, a ...interface{}) {
+	return
 	if l.IsWithinSeverity(severity) == false {
 		return
 	}
@@ -77,6 +78,7 @@ func (l *simple) SetSeverityThresh(severity int) {
 }
 
 func (l *simple) IsWithinSeverity(severity int) bool {
+	return false
 	if severity > l.severityThresh {
 		return false
 	}

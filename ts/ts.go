@@ -10,7 +10,7 @@ import (
 )
 
 const LOGGER_NAME = "ts"
-const LOGGER_SEVERITY_LEVEL = mylog.SEV_TRACE
+const LOGGER_SEVERITY_LEVEL = mylog.SEV_ERROR
 
 const TS_PACKET_SIZE = 188
 
@@ -38,8 +38,8 @@ type TSState struct {
 	pat                    Pat
 
 	bytes []byte
-	// reader *data.Reader
-	reader *data.BufferedReader
+	reader *data.Reader
+	// reader *data.BufferedReader
 	pcr    uint
 
 	// pes.streamtype -> pes[]
@@ -61,8 +61,8 @@ func Load(fh *os.File) *TSState {
 		// return 71
 		return nil
 	}
-	// state.reader = data.NewReaderFromStream(fh)
-	state.reader = data.NewBufferedReaderFromStream(fh)
+	state.reader = data.NewReaderFromStream(fh)
+	// state.reader = data.NewBufferedReaderFromStream(fh)
 	// state.attemptToFillBuffers()
 
 	state.main()

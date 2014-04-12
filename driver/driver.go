@@ -13,7 +13,7 @@ import (
 )
 
 const LOGGER_NAME = "driver"
-const LOGGER_SEVERITY_LEVEL = mylog.SEV_DEBUG
+const LOGGER_SEVERITY_LEVEL = mylog.SEV_ERROR
 
 func Main() int {
 
@@ -38,14 +38,15 @@ func Main() int {
 	}()
 
 	pesBuffer := make([]*ts.TSState, 1)
-
+fmt.Println("TESTING1")
 	for i := 0; i < 30; i++ {
-
+		fmt.Println( "TESTING i = ", i )
 		ts := ts.Load(fh)
+		fmt.Println( "TESTING after i" )
 		pesBuffer = append(pesBuffer, ts)
 
 	}
-
+fmt.Println("TESTING2")
 	giftcollection.Regift(pesBuffer)
 
 	return 0
