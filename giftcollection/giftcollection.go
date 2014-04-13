@@ -40,12 +40,15 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 	videoByte := make([]byte, 0)
 	audioSamples := make([]mp4box.Sample, 0)
 	videoSamples := make([]mp4box.Sample, 0)
+	trackID := 1
 	// Need a array of boxes to hold the boxes
 	// until they are ready to print
 	// boxes = make([]mpeg4boxes, 0)
 	// IMPORTANT NOTE: To have a array of the boxes they all have to
 	// be in the same interface. I think this means all the box files
 	// will need to be in the same package.
+
+	// Dave you will need to print to file in reverse order on the
 	Boxes := make([]mp4box.Box, 0)
 
 	var audioSize int = 0
@@ -106,12 +109,27 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 		0, //no reason for first-sample-flags
 		uint32(len(audioSamples)),
 		audioSamples)
-	Boxes = append(Boxes, audioTrun)
 	// Add audio trun to boxes array. Append to front of boxes array
+	Boxes = append(Boxes, audioTrun)
 
 	// Add tfhd to boxes array. Append to front of boxes array
-
+	audioTfhdFlags := make([]byte, 0, 3)
+	audioTfhdFlags = append(audioTrunFlags, 0x00)
+	audioTfhdFlags = append(audioTrunFlags, 0x00)
+	audioTfhdFlags = append(audioTrunFlags, 0x20)
+	audioTfhd := mp4box.NewTfhd(
+		0, //size is calculated later
+		0, //version is typically 0
+		audioTfhdFlags,
+		uint32(trackID),
+		0, //base-data-offset not obsevred in sample fragments
+		0, //sample-description-index not observed in sample fragments
+		0, //default-sample-duration not observed in sample fragments
+		0, //default-sample-size not observed in sample fragments
+		0) //default-sample-flags not observed in sample fragments
+	trackID++
 	// Add audio traf to boxes array. Append to front of boxes array
+	Boxes = append(Boxes, audioTfhd)
 
 	// Add video samples to boxes array. Append to front of boxes array
 
