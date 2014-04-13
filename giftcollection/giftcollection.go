@@ -132,7 +132,23 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 	Boxes = append(Boxes, audioTfhd)
 
 	// Add video samples to boxes array. Append to front of boxes array
-
+	// Setting Flags for the trun should be done programatically from the
+	// PES data but that can come later
+	audioTrunFlags := make([]byte, 0, 3)
+	audioTrunFlags = append(audioTrunFlags, 0x00)
+	audioTrunFlags = append(audioTrunFlags, 0x0B)
+	audioTrunFlags = append(audioTrunFlags, 0x01)
+	// Add audio Samples to boxes array. Append to front of boxes array
+	audioTrun := mp4box.NewTrun(
+		0, //size is calculated later
+		0, //version will be zero until we have a reason to do otherwise
+		audioTrunFlags,
+		0, //dataoffset = MOOF.SIZE + 8, must be calculated later
+		0, //no reason for first-sample-flags
+		uint32(len(audioSamples)),
+		audioSamples)
+	// Add audio trun to boxes array. Append to front of boxes array
+	Boxes = append(Boxes, audioTrun)
 	// Add video trun to boxes array. Append to front of boxes array
 
 	// Add tfhd to boxes array. Append to front of boxes array
