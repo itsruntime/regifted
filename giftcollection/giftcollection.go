@@ -29,12 +29,12 @@ const (
 )
 
 func Regift(AccessUnits []*ts.AccessUnit) bool {
-	fmt.Println("Regift()")
+	fmt.Println("\nRegift()\n\n")
 
-	fmt.Println("AccessUnits[0]:")
-	fmt.Println(AccessUnits[0])
-	fmt.Println("AccessUnits[0].PesMap:")
-	fmt.Println(AccessUnits[0].PesMap)
+	//fmt.Println("AccessUnits[0]:")
+	//fmt.Println(AccessUnits[0])
+	//fmt.Println("AccessUnits[0].PesMap:")
+	//fmt.Println(AccessUnits[0].PesMap)
 
 	audioByte := make([]byte, 0)
 	videoByte := make([]byte, 0)
@@ -53,26 +53,28 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 
 	var audioSize int = 0
 	var videoSize int = 0
+	var pcrDelta uint32 = 0
 
 	for _, AccessUnit := range AccessUnits {
 		// fmt.Println( "for _, AccessUnit := " )
 		// fmt.Println( AccessUnit )
 
 		delta := 0
+
 		// fmt.Println("VIDEO_STREAM_TYPE = ", AccessUnit.PesMap[VIDEO_STREAM_TYPE])
 
-		fmt.Println("for_, pes := AUDIO_STREAM_TYPE")
+		//fmt.Println("for_, pes := AUDIO_STREAM_TYPE")
 		for _, pes := range AccessUnit.PesMap[AUDIO_STREAM_TYPE] {
-			fmt.Println("audio pes payload= ", pes.Payload)
+			//fmt.Println("audio pes payload= ", pes.Payload)
 			audioByte = append(audioByte, pes.Payload...)
 		}
-		fmt.Println("AFTER for_, pes := AUDIO_STREAM_TYPE")
+		//fmt.Println("AFTER for_, pes := AUDIO_STREAM_TYPE")
 
 		delta = len(audioByte) - audioSize
 
 		audioSize = len(audioByte)
 
-		audioSamples = append(audioSamples, mp4box.Sample{0, uint32(delta), 0, 0})
+		audioSamples = append(audioSamples, mp4box.Sample{uint32(AccessUnit.Pcr), uint32(delta), 0, 0})
 
 		// fmt.Println("audioSamples = ", audioSamples)
 
@@ -84,10 +86,36 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 
 		videoSize = len(videoByte)
 
-		videoSamples = append(videoSamples, mp4box.Sample{0, uint32(delta), 0, 0})
+		videoSamples = append(videoSamples, mp4box.Sample{uint32(AccessUnit.Pcr), uint32(delta), 0, 0})
 	}
 
-	// fmt.Println("videoSamples = ", videoSamples)
+	pcrDelta = (videoSamples[len(videoSamples)-1].SampleDuration) - (videoSamples[len(videoSamples)-2].SampleDuration)
+
+	fmt.Println("pcrDelta", pcrDelta)
+
+	if (videoSamples[len(videoSamples)-1].SampleDuration % uint32(pcrDelta)) == 0 {
+
+		for i := 0; i < len(videoSamples); i++ {
+
+			videoSamples[i].SampleDuration = pcrDelta
+
+		}
+
+	}
+
+	if (audioSamples[len(audioSamples)-1].SampleDuration % uint32(pcrDelta)) == 0 {
+
+		for i := 0; i < len(audioSamples); i++ {
+
+			audioSamples[i].SampleDuration = pcrDelta
+
+		}
+
+	}
+
+	fmt.Println("\nvideoSamples = ", videoSamples)
+
+	fmt.Println("\naudioSamples = ", audioSamples)
 
 	// Create mdat and add it to boxes array
 	payload := append(videoByte, audioByte...)
