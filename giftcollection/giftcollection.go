@@ -92,7 +92,7 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 
 	
 	if len(videoSamples) < 2 {
-		log.Fatal("Not enough data do genertae pcr delta")
+		log.Fatal("Not enough data to genertae pcr delta")
 		return false
 		
 	}
