@@ -90,11 +90,10 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 		videoSamples = append(videoSamples, mp4box.Sample{uint32(AccessUnit.Pcr), uint32(delta), 0, 0})
 	}
 
-	
 	if len(videoSamples) < 2 {
 		log.Fatal("Not enough data to genertae pcr delta")
 		return false
-		
+
 	}
 
 	pcrDelta = (videoSamples[len(videoSamples)-1].SampleDuration) - (videoSamples[len(videoSamples)-2].SampleDuration)
@@ -102,10 +101,10 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 	if pcrDelta == 0 {
 		log.Fatal("pcrDelta is 0, cannot generate delta")
 		return false
-		
+
 	}
 
-	fmt.Println("pcrDelta", pcrDelta)
+	fmt.Println("video pcrDelta", pcrDelta)
 
 	if (videoSamples[len(videoSamples)-1].SampleDuration % uint32(pcrDelta)) == 0 {
 
@@ -116,6 +115,22 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 		}
 
 	}
+
+	if len(audioSamples) < 2 {
+		log.Fatal("Not enough data to genertae pcr delta")
+		return false
+
+	}
+
+	pcrDelta = (audioSamples[len(audioSamples)-1].SampleDuration) - (audioSamples[len(audioSamples)-2].SampleDuration)
+
+	if pcrDelta == 0 {
+		log.Fatal("pcrDelta is 0, cannot generate delta")
+		return false
+
+	}
+
+	fmt.Println("audio pcrDelta", pcrDelta)
 
 	if (audioSamples[len(audioSamples)-1].SampleDuration % uint32(pcrDelta)) == 0 {
 
