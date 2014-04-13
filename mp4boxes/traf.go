@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"strconv"
+	//"strconv"
 )
 
-type traf struct {
+type Traf struct {
 	*BoxFields
 }
 
@@ -24,7 +24,7 @@ func (t *Traf) Write() []byte {
 	buf := new(bytes.Buffer)
 	var err error
 	// Size
-	err = binary.Write(buf, binary.BigEndian, T.Size)
+	err = binary.Write(buf, binary.BigEndian, t.Size)
 	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}

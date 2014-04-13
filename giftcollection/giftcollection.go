@@ -2,7 +2,7 @@ package giftcollection
 
 import (
 	"fmt"
-	"regifted/mp4box"
+	"regifted/mp4boxes"
 	"regifted/ts"
 )
 
@@ -38,15 +38,15 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 
 	audioByte := make([]byte, 0)
 	videoByte := make([]byte, 0)
-	audioSamples := make([]sample, 0)
-	videoSamples := make([]sample, 0)
+	audioSamples := make([]mp4box.Sample, 0)
+	videoSamples := make([]mp4box.Sample, 0)
 	// Need a array of boxes to hold the boxes
 	// until they are ready to print
 	// boxes = make([]mpeg4boxes, 0)
 	// IMPORTANT NOTE: To have a array of the boxes they all have to
 	// be in the same interface. I think this means all the box files
 	// will need to be in the same package.
-	Boxes := make([]Box, 0)
+	Boxes := make([]mp4box.Box, 0)
 
 	var audioSize int = 0
 	var videoSize int = 0
@@ -69,7 +69,7 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 
 		audioSize = len(audioByte)
 
-		audioSamples = append(audioSamples, Sample{0, delta, 0})
+		audioSamples = append(audioSamples, mp4box.Sample{0, uint32(delta), 0, 0})
 
 		// fmt.Println("audioSamples = ", audioSamples)
 
@@ -81,36 +81,32 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 
 		videoSize = len(videoByte)
 
-		videoSamples = append(videoSamples, Sample{0, delta, 0})
+		videoSamples = append(videoSamples, mp4box.Sample{0, uint32(delta), 0, 0})
 	}
 
 	// fmt.Println("videoSamples = ", videoSamples)
 
 	// Create mdat and add it to boxes array
 	payload := append(videoByte, audioByte...)
-	mdat := Mdat.NewMdat( 
-		uint64(audioSize + videoSize + 8),
-		payload		
-	)
-	
-	Boxes = append(mdat)
+	mdat := mp4box.NewMdat(uint32(audioSize+videoSize+8), payload)
+
+	Boxes = append(Boxes, mdat)
 	// Setting Flags for the trun should be done programatically from the
 	// PES data but that can come later
 	audioTrunFlags := make([]byte, 0, 3)
-	audioTrunFlags.append(0x00)
-	audioTrunFlags.append(0x0B)
-	audioTrunFlags.append(0x01)
+	audioTrunFlags = append(audioTrunFlags, 0x00)
+	audioTrunFlags = append(audioTrunFlags, 0x0B)
+	audioTrunFlags = append(audioTrunFlags, 0x01)
 	// Add audio Samples to boxes array. Append to front of boxes array
-	audioTrun := Trun.NewTrun(
+	audioTrun := mp4box.NewTrun(
 		0, //size is calculated later
 		0, //version will be zero until we have a reason to do otherwise
-		trunFlags,
+		audioTrunFlags,
 		0, //dataoffset = MOOF.SIZE + 8, must be calculated later
 		0, //no reason for first-sample-flags
 		uint32(len(audioSamples)),
-		audioSamples		
-	)
-	Boxes = append(audioTrun)
+		audioSamples)
+	Boxes = append(Boxes, audioTrun)
 	// Add audio trun to boxes array. Append to front of boxes array
 
 	// Add tfhd to boxes array. Append to front of boxes array

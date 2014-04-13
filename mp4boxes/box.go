@@ -36,12 +36,12 @@ func NewBoxFields(size uint32, boxtype uint32) BoxFields {
 //FullBox variables are all exported;
 //easier to work with from outside the package.
 type FullBoxFields struct {
-	Box
+	*BoxFields
 	//Version specifies the box version; typically either 0 or 1.
 	Version uint8
 	//Flags are utilized to indicate a variety of present/absent
 	//conditions for a particular FullBox subtype.
-	Flags [3]byte
+	Flags []byte
 }
 
 //NewFullBox is a FullBox factory that can be used to
@@ -50,8 +50,8 @@ type FullBoxFields struct {
 //the exported variables are sufficient for outside
 //access.
 func NewFullBoxFields(size uint32, boxtype uint32,
-	version uint8, flags [3]byte) FullBoxFields {
-	return FullBoxFields{BoxFields: Box{size, boxtype},
-		Version: version,
-		Flags:   flags}
+	version uint8, flags []byte) FullBoxFields {
+	return FullBoxFields{&BoxFields{size, boxtype},
+		version,
+		flags}
 }

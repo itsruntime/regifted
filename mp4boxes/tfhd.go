@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"strconv"
+	//"strconv"
 )
 
 type Tfhd struct {
@@ -18,12 +18,19 @@ type Tfhd struct {
 	defaultSampleFlags     uint32
 }
 
-func NewTfhd(s uint32, ver uint32, flag [3]byte, trackID uint32) *Tfhd {
-	newTfhd := &Tfhd{&FullBoxFields{Size: s,
-		BoxType: 0x74666864,
-		Version: ver,
-		Flags:   flag},
-		TrackID: trackID}
+func NewTfhd(s uint32, ver uint8, flag []byte, trackID uint32,
+	bdoff uint64, sdind uint32, defSD uint32, defSS uint32,
+	defSF uint32) *Tfhd {
+	newTfhd := &Tfhd{&FullBoxFields{
+		&BoxFields{s, 0x74666864},
+		ver,
+		flag},
+		trackID,
+		bdoff,
+		sdind,
+		defSD,
+		defSS,
+		defSF}
 	return newTfhd
 }
 
@@ -59,31 +66,31 @@ func (t *Tfhd) Write() []byte {
 	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
-	if m.baseDataOffset != 0 {
+	if t.baseDataOffset != 0 {
 		err = binary.Write(buf, binary.BigEndian, t.baseDataOffset)
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
 		}
 	}
-	if m.sampleDescriptionIndex != 0 {
+	if t.sampleDescriptionIndex != 0 {
 		err = binary.Write(buf, binary.BigEndian, t.sampleDescriptionIndex)
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
 		}
 	}
-	if m.defaultSampleDuration != 0 {
+	if t.defaultSampleDuration != 0 {
 		err = binary.Write(buf, binary.BigEndian, t.defaultSampleDuration)
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
 		}
 	}
-	if m.defaultSampleSize != 0 {
+	if t.defaultSampleSize != 0 {
 		err = binary.Write(buf, binary.BigEndian, t.defaultSampleSize)
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
 		}
 	}
-	if m.defaultSampleFlags != 0 {
+	if t.defaultSampleFlags != 0 {
 		err = binary.Write(buf, binary.BigEndian, t.defaultSampleFlags)
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)

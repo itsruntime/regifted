@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"strconv"
+	//"strconv"
 )
 
 type Mfhd struct {
@@ -12,12 +12,12 @@ type Mfhd struct {
 	SequenceNumber uint32
 }
 
-func NewMfhd(s uint32, ver uint8, flag [3]byte, sqn uint32) *Mfhd {
-	newMfhd := &Mfhd{&FullBoxFields{Size: s,
-		BoxType: 0x6d666864,
-		Version: ver,
-		Flags:   flag},
-		SequenceNumber: sqn}
+func NewMfhd(s uint32, ver uint8, flag []byte, sqn uint32) *Mfhd {
+	newMfhd := &Mfhd{&FullBoxFields{
+		&BoxFields{s, 0x6d666864},
+		ver,
+		flag},
+		sqn}
 	return newMfhd
 }
 

@@ -11,9 +11,9 @@ type Mdat struct {
 	data []byte
 }
 
-func NewMdat(s uint64, payload []byte) *Mdat {
-	newMdat := &Mdat{&BoxFields{Size: s, BoxType: 0x6d646174}}
-	newMdat.data = payload
+// Need to incorporate the uint64 handling later, unimplemented 4/13/14
+func NewMdat(s uint32, payload []byte) *Mdat {
+	newMdat := &Mdat{&BoxFields{Size: s, BoxType: 0x6d646174}, payload}
 	return newMdat
 }
 
@@ -25,7 +25,7 @@ func (m *Mdat) SetSize(s uint64) {
 			m.Size = uint32(s)
 		} else {
 			m.Size = 1
-			m.LargeSize = s
+			//m.LargeSize = s
 		}
 	}
 }

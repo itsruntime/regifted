@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"strconv"
+	//"strconv"
 )
 
 type Trun struct {
 	*FullBoxFields
 	SampleCount uint32
 	//optional fields
-	DataOffset      int32
+	DataOffset      int
 	FirstSampleFlag uint32
 	Samples         []Sample
 }
@@ -24,16 +24,16 @@ type Sample struct {
 	//SampleCompositionTimeOffsetNormal int32  // when version is 1
 }
 
-func NewTrun(s uint32, ver uint32, flag [3]byte, doff int,
-	first uint32, count uint32, samples []Sample) *Trun {
-	newTrun := &Tfhd{&FullBoxFields{Size: s,
-		BoxType: 0x7472756E,
-		Version: ver,
-		Flags:   flag},
-		DataOffset:      doff,
-		FirstSampleFlag: first,
-		SampleCount:     count,
-		Samples:         samples}
+func NewTrun(s uint32, ver uint8, flag []byte, count uint32, doff int,
+	first uint32, samples []Sample) *Trun {
+	newTrun := &Trun{&FullBoxFields{
+		&BoxFields{s, 0x7472756E},
+		ver,
+		flag},
+		count,
+		doff,
+		first,
+		samples}
 	return newTrun
 }
 
@@ -78,15 +78,15 @@ func (t *Trun) Write() []byte {
 		fmt.Println("binary.Write failed:", err)
 	}
 	// data offset
-	if t.dataOffset != 0 {
-		err = binary.Write(buf, binary.BigEndian, t.dataOffset)
+	if t.DataOffset != 0 {
+		err = binary.Write(buf, binary.BigEndian, t.DataOffset)
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
 		}
 	}
 	// first sample flags
-	if t.firstSampleFlag != 0 {
-		err = binary.Write(buf, binary.BigEndian, t.firstSampleFlag)
+	if t.FirstSampleFlag != 0 {
+		err = binary.Write(buf, binary.BigEndian, t.FirstSampleFlag)
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
 		}
@@ -110,7 +110,7 @@ func (t *Trun) Write() []byte {
 				fmt.Println("binary.Write failed:", err)
 			}
 		}
-		if m.version == 0 {
+		if t.Version == 0 {
 			if t.Samples[i].SampleDuration != 0 {
 				err = binary.Write(buf, binary.BigEndian,
 					t.Samples[i].SampleCompositionTimeOffset)
@@ -119,13 +119,14 @@ func (t *Trun) Write() []byte {
 				}
 			}
 		} else {
-			if t.Samples[i].SampleDuration != 0 {
-				err = binary.Write(buf, binary.BigEndian,
-					t.Samples[i].SampleCompositionTimeOffsetNormal)
-				if err != nil {
-					fmt.Println("binary.Write failed:", err)
-				}
-			}
+			fmt.Println("Error, version = 1 in TRUN")
+			//if t.Samples[i].SampleDuration != 0 {
+			//	err = binary.Write(buf, binary.BigEndian,
+			//		t.Samples[i].SampleCompositionTimeOffsetNormal)
+			//	if err != nil {
+			//		fmt.Println("binary.Write failed:", err)
+			//	}
+			//}
 		}
 	}
 	return buf.Bytes()
