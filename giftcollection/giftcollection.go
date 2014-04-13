@@ -28,6 +28,8 @@ const (
 	VIDEO_STREAM_TYPE uint = 27
 )
 
+var sequenceNumber uint32 = 1
+
 func Regift(AccessUnits []*ts.AccessUnit) bool {
 	fmt.Println("\nRegift()\n\n")
 
@@ -48,7 +50,8 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 	// be in the same interface. I think this means all the box files
 	// will need to be in the same package.
 
-	// Dave you will need to print to file in reverse order on the
+	// Dave you will need to print to file in reverse order from driver.go
+	// Boxes is exported so that this is convenient
 	Boxes := make([]mp4box.Box, 0)
 
 	var audioSize int = 0
@@ -118,7 +121,7 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 	fmt.Println("\naudioSamples = ", audioSamples)
 
 	// Create mdat and add it to boxes array
-	payload := append(videoByte, audioByte...)
+	payload := append(audioByte, videoByte...)
 	mdat := mp4box.NewMdat(uint32(audioSize+videoSize+8), payload)
 
 	Boxes = append(Boxes, mdat)
@@ -128,19 +131,19 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 	audioTrunFlags = append(audioTrunFlags, 0x00)
 	audioTrunFlags = append(audioTrunFlags, 0x0B)
 	audioTrunFlags = append(audioTrunFlags, 0x01)
-	// Add audio Samples to boxes array. Append to front of boxes array
+	// Add audio Samples to boxes array. Appended to rear of boxes array
 	audioTrun := mp4box.NewTrun(
 		0, //size is calculated later
 		0, //version will be zero until we have a reason to do otherwise
 		audioTrunFlags,
-		0, //dataoffset = MOOF.SIZE + 8, must be calculated later
+		0, //dataoffset = MOOF.SIZE + 8, points to start of mdat, must be calculated later
 		0, //no reason for first-sample-flags
 		uint32(len(audioSamples)),
 		audioSamples)
-	// Add audio trun to boxes array. Append to front of boxes array
+	// Add audio trun to boxes array. Appended to rear of boxes array
 	Boxes = append(Boxes, audioTrun)
 
-	// Add tfhd to boxes array. Append to front of boxes array
+	// Add tfhd to boxes array. Appended to rear of boxes array
 	audioTfhdFlags := make([]byte, 0, 3)
 	audioTfhdFlags = append(audioTrunFlags, 0x00)
 	audioTfhdFlags = append(audioTrunFlags, 0x00)
@@ -156,39 +159,67 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 		0, //default-sample-size not observed in sample fragments
 		0) //default-sample-flags not observed in sample fragments
 	trackID++
-	// Add audio traf to boxes array. Append to front of boxes array
 	Boxes = append(Boxes, audioTfhd)
-
-	// Add video samples to boxes array. Append to front of boxes array
+	// Add audio traf to boxes array. Appended to rear of boxes array
+	audioTraf := mp4box.NewTraf(0) //Size = 8 + audioTfhd.size + audioTrun.Size, calculated later
+	Boxes = append(Boxes, audioTraf)
+	// Add video samples to boxes array. Appended to rear of boxes array
 	// Setting Flags for the trun should be done programatically from the
 	// PES data but that can come later
-	audioTrunFlags := make([]byte, 0, 3)
-	audioTrunFlags = append(audioTrunFlags, 0x00)
-	audioTrunFlags = append(audioTrunFlags, 0x0B)
-	audioTrunFlags = append(audioTrunFlags, 0x01)
-	// Add audio Samples to boxes array. Append to front of boxes array
-	audioTrun := mp4box.NewTrun(
+	videoTrunFlags := make([]byte, 0, 3)
+	videoTrunFlags = append(audioTrunFlags, 0x00)
+	videoTrunFlags = append(audioTrunFlags, 0x0B)
+	videoTrunFlags = append(audioTrunFlags, 0x01)
+	// Add video Samples to boxes array. Appended to rear of boxes array
+	videoTrun := mp4box.NewTrun(
 		0, //size is calculated later
 		0, //version will be zero until we have a reason to do otherwise
-		audioTrunFlags,
-		0, //dataoffset = MOOF.SIZE + 8, must be calculated later
+		videoTrunFlags,
+		0, //dataoffset = MOOF.SIZE + 8 + len(audioByte),
+		//points to end of audio data in mdat, must be calculated later
 		0, //no reason for first-sample-flags
-		uint32(len(audioSamples)),
-		audioSamples)
-	// Add audio trun to boxes array. Append to front of boxes array
-	Boxes = append(Boxes, audioTrun)
-	// Add video trun to boxes array. Append to front of boxes array
+		uint32(len(videoSamples)),
+		videoSamples)
+	// Add video trun to boxes array.
+	Boxes = append(Boxes, videoTrun)
 
-	// Add tfhd to boxes array. Append to front of boxes array
-
+	// Add tfhd to boxes array. Appended to rear of boxes array
+	videoTfhdFlags := make([]byte, 0, 3)
+	videoTfhdFlags = append(audioTrunFlags, 0x00)
+	videoTfhdFlags = append(audioTrunFlags, 0x00)
+	videoTfhdFlags = append(audioTrunFlags, 0x20)
+	videoTfhd := mp4box.NewTfhd(
+		0, //size is calculated later
+		0, //version is typically 0
+		videoTfhdFlags,
+		uint32(trackID),
+		0, //base-data-offset not observed in sample fragments
+		0, //sample-description-index not observed in sample fragments
+		0, //default-sample-duration not observed in sample fragments
+		0, //default-sample-size not observed in sample fragments
+		0) //default-sample-flags not observed in sample fragments
+	trackID++
+	Boxes = append(Boxes, videoTfhd)
 	// Add video traf to boxes array. Append to fron of boxes array
-
-	// Add mfhd to boxes array. Append to front of boxes array
-
-	// Add moof to boxes array. Append to front of boxes array
-
-	// Call the write method for all boxes in boxes array.
-	// And append the values to the end of the FileByte array.
+	videoTraf := mp4box.NewTraf(0) //Size = 8 + audioTfhd.size + audioTrun.Size, calculated later
+	Boxes = append(Boxes, videoTraf)
+	// Add mfhd to boxes array. Appended to rear of boxes array
+	mfhdFlags := make([]byte, 0, 3)
+	mfhdFlags = append(audioTrunFlags, 0x00)
+	mfhdFlags = append(audioTrunFlags, 0x00)
+	mfhdFlags = append(audioTrunFlags, 0x00)
+	mfhd := mp4box.NewMfhd(
+		16, //Size = 16 always
+		0,
+		mfhdFlags,
+		sequenceNumber)
+	sequenceNumber++ //advance sequenceNumber for the next moof-mdat fragment
+	Boxes = append(Boxes, mfhd)
+	// Add moof to boxes array. Appended to rear of boxes array
+	moof := mp4box.NewMoof(0) //Size is 8 + MFHD.SIZE + TRAFs.SIZE, calculated later
+	Boxes = append(Boxes, moof)
+	// Call the write method for all boxes in boxes array. <-- NO! CHECK DRIVER.GO, THIS GOES THERE (Line67)
+	// And append the values to the end of the FileByte array. <-- NO! CHECK DRIVER.GO, THIS GOES THERE (Line67)
 
 	return false
 
