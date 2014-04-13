@@ -5,7 +5,7 @@ import (
 	"regifted/util"
 	"regifted/util/mylog"
 
-	"fmt"
+	
 	"log"
 	"os"
 )
@@ -51,7 +51,7 @@ type TSState struct {
 
 type AccessUnit struct {
 	PesMap map[uint][]Pes
-	pcr    uint
+	Pcr    uint
 }
 
 // todo( mathew guest ) add error return
@@ -122,8 +122,8 @@ func (state *TSState) GetNextAccessUnit() (*AccessUnit, int) {
 	}
 	x := &state.AccessUnits[state.AccessUnitIdx]
 	state.AccessUnitIdx++
-	fmt.Println("ts.GetNextAccessUnit")
-	fmt.Println(x)
+	//fmt.Println("ts.GetNextAccessUnit")
+	//fmt.Println(x)
 	return x, err
 }
 
@@ -158,8 +158,8 @@ func (state *TSState) readPacket() int {
 		pesData = state.readES(&tsPacket, packetReader)
 
 		if pesData != nil {
-			fmt.Println("NOWHERE")
-			fmt.Println(pesData.streamType)
+			//fmt.Println("NOWHERE")
+			//fmt.Println(pesData.streamType)
 			if state.CurPesMap[pesData.streamType] != nil {
 				state.CurPesMap[pesData.streamType] = make([]Pes, 1, 1)
 
@@ -167,8 +167,8 @@ func (state *TSState) readPacket() int {
 
 			state.CurPesMap[pesData.streamType] = append(state.CurPesMap[pesData.streamType], *pesData)
 
-			fmt.Println("asdfasdfafdsfas")
-			fmt.Println(pesData.streamType)
+			//fmt.Println("asdfasdfafdsfas")
+			//fmt.Println(pesData.streamType)
 
 		}
 	}
@@ -177,11 +177,11 @@ func (state *TSState) readPacket() int {
 
 		state.pcr = tsPacket.adaptation.pcr.pcr
 		state.AccessUnits = append(state.AccessUnits, AccessUnit{state.CurPesMap, state.pcr})
-		fmt.Println("state.AccessUnits:")
-		fmt.Println(state.AccessUnits)
+		//fmt.Println("state.AccessUnits:")
+		//fmt.Println(state.AccessUnits)
 
-		fmt.Println("state.CurPesMap:")
-		fmt.Println(state.CurPesMap)
+		//fmt.Println("state.CurPesMap:")
+		//fmt.Println(state.CurPesMap)
 	}
 
 	return packetType

@@ -45,19 +45,28 @@ func Main() int {
 
 	for true {
 		accsessUnit, ok := tsState.GetNextAccessUnit()
+
+		//fmt.Printf("accsessUnit pcr", accsessUnit.Pcr)
+
 		if ok != 0 {
 			break
 		}
 
-		if n <= 30 {
+		if n < 30 {
+
+			//fmt.Printf("accsessUnit", accsessUnit.Pcr)
 
 			Buffer = append(Buffer, accsessUnit)
 			n++
 
 		}else{
 			giftcollection.Regift(Buffer)
-			n= 0
+			n = 0
 			Buffer = make([]*ts.AccessUnit, 0)
+
+			//EXPORT EACH ITERATION GIFTCOLLECTIONS BOXES INTO A BYTE ARRAY OR THEY WILL BE OVERWRITTEN
+			//THIS BYTE ARRAY IS TO WRITE OUT TO FILE
+
 		}
 	}
 
