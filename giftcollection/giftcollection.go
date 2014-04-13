@@ -2,10 +2,8 @@ package giftcollection
 
 import (
 	"fmt"
+	"regifted/mp4box"
 	"regifted/ts"
-	//"regifted/mpeg4file"
-	//"regifted/mpeg4file/moof"
-	//"regifted/mpeg4file/moof/traf"
 )
 
 type sample struct {
@@ -48,6 +46,7 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 	// IMPORTANT NOTE: To have a array of the boxes they all have to
 	// be in the same interface. I think this means all the box files
 	// will need to be in the same package.
+	Boxes := make([]Box, 0)
 
 	var audioSize int = 0
 	var videoSize int = 0
@@ -70,7 +69,7 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 
 		audioSize = len(audioByte)
 
-		audioSamples = append(audioSamples, sample{delta, 0, 0})
+		audioSamples = append(audioSamples, Sample{0, delta, 0})
 
 		// fmt.Println("audioSamples = ", audioSamples)
 
@@ -82,15 +81,36 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 
 		videoSize = len(videoByte)
 
-		videoSamples = append(videoSamples, sample{delta, 0, 0})
+		videoSamples = append(videoSamples, Sample{0, delta, 0})
 	}
 
 	// fmt.Println("videoSamples = ", videoSamples)
 
 	// Create mdat and add it to boxes array
-
+	payload := append(videoByte, audioByte...)
+	mdat := Mdat.NewMdat( 
+		uint64(audioSize + videoSize + 8),
+		payload		
+	)
+	
+	Boxes = append(mdat)
+	// Setting Flags for the trun should be done programatically from the
+	// PES data but that can come later
+	audioTrunFlags := make([]byte, 0, 3)
+	audioTrunFlags.append(0x00)
+	audioTrunFlags.append(0x0B)
+	audioTrunFlags.append(0x01)
 	// Add audio Samples to boxes array. Append to front of boxes array
-
+	audioTrun := Trun.NewTrun(
+		0, //size is calculated later
+		0, //version will be zero until we have a reason to do otherwise
+		trunFlags,
+		0, //dataoffset = MOOF.SIZE + 8, must be calculated later
+		0, //no reason for first-sample-flags
+		uint32(len(audioSamples)),
+		audioSamples		
+	)
+	Boxes = append(audioTrun)
 	// Add audio trun to boxes array. Append to front of boxes array
 
 	// Add tfhd to boxes array. Append to front of boxes array
