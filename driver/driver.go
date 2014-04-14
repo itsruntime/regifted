@@ -43,6 +43,8 @@ func Main() int {
 
 	var n int = 0
 
+	file := make([]byte,0)
+
 	for true {
 		accsessUnit, ok := tsState.GetNextAccessUnit()
 
@@ -60,17 +62,22 @@ func Main() int {
 			n++
 
 		}else{
-			giftcollection.Regift(Buffer)
+			//giftcollection.Regift(Buffer)
+			//fmt.Printf("% x", giftcollection.Regift(Buffer))
+			file = append(file, giftcollection.Regift(Buffer)...)
 			n = 0
 			Buffer = make([]*ts.AccessUnit, 0)
 
 			//EXPORT EACH ITERATION GIFTCOLLECTIONS BOXES INTO A BYTE ARRAY OR THEY WILL BE OVERWRITTEN
 			//THIS BYTE ARRAY IS TO WRITE OUT TO FILE
 
+			// appends the byte array returned from giftcollection.Regift(Buffer) to the overall
+			// byteFile
+
 		}
 	}
 
-
+	fileWrtier(file)
 
 	return 0
 
@@ -93,4 +100,22 @@ func getFilepath() (string, int) {
 	}
 	filename := os.Args[1]
 	return filename, 0
+}
+
+// Used for debuging prints the byte array to the screen
+// in the hex format.
+//func fileWrtier(fileBytes []byte){
+	// fmt.Printf("% x", fileBytes)
+// }
+
+
+
+// Writes a byte array to a file.
+func fileWrtier(fileBytes []byte){
+	file, err := os.Create("MPEG4File.Fragment")
+	if err != nil{
+		fmt.Println("Error wrtiting fragment file")
+	}
+	file.Write(fileBytes)
+	file.Close()
 }
