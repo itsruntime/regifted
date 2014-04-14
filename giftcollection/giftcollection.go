@@ -5,6 +5,7 @@ import (
 	"log"
 	"regifted/mp4boxes"
 	"regifted/ts"
+	"os"
 )
 
 type sample struct {
@@ -31,7 +32,7 @@ const (
 
 var sequenceNumber uint32 = 1
 
-func Regift(AccessUnits []*ts.AccessUnit) bool {
+func Regift(AccessUnits []*ts.AccessUnit) []byte {
 	fmt.Println("\nRegift()\n\n")
 
 	//fmt.Println("AccessUnits[0]:")
@@ -95,7 +96,7 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 
 	if len(videoSamples) < 2 {
 		log.Fatal("Not enough data to genertae pcr delta")
-		return false
+		os.Exit(71)
 
 	}
 
@@ -103,7 +104,7 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 
 	if pcrDelta == 0 {
 		log.Fatal("pcrDelta is 0, cannot generate delta")
-		return false
+		os.Exit(71)
 
 	}
 
@@ -121,7 +122,7 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 
 	if len(audioSamples) < 2 {
 		log.Fatal("Not enough data to genertae pcr delta")
-		return false
+		os.Exit(71)
 
 	}
 
@@ -129,7 +130,7 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 
 	if pcrDelta == 0 {
 		log.Fatal("pcrDelta is 0, cannot generate delta")
-		return false
+		os.Exit(71)
 
 	}
 
@@ -250,6 +251,8 @@ func Regift(AccessUnits []*ts.AccessUnit) bool {
 	// Call the write method for all boxes in boxes array. <-- NO! CHECK DRIVER.GO, THIS GOES THERE (Line67)
 	// And append the values to the end of the FileByte array. <-- NO! CHECK DRIVER.GO, THIS GOES THERE (Line67)
 
-	return false
+	temp := make([]byte, 1)
+
+	return temp
 
 }
