@@ -251,8 +251,15 @@ func Regift(AccessUnits []*ts.AccessUnit) []byte {
 	// Call the write method for all boxes in boxes array. <-- NO! CHECK DRIVER.GO, THIS GOES THERE (Line67)
 	// And append the values to the end of the FileByte array. <-- NO! CHECK DRIVER.GO, THIS GOES THERE (Line67)
 
-	temp := make([]byte, 1)
+	//D
 
-	return temp
+	boxesBytes := make([]byte, 0)
+	for i:=(len(Boxes)-1); i>=0;i--{
+		boxesBytes = append(boxesBytes, Boxes[i].Write()...)
+	}
+	//D
+	
 
+	return boxesBytes
 }
+
