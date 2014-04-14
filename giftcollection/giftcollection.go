@@ -234,10 +234,28 @@ func Regift(AccessUnits []*ts.AccessUnit) []byte {
 	videoTraf := mp4box.NewTraf(0) //Size = 8 + audioTfhd.size + audioTrun.Size, calculated later
 	Boxes = append(Boxes, videoTraf)
 	// Add mfhd to boxes array. Appended to rear of boxes array
+
+
+	// ************ANDREW LOOK HERE**************
+	// The flags array should only be of length 3 but it is coming back length 4
+	// I think that for the way you are doing it here you want to use 
+	// mfhdFlags := make([]byte, 0)
+	// then when you call append we wont have any extra locations in the array. 
 	mfhdFlags := make([]byte, 0, 3)
+	mfhdFlags = append(audioTrunFlags, 0x00) //  audioTrunFlags???? mfhdFlags?
 	mfhdFlags = append(audioTrunFlags, 0x00)
 	mfhdFlags = append(audioTrunFlags, 0x00)
-	mfhdFlags = append(audioTrunFlags, 0x00)
+
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
+	fmt.Printf("len of mfhdFlags : %d", len(mfhdFlags))
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
+
 	mfhd := mp4box.NewMfhd(
 		16, //Size = 16 always
 		0,
