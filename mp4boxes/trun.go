@@ -11,7 +11,7 @@ type Trun struct {
 	*FullBoxFields
 	SampleCount uint32
 	//optional fields
-	DataOffset      int
+	DataOffset      int32
 	FirstSampleFlag uint32
 	Samples         []Sample
 }
@@ -24,7 +24,7 @@ type Sample struct {
 	//SampleCompositionTimeOffsetNormal int32  // when version is 1
 }
 
-func NewTrun(s uint32, ver uint8, flag []byte, count uint32, doff int,
+func NewTrun(s uint32, ver uint8, flag []byte, count uint32, doff int32,
 	first uint32, samples []Sample) *Trun {
 	newTrun := &Trun{&FullBoxFields{
 		&BoxFields{s, 0x7472756E},
