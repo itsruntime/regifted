@@ -160,7 +160,7 @@ func Regift(AccessUnits []*ts.AccessUnit) []byte {
 	audioTrunFlags := make([]byte, 0, 3)
 	audioTrunFlags = append(audioTrunFlags, 0x00)
 	audioTrunFlags = append(audioTrunFlags, 0x0B)
-	audioTrunFlags = append(audioTrunFlags, 0x01)
+	audioTrunFlags = append(audioTrunFlags, 0x00)
 	// Add audio Samples to boxes array. Appended to rear of boxes array
 	fmt.Println(uint32(len(audioSamples)))
 	audioTrun := mp4box.NewTrun(
@@ -212,7 +212,8 @@ func Regift(AccessUnits []*ts.AccessUnit) []byte {
 	videoTrunFlags := make([]byte, 0, 3)
 	videoTrunFlags = append(videoTrunFlags, 0x00)
 	videoTrunFlags = append(videoTrunFlags, 0x0B)
-	videoTrunFlags = append(videoTrunFlags, 0x01)
+	videoTrunFlags = append(videoTrunFlags, 0x00)
+	fmt.Println("Num videoSamples is: ", len(videoSamples))
 	// Add video Samples to boxes array. Appended to rear of boxes array
 	videoTrun := mp4box.NewTrun(
 		0, //size is calculated later
@@ -224,6 +225,7 @@ func Regift(AccessUnits []*ts.AccessUnit) []byte {
 		0, //no reason for first-sample-flags
 		videoSamples)
 	videoTrun.CalculateSize()
+	fmt.Println("Num samplecount is: ", videoTrun.SampleCount)
 	// Add video trun to boxes array.
 	Boxes = append(Boxes, videoTrun)
 
