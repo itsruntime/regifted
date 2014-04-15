@@ -25,6 +25,18 @@ func (m *Mfhd) SetSize(s uint32) {
 	m.Size = s
 }
 
+func (m *Mfhd) GetSize() uint32 {
+	return m.Size
+}
+
+func (m *Mfhd) GetBoxType() uint32 {
+	return m.BoxType
+}
+
+func (m *Mfhd) CalculateSize() {
+	m.Size = 16
+}
+
 func (m *Mfhd) Write() []byte {
 	buf := new(bytes.Buffer)
 	var err error

@@ -8,6 +8,8 @@ package mp4box
 
 type Box interface {
 	Write() []byte
+	GetSize() uint32    //Sorry Go
+	GetBoxType() uint32 //Sorry Again, Go
 }
 
 //Box variables are all exported;

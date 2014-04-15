@@ -49,6 +49,38 @@ func (t *Trun) SetSize(s uint32) {
 	t.Size = s
 }
 
+func (t *Trun) GetSize() uint32 {
+	return t.Size
+}
+
+func (t *Trun) GetBoxType() uint32 {
+	return t.BoxType
+}
+
+func (t *Trun) CalculateSize() {
+	t.Size = 16
+	if t.DataOffset != 0 {
+		t.Size += 4
+	}
+	if t.FirstSampleFlag != 0 {
+		t.Size += 4
+	}
+	for _, Sample := range t.Samples {
+		if Sample.SampleDuration != 0 {
+			t.Size += 4
+		}
+		if Sample.SampleSize != 0 {
+			t.Size += 4
+		}
+		if Sample.SampleFlags != 0 {
+			t.Size += 4
+		}
+		if Sample.SampleCompositionTimeOffset != 0 {
+			t.Size += 4
+		}
+	}
+}
+
 func (t *Trun) Write() []byte {
 	buf := new(bytes.Buffer)
 	var err error

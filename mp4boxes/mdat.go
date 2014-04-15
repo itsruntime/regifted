@@ -30,6 +30,14 @@ func (m *Mdat) SetSize(s uint64) {
 	}
 }
 
+func (m *Mdat) GetSize() uint32 {
+	return m.Size
+}
+
+func (m *Mdat) GetBoxType() uint32 {
+	return m.BoxType
+}
+
 func (m *Mdat) Write() []byte {
 	buf := new(bytes.Buffer)
 	var err error

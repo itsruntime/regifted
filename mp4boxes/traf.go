@@ -20,6 +20,19 @@ func (t *Traf) SetSize(s uint32) {
 	t.Size = s
 }
 
+func (t *Traf) GetSize() uint32 {
+	return t.Size
+}
+
+func (t *Traf) GetBoxType() uint32 {
+	return t.BoxType
+}
+
+func (t *Traf) CalculateSize(totalTrunSize uint32, tfhdSize uint32) {
+	// need to modify to handle multiple truns
+	t.Size = 8 + totalTrunSize + tfhdSize
+}
+
 func (t *Traf) Write() []byte {
 	buf := new(bytes.Buffer)
 	var err error

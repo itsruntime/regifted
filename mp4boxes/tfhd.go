@@ -11,11 +11,11 @@ type Tfhd struct {
 	*FullBoxFields
 	TrackID uint32
 	//optional fields
-	baseDataOffset         uint64
-	sampleDescriptionIndex uint32
-	defaultSampleDuration  uint32
-	defaultSampleSize      uint32
-	defaultSampleFlags     uint32
+	BaseDataOffset         uint64
+	SampleDescriptionIndex uint32
+	DefaultSampleDuration  uint32
+	DefaultSampleSize      uint32
+	DefaultSampleFlags     uint32
 }
 
 func NewTfhd(s uint32, ver uint8, flag []byte, trackID uint32,
@@ -36,6 +36,33 @@ func NewTfhd(s uint32, ver uint8, flag []byte, trackID uint32,
 
 func (t *Tfhd) SetSize(s uint32) {
 	t.Size = s
+}
+
+func (t *Tfhd) GetSize() uint32 {
+	return t.Size
+}
+
+func (t *Tfhd) GetBoxType() uint32 {
+	return t.BoxType
+}
+
+func (t *Tfhd) CalculateSize() {
+	t.Size = 16
+	if t.BaseDataOffset != 0 {
+		t.Size += 8
+	}
+	if t.SampleDescriptionIndex != 0 {
+		t.Size += 4
+	}
+	if t.DefaultSampleDuration != 0 {
+		t.Size += 4
+	}
+	if t.DefaultSampleSize != 0 {
+		t.Size += 4
+	}
+	if t.DefaultSampleFlags != 0 {
+		t.Size += 4
+	}
 }
 
 func (t *Tfhd) Write() []byte {
@@ -66,32 +93,32 @@ func (t *Tfhd) Write() []byte {
 	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
-	if t.baseDataOffset != 0 {
-		err = binary.Write(buf, binary.BigEndian, t.baseDataOffset)
+	if t.BaseDataOffset != 0 {
+		err = binary.Write(buf, binary.BigEndian, t.BaseDataOffset)
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
 		}
 	}
-	if t.sampleDescriptionIndex != 0 {
-		err = binary.Write(buf, binary.BigEndian, t.sampleDescriptionIndex)
+	if t.SampleDescriptionIndex != 0 {
+		err = binary.Write(buf, binary.BigEndian, t.SampleDescriptionIndex)
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
 		}
 	}
-	if t.defaultSampleDuration != 0 {
-		err = binary.Write(buf, binary.BigEndian, t.defaultSampleDuration)
+	if t.DefaultSampleDuration != 0 {
+		err = binary.Write(buf, binary.BigEndian, t.DefaultSampleDuration)
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
 		}
 	}
-	if t.defaultSampleSize != 0 {
-		err = binary.Write(buf, binary.BigEndian, t.defaultSampleSize)
+	if t.DefaultSampleSize != 0 {
+		err = binary.Write(buf, binary.BigEndian, t.DefaultSampleSize)
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
 		}
 	}
-	if t.defaultSampleFlags != 0 {
-		err = binary.Write(buf, binary.BigEndian, t.defaultSampleFlags)
+	if t.DefaultSampleFlags != 0 {
+		err = binary.Write(buf, binary.BigEndian, t.DefaultSampleFlags)
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
 		}

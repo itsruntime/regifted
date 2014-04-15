@@ -24,6 +24,18 @@ func (m *Moof) SetSize(s uint32) {
 	m.Size = s
 }
 
+func (m *Moof) GetSize() uint32 {
+	return m.Size
+}
+
+func (m *Moof) GetBoxType() uint32 {
+	return m.BoxType
+}
+
+func (m *Moof) CalculateSize(totalTrafSize uint32, mfhdSize uint32) {
+	m.Size = 8 + totalTrafSize + mfhdSize
+}
+
 func (m *Moof) Write() []byte {
 	buf := new(bytes.Buffer)
 	var err error
