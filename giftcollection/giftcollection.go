@@ -159,7 +159,7 @@ func Regift(AccessUnits []*ts.AccessUnit) []byte {
 	// PES data but that can come later
 	audioTrunFlags := make([]byte, 0, 3)
 	audioTrunFlags = append(audioTrunFlags, 0x00)
-	audioTrunFlags = append(audioTrunFlags, 0x00)
+	audioTrunFlags = append(audioTrunFlags, 0x0B)
 	audioTrunFlags = append(audioTrunFlags, 0x00)
 	// Add audio Samples to boxes array. Appended to rear of boxes array
 	fmt.Println(uint32(len(audioSamples)))
@@ -211,7 +211,7 @@ func Regift(AccessUnits []*ts.AccessUnit) []byte {
 	// PES data but that can come later
 	videoTrunFlags := make([]byte, 0, 3)
 	videoTrunFlags = append(videoTrunFlags, 0x00)
-	videoTrunFlags = append(videoTrunFlags, 0x00)
+	videoTrunFlags = append(videoTrunFlags, 0x0B)
 	videoTrunFlags = append(videoTrunFlags, 0x00)
 	fmt.Println("Num videoSamples is: ", len(videoSamples))
 	// Add video Samples to boxes array. Appended to rear of boxes array
