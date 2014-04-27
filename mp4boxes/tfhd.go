@@ -7,6 +7,8 @@ import (
 	//"strconv"
 )
 
+// Contains all of the variables associated with 
+// the Track Fragment Header Box (tfhd). 
 type Tfhd struct {
 	*FullBoxFields
 	TrackID uint32
@@ -18,6 +20,8 @@ type Tfhd struct {
 	DefaultSampleFlags     uint32
 }
 
+// The Track Fragment Header Box (tfhd) contains all the metadata
+// about which elements to use when parsing the sample information.
 func NewTfhd(s uint32, ver uint8, flag []byte, trackID uint32,
 	bdoff uint64, sdind uint32, defSD uint32, defSS uint32,
 	defSF uint32) *Tfhd {
@@ -34,18 +38,25 @@ func NewTfhd(s uint32, ver uint8, flag []byte, trackID uint32,
 	return newTfhd
 }
 
+// DEPRECATED. 
+// Sets the size variable in the Track Fragment Header Box(tfhd) 
 func (t *Tfhd) SetSize(s uint32) {
 	t.Size = s
 }
 
+// Returns the size variable of the Track Fragment Header Box (tfhd)
 func (t *Tfhd) GetSize() uint32 {
 	return t.Size
 }
 
+// Returns the integer identifier of the Track Fragement Header Box (tfhd)
 func (t *Tfhd) GetBoxType() uint32 {
 	return t.BoxType
 }
 
+// Calculates the size (bytes) of the Track Fragment Header Box (traf). 
+// The size of this box varies depending on what flags are set during
+// construction of the box. 
 func (t *Tfhd) CalculateSize() {
 	t.Size = 16
 	if t.BaseDataOffset != 0 {
@@ -65,6 +76,7 @@ func (t *Tfhd) CalculateSize() {
 	}
 }
 
+// Returns a array of bytes representing the Track Fragment Header Box (tfhd). 
 func (t *Tfhd) Write() []byte {
 	buf := new(bytes.Buffer)
 	var err error

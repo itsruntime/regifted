@@ -15,6 +15,8 @@ import (
 const LOGGER_NAME = "driver"
 const LOGGER_SEVERITY_LEVEL = mylog.SEV_ERROR
 
+// Main takes a TS file and parses it into access units to be repackaged as 
+// a MPEG-4 fragment file. 
 func Main() int {
 
 	logger := mylog.CreateLogger(LOGGER_NAME)
@@ -62,18 +64,11 @@ func Main() int {
 			n++
 
 		}else{
-			//giftcollection.Regift(Buffer)
-			//fmt.Printf("% x", giftcollection.Regift(Buffer))
+			// Send the AccessUnit to Regift to be repackaged. And append the 
+			// byte array to the file variable to be writen to file later. 
 			file = append(file, giftcollection.Regift(Buffer)...)
 			n = 0
 			Buffer = make([]*ts.AccessUnit, 0)
-
-			//EXPORT EACH ITERATION GIFTCOLLECTIONS BOXES INTO A BYTE ARRAY OR THEY WILL BE OVERWRITTEN
-			//THIS BYTE ARRAY IS TO WRITE OUT TO FILE
-
-			// appends the byte array returned from giftcollection.Regift(Buffer) to the overall
-			// byteFile
-
 		}
 	}
 
@@ -101,14 +96,6 @@ func getFilepath() (string, int) {
 	filename := os.Args[1]
 	return filename, 0
 }
-
-// Used for debuging prints the byte array to the screen
-// in the hex format.
-//func fileWrtier(fileBytes []byte){
-	// fmt.Printf("% x", fileBytes)
-// }
-
-
 
 // Writes a byte array to a file.
 func fileWrtier(fileBytes []byte){

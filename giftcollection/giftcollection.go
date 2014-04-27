@@ -32,6 +32,8 @@ const (
 
 var sequenceNumber uint32 = 1
 
+// Regift takes a section of the TS stream and repackages into 
+// a MPEG-4 box structure. 
 func Regift(AccessUnits []*ts.AccessUnit) []byte {
 	fmt.Println("\nRegift()\n\n")
 
@@ -282,14 +284,12 @@ func Regift(AccessUnits []*ts.AccessUnit) []byte {
 	}
 	moof.CalculateSize(totalTraf, mfhd.Size)
 	Boxes = append(Boxes, moof)
-	// Call the write method for all boxes in boxes array. <-- NO! CHECK DRIVER.GO, THIS GOES THERE (Line67)
-	// And append the values to the end of the FileByte array. <-- NO! CHECK DRIVER.GO, THIS GOES THERE (Line67)
+	
 
 	boxesBytes := make([]byte, 0)
 	for i := (len(Boxes) - 1); i >= 0; i-- {
 		boxesBytes = append(boxesBytes, Boxes[i].Write()...)
 	}
-	//D
 
 	return boxesBytes
 }

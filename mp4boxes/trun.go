@@ -7,6 +7,8 @@ import (
 	//"strconv"
 )
 
+// Contains all of the variables associated with 
+// the Track Fragment Run Box.
 type Trun struct {
 	*FullBoxFields
 	SampleCount uint32
@@ -16,6 +18,8 @@ type Trun struct {
 	Samples         []Sample
 }
 
+// Contains all of the variables associated with 
+// sample information. 
 type Sample struct {
 	SampleDuration              uint32
 	SampleSize                  uint32
@@ -24,6 +28,8 @@ type Sample struct {
 	//SampleCompositionTimeOffsetNormal int32  // when version is 1
 }
 
+// The Track Fragment Run Box (trun) contatins all the sample information
+// for a single Track Fragment. 
 func NewTrun(s uint32, ver uint8, flag []byte, count uint32, doff int32,
 	first uint32, samples []Sample) *Trun {
 	newTrun := &Trun{&FullBoxFields{
@@ -37,6 +43,10 @@ func NewTrun(s uint32, ver uint8, flag []byte, count uint32, doff int32,
 	return newTrun
 }
 
+// A sample is all of the data contained in one 
+// time stamp of the presentation. Only a samples metadata
+// is stored in the Track Fragment Run Box (trun). There are usually several
+// sets of sample information in one Track Fragment Run Box (trun). 
 func NewSample(d uint32, s uint32, f uint32, scto uint32) *Sample {
 	newSample := &Sample{SampleDuration: d,
 		SampleSize:                  s,
@@ -45,18 +55,23 @@ func NewSample(d uint32, s uint32, f uint32, scto uint32) *Sample {
 	return newSample
 }
 
+// DEPRECATED. 
+// Sets the size variable in the Track Fragment Run Box (trun). 
 func (t *Trun) SetSize(s uint32) {
 	t.Size = s
 }
 
+// Returns the size of the Track Fragment Run Box (trun). 
 func (t *Trun) GetSize() uint32 {
 	return t.Size
 }
 
+// Returns the integer identifier of the Track Fragment Run Box (trun).
 func (t *Trun) GetBoxType() uint32 {
 	return t.BoxType
 }
 
+// Calcualtes the size (bytes) of the Track Fragment Run Box (trun). 
 func (t *Trun) CalculateSize() {
 	t.Size = 16
 	if t.DataOffset != 0 {
@@ -81,6 +96,7 @@ func (t *Trun) CalculateSize() {
 	}
 }
 
+// Returns a array of bytes representing the Track Fragmant Run Box (trun).
 func (t *Trun) Write() []byte {
 	buf := new(bytes.Buffer)
 	var err error
