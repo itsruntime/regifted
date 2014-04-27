@@ -123,7 +123,7 @@ func (t *Trun) Write() []byte {
 			fmt.Println("binary.Write failed:", err)
 		}
 	}
-	for i := 0; i < len(t.Samples)-1; i++ {
+	for i := 0; i < len(t.Samples); i++ {
 		if t.Samples[i].SampleDuration != 0 {
 			err = binary.Write(buf, binary.BigEndian, t.Samples[i].SampleDuration)
 			if err != nil {

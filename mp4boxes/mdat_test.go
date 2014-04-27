@@ -7,19 +7,21 @@ import (
 	"testing"
 )
 
-func TestMoofConstructor(t *testing.T) {
-	m1 := NewMoof(16)
+func TestMdatConstructor(t *testing.T) {
+	z := []byte{1, 2, 3, 4, 5, 6, 7, 8}
+	m1 := NewMdat(16, z)
 	if m1.Size != 16 {
 		t.Fail()
-		fmt.Println("Error checking Moof.Size in the Constructor test.")
+		fmt.Println("Error checking Mdat.Size in the Constructor test.")
 	}
-	if m1.BoxType != 1836019558 {
+	if m1.BoxType != 1835295092 {
 		t.Fail()
 	}
 }
 
-func TestMoofSetSize(t *testing.T) {
-	m3 := NewMoof(16)
+func TestMdatSetSize(t *testing.T) {
+	z := []byte{1, 2, 3, 4, 5, 6, 7, 8}
+	m3 := NewMdat(16, z)
 	a := reflect.TypeOf(m3.Size).Kind()
 	if a != reflect.Uint32 {
 		t.Fail()
@@ -27,9 +29,9 @@ func TestMoofSetSize(t *testing.T) {
 	}
 	if m3.Size != 16 {
 		t.Fail()
-		fmt.Println("Error checking value of Size.")
+		fmt.Println("Error checking value of Size. -1")
 	}
-	m3.SetSize(32)
+	m3.SetSize(uint64(32))
 	b := reflect.TypeOf(m3.Size).Kind()
 	if b != reflect.Uint32 {
 		t.Fail()
@@ -37,12 +39,14 @@ func TestMoofSetSize(t *testing.T) {
 	}
 	if m3.Size != 32 {
 		t.Fail()
-		fmt.Println("Error checking value of Size.")
+		fmt.Println(m3.Size)
+		fmt.Println("Error checking value of Size. -2")
 	}
 }
 
-func TestMoofGetSize(t *testing.T) {
-	m4 := NewMoof(32)
+func TestMdatGetSize(t *testing.T) {
+	z := []byte{1, 2, 3, 4, 5, 6, 7, 8}
+	m4 := NewMdat(32, z)
 	a := m4.GetSize()
 	b := reflect.TypeOf(a).Kind()
 	if b != reflect.Uint32 {
@@ -55,48 +59,31 @@ func TestMoofGetSize(t *testing.T) {
 	}
 }
 
-func TestMoofGetBoxType(t *testing.T) {
-	m5 := NewMoof(0)
+func TestMdatGetBoxType(t *testing.T) {
+	z := []byte{1, 2, 3, 4, 5, 6, 7, 8}
+	m5 := NewMdat(0, z)
 	a := m5.GetBoxType()
 	b := reflect.TypeOf(a).Kind()
 	if b != reflect.Uint32 {
 		t.Fail()
 		fmt.Println("Error checking data type of BoxType.")
 	}
-	if a != 1836019558 {
+	if a != 1835295092 {
 		t.Fail()
 		fmt.Println("Error checking value of BoxType.")
 	}
 }
 
-func TestMoofCalculateSize(t *testing.T) {
-	m6 := NewMoof(16)
-	a, b := 32, 64
-	m6.CalculateSize(uint32(a), uint32(b))
-	c := m6.Size
-	d := reflect.TypeOf(c).Kind()
-	if d != reflect.Uint32 {
-		t.Fail()
-		fmt.Println("Error checking data type of calculated Size.")
-	}
-	e := a + b
-	if m6.Size-uint32(e) != 8 {
-		t.Fail()
-		fmt.Println("Error checking value of calculated Size.")
-	}
-
-}
-
-func TestMoofWrite(t *testing.T) {
-	m7 := NewMoof(8)
-	a := m7.Write()
+func TestMdatWrite(t *testing.T) {
+	z := []byte{1, 2, 3, 4, 5, 6, 7, 8}
+	m6 := NewMdat(8, z)
+	a := m6.Write()
 	b := reflect.TypeOf(a).Kind()
 	if b != reflect.Slice {
 		t.Fail()
-		fmt.Println(b)
 		fmt.Println("Error checking write returns an Array.")
 	}
-	c := []byte{0, 0, 0, 8, 109, 111, 111, 102}
+	c := []byte{0, 0, 0, 8, 109, 100, 97, 116, 1, 2, 3, 4, 5, 6, 7, 8}
 	if len(a) != len(c) {
 		t.Fail()
 		fmt.Println("Slice lengths are different; should be identical.")

@@ -21,7 +21,7 @@ func (m *Mdat) SetSize(s uint64) {
 	if s == 0 {
 		m.Size = 0
 	} else {
-		if s > 4294967295 {
+		if s < 4294967295 {
 			m.Size = uint32(s)
 		} else {
 			m.Size = 1
