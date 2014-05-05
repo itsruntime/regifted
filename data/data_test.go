@@ -16,6 +16,7 @@ func TestBufferedReader(t *testing.T) {
 	filename := BYTE_FILE
 	fh, err := os.OpenFile(filename, os.O_RDONLY, 0)
 	if err != nil {
+		return // dont test if the file doesnt exist: ./util/genned_bytes
 		// log.Fatal(err)
 		panic(err)
 	}

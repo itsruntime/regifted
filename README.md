@@ -3,8 +3,8 @@ Regifted
 
 This is an mpeg2 transport stream (mpeg2 ts) to mpeg4 repackaging utility.
 
-Build Process  
-=============  
+Build Process
+=============
 
 #### Installing GO and Setting the GO Environment
 ##### 1. Download and Install GO using instructions from http://golang.org/doc/install
@@ -26,8 +26,8 @@ Build Process
 					i. From the $GOPATH/bin directory you can type:
 						a. ./regifted [ts file location]
 
-Test Process  
-============  
+Test Process
+============
 #### Running the unit tests
 ##### 1. Visit http://golang.org/cmd/go/#hdr-Test_packages for more on the GO testing suite.
 ##### 2. From the regifted folder you make these calls:
@@ -36,10 +36,16 @@ Test Process
 					iii. go test -v regifted/data
 
 
-Implementation Documentation  
+Implementation Documentation
 ============================
 ##### 1. Steps to generate godocs. From the regifted folder:
 					i.  godoc regifted/moof
 					ii. godoc regifted/ts
 ##### 2. You can find a link to diagrams demonstrating the activity of ts.go and moof.go here:
 ##### https://github.com/itsruntime/regifted/wiki/Design-Documentation
+
+MESSAGE SYSTEM
+==============
+There is a logging message system on the TS and Reader Libraries. One can set
+module-granular threshold levels to filter messages. Currently, messages are
+sent to stderr.
