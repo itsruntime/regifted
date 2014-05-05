@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// log messages below thresh will not be let pass
-const DEFAULT_SEV_THRESH = 0
+// log messages above thresh will not be let pass
+const DEFAULT_SEV_THRESH = 8
 
 // default internal severity levels
 const (
@@ -62,7 +62,7 @@ type simple struct {
 }
 
 func (l *simple) log(severity int, format string, a ...interface{}) {
-	return
+	// return 				// ad hoc disable logging
 	if l.IsWithinSeverity(severity) == false {
 		return
 	}
@@ -78,7 +78,6 @@ func (l *simple) SetSeverityThresh(severity int) {
 }
 
 func (l *simple) IsWithinSeverity(severity int) bool {
-	return false
 	if severity > l.severityThresh {
 		return false
 	}

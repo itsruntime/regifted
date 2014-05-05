@@ -41,7 +41,7 @@ type TsPacket struct {
 //continuity - Sequence number of payload packets, Incremented only when a payload is present (i.e., payload value is true) (4 bits)
 func (state *TSState) ReadTSPacket(tsPacket *TsPacket) (int, *data.Reader) {
 	if tsPacket.byteChunk == nil {
-		log.Printf("attempted to read from nil pointer\n")
+		log.Printf("ReadTSPacket attempted to read from nil pointer\n")
 		return PACKET_TYPE_ERROR, nil
 	}
 	var packetType int = PACKET_TYPE_ERROR
@@ -53,10 +53,10 @@ func (state *TSState) ReadTSPacket(tsPacket *TsPacket) (int, *data.Reader) {
 	tsPacket.sync = reader.Read(1)
 
 	if tsPacket.sync != 0x47 {
-		log.Printf("sync byte not 'G'\n")
+		logger.Error("sync byte not 'G'\n")
 		return PACKET_TYPE_ERROR, nil
 	}
-	// asserted tsPacket.sync == 'G'
+	logger.Trace("asserted sync byte == 'G'")
 
 	flags = reader.Read(2)
 
@@ -65,6 +65,7 @@ func (state *TSState) ReadTSPacket(tsPacket *TsPacket) (int, *data.Reader) {
 	tsPacket.priority = flags&0x2000 > 0
 	pid = flags & 0x1fff
 	tsPacket.pid = pid
+	logger.Trace( "ReadTSPacket pid read as %s", pid )
 
 	flags = reader.Read(1)
 

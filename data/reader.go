@@ -23,6 +23,7 @@ type Writer struct {
 
 // Creates a new Reader for reading the data from the byte array.
 func NewReader(da []byte) *Reader {
+	InitLogger()
 	r := new(Reader)
 	r.data = da
 	r.Cursor = 0

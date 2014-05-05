@@ -5,13 +5,12 @@ import (
 	"regifted/util"
 	"regifted/util/mylog"
 
-	
 	"log"
 	"os"
 )
 
 const LOGGER_NAME = "ts"
-const LOGGER_SEVERITY_LEVEL = mylog.SEV_ERROR
+const LOGGER_SEVERITY_LEVEL = mylog.SEV_TRACE
 
 const TS_PACKET_SIZE = 188
 
@@ -39,8 +38,8 @@ type TSState struct {
 	pat                    Pat
 
 	bytes  []byte
-	reader *data.Reader
-	// reader *data.BufferedReader
+	// reader *data.Reader
+	reader *data.BufferedReader
 	pcr uint
 
 	// pes.streamtype -> pes[]
@@ -69,8 +68,8 @@ func Load(fh *os.File) *TSState {
 		// return 71
 		return nil
 	}
-	state.reader = data.NewReaderFromStream(fh)
-	// state.reader = data.NewBufferedReaderFromStream(fh)
+	//state.reader = data.NewReaderFromStream(fh)
+	state.reader = data.NewBufferedReaderFromStream(fh)
 	// state.attemptToFillBuffers()
 
 	state.main()
@@ -158,7 +157,6 @@ func (state *TSState) readPacket() int {
 		pesData = state.readES(&tsPacket, packetReader)
 
 		if pesData != nil {
-			//fmt.Println("NOWHERE")
 			//fmt.Println(pesData.streamType)
 			if state.CurPesMap[pesData.streamType] != nil {
 				state.CurPesMap[pesData.streamType] = make([]Pes, 1, 1)
@@ -166,8 +164,6 @@ func (state *TSState) readPacket() int {
 			}
 
 			state.CurPesMap[pesData.streamType] = append(state.CurPesMap[pesData.streamType], *pesData)
-
-			//fmt.Println("asdfasdfafdsfas")
 			//fmt.Println(pesData.streamType)
 
 		}
@@ -185,7 +181,6 @@ func (state *TSState) readPacket() int {
 	}
 
 	return packetType
-	return -1
 }
 
 //CreateAndDispensePes
