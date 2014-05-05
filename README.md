@@ -21,15 +21,10 @@ Build Process
 
 #### Options for building and running the program using 'go install', 'go run', and the resultant binaries.
 ##### 6.  Move to the regifted folder using the CMD or Terminal. Type both:
-					i.  go install regifted/moof
-					ii. go install regifted/ts
-##### 7.  You can run the file from this location.
-					i.  go run ts.go [ts file location]
-					ii. go run moof.go [mp4 fragment file location]
+					i.  go install regifted
 ##### 8. In step 6 you built binaries for moof_main.go and ts.go. These can be found in $GOPATH/bin.
 					i. From the $GOPATH/bin directory you can type:
-						a. ./ts [ts file location]
-						b. ./moof [mp4 fragment file location]
+						a. ./regifted [ts file location]
 
 Test Process  
 ============  
