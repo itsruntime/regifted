@@ -48,4 +48,5 @@ MESSAGE SYSTEM
 ==============
 There is a logging message system on the TS and Reader Libraries. One can set
 module-granular threshold levels to filter messages. Currently, messages are
-sent to stderr.
+sent to stderr.  There is a module-level constant in each module that defines
+the logging threshold. 
