@@ -53,5 +53,14 @@ the logging threshold.
 
 Issues
 ==============
-To report a bug or to find information on known bugs please vists:
-https://github.com/itsruntime/regifted/issues
+There is a known issue with the giftcollection.go. Upon parsing the newly created fragment file, an error 
+will occur complaining about an 'unknown box'. The first TRUN box is parsed, which is video data, but it will 
+error out on the audio TRUN box. This error might be because our timestamp calculations are incorrect at 
+1/15th of a second, we believe it should be 1/30th of a second with one frame per pcr timestamp. 
+It also may be an issue with a flag not being set but the fact one box parses and the other doesn’t 
+gives us no evidence.There is a known issue with the giftcollection.go. Upon parsing the newly created 
+fragment file, an error will occur complaining about an 'unknown box'. The first TRUN box is parsed, 
+which is video data, but it will error out on the audio TRUN box. This error might be because our timestamp 
+calculations are incorrect at 1/15th of a second, we believe it should be 1/30th of a second with one 
+frame per pcr timestamp. It also may be an issue with a flag not being set but the fact one box parses and 
+the other doesn’t gives us no evidence.
