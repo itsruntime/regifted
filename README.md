@@ -50,3 +50,8 @@ There is a logging message system on the TS and Reader Libraries. One can set
 module-granular threshold levels to filter messages. Currently, messages are
 sent to stderr.  There is a module-level constant in each module that defines
 the logging threshold. 
+
+Issues
+==============
+To report a bug or to find information on known bugs please vists:
+https://github.com/itsruntime/regifted/issues
